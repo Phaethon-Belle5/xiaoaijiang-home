@@ -413,6 +413,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;color:inhe
 <input type="file" id="wallpaper-video" accept="video/mp4" style="display:none">
 <input type="file" id="portfolio-image" accept="image/*" style="display:none">
 <input type="file" id="gallery-image" accept="image/*" style="display:none">
+<input type="file" id="carousel-bg-image" accept="image/*" style="display:none">
 <audio id="bgm-audio" loop preload="none" style="display:none"></audio>
 
 <script>
@@ -446,8 +447,9 @@ const DEFAULT_DATA={
   navItems:[{id:'carousel',label:'首页'},{id:'content',label:'内容分区'},{id:'footer-sec',label:'联系'}],
   content:{
     // Carousel slides
-    slide1Eyebrow:'Fantasy Realm', slide1Cta:'探索世界',
-    slide2Eyebrow:'About the Realm', slide2Headline:'关于这个世界', slide2Cta:'了解更多',
+    slide1Eyebrow:'Fantasy Realm', slide1Cta:'探索世界', slide1Bg:'',
+    slide2Eyebrow:'About the Realm', slide2Headline:'关于这个世界', slide2Cta:'了解更多', slide2Bg:'',
+    slide3Eyebrow:'Chronicle', slide3Headline:'冒险编年史', slide3Cta:'了解更多', slide3Bg:'',
     slide3Eyebrow:'Chronicle', slide3Headline:'冒险编年史', slide3Cta:'了解更多',
     // Section headers
     contentEyebrow:'Content Realm', contentHeadline:'内容分区', contentDesc:'探索幻想世界的每一个角落，发现散落的记忆与珍宝。',
@@ -530,10 +532,19 @@ async function loadData(){
 }
 
 function saveData(showToast=true){
+  // Strip large base64 images before cloud sync (Cloudflare KV has 25MB limit)
+  const cloud=JSON.parse(JSON.stringify(data));
+  const strip=(obj,keys)=>{keys.forEach(k=>{if(obj[k]&&obj[k].startsWith('data:'))obj[k]='';});};
+  if(cloud.profile)strip(cloud.profile,['avatar']);
+  if(cloud.content){['slide1Bg','slide2Bg','slide3Bg'].forEach(k=>{if(cloud.content[k]&&cloud.content[k].startsWith('data:'))cloud.content[k]='';});}
+  if(cloud.wallpaper){if(cloud.wallpaper.images)cloud.wallpaper.images=cloud.wallpaper.images.map(u=>u.startsWith('data:')?'':u);if(cloud.wallpaper.videos)cloud.wallpaper.videos.forEach(v=>{if(v.src&&v.src.startsWith('data:'))v.src='';});}
+  if(cloud.portfolio)cloud.portfolio.forEach(p=>{if(p.image&&p.image.startsWith('data:'))p.image='';});
+  if(cloud.gallery)cloud.gallery.forEach(g=>{if(g.image&&g.image.startsWith('data:'))g.image='';});
+
   dbSet(LS_KEY,data).catch(e=>console.warn('DB save:',e));
-  fetchWithRetry(API_URL+'/data',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer xiaoaijiang2026'},body:JSON.stringify(data)})
-  .then(r=>{if(!r.ok&&showToast)toast('云端保存失败','error')})
-  .catch(e=>{if(showToast)toast('已保存到本设备','info')});
+  fetchWithRetry(API_URL+'/data',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer xiaoaijiang2026'},body:JSON.stringify(cloud)})
+  .then(r=>{if(!r.ok&&showToast)toast('云端同步失败','error')})
+  .catch(e=>{if(showToast)toast('已保存到本设备(图片未同步到云端)','info')});
 }
 
 function copySyncLink(){
@@ -732,7 +743,7 @@ function renderMain(){
       <div class="carousel-track" id="carousel-track">
         <!-- Slide 1: Profile Hero -->
         <div class="carousel-slide active" data-index="0">
-          <div class="slide-bg" style="background-image:url('${(data.wallpaper.images||[])[0]||'https://picsum.photos/seed/fantasy-castle/1920/1080'}')"></div>
+          <div class="slide-bg" style="background-image:url('${c.slide1Bg||(data.wallpaper.images||[])[0]||'https://picsum.photos/seed/fantasy-castle/1920/1080'}')"></div>
           <div class="slide-vignette"></div>
           <div class="slide-content reveal reveal-d1">
             <img class="slide-avatar" src="${p.avatar||fallbackAvatar()}" alt="${escHtml(p.name)}" onerror="this.src=fallbackAvatar()" onclick="${isAdmin?'document.getElementById(\'avatar-upload\').click()':''}">
@@ -744,7 +755,7 @@ function renderMain(){
         </div>
         <!-- Slide 2: Bio -->
         <div class="carousel-slide" data-index="1">
-          <div class="slide-bg" style="background-image:url('${(data.wallpaper.images||[])[1]||'https://picsum.photos/seed/starry-night/1920/1080'}')"></div>
+          <div class="slide-bg" style="background-image:url('${c.slide2Bg||(data.wallpaper.images||[])[1]||'https://picsum.photos/seed/starry-night/1920/1080'}')"></div>
           <div class="slide-vignette"></div>
           <div class="slide-content">
             <p class="slide-eyebrow">${escHtml(c.slide2Eyebrow||'About the Realm')}</p>
@@ -755,7 +766,7 @@ function renderMain(){
         </div>
         <!-- Slide 3: About text -->
         <div class="carousel-slide" data-index="2">
-          <div class="slide-bg" style="background-image:url('${(data.wallpaper.images||[])[2]||'https://picsum.photos/seed/magic-library/1920/1080'}')"></div>
+          <div class="slide-bg" style="background-image:url('${c.slide3Bg||(data.wallpaper.images||[])[2]||'https://picsum.photos/seed/magic-library/1920/1080'}')"></div>
           <div class="slide-vignette"></div>
           <div class="slide-content">
             <p class="slide-eyebrow">${escHtml(c.slide3Eyebrow||'Chronicle')}</p>
@@ -1079,12 +1090,18 @@ function showAdminPanel(){
     <h3>页面文案</h3>
     <div class="admin-group"><label>轮播第1张 - 眉题</label><input type="text" id="e-s1-eyebrow" value="${escHtml(c.slide1Eyebrow||'')}"></div>
     <div class="admin-group"><label>轮播第1张 - 按钮文字</label><input type="text" id="e-s1-cta" value="${escHtml(c.slide1Cta||'')}"></div>
+    <div class="admin-group"><label>轮播第1张 - 背景图URL</label><input type="url" id="e-s1-bg" value="${escHtml(c.slide1Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
+    <div class="admin-group"><label>轮播第1张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(1)">选择本地图片</button></div>
     <div class="admin-group"><label>轮播第2张 - 眉题</label><input type="text" id="e-s2-eyebrow" value="${escHtml(c.slide2Eyebrow||'')}"></div>
     <div class="admin-group"><label>轮播第2张 - 标题</label><input type="text" id="e-s2-headline" value="${escHtml(c.slide2Headline||'')}"></div>
     <div class="admin-group"><label>轮播第2张 - 按钮文字</label><input type="text" id="e-s2-cta" value="${escHtml(c.slide2Cta||'')}"></div>
+    <div class="admin-group"><label>轮播第2张 - 背景图URL</label><input type="url" id="e-s2-bg" value="${escHtml(c.slide2Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
+    <div class="admin-group"><label>轮播第2张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(2)">选择本地图片</button></div>
     <div class="admin-group"><label>轮播第3张 - 眉题</label><input type="text" id="e-s3-eyebrow" value="${escHtml(c.slide3Eyebrow||'')}"></div>
     <div class="admin-group"><label>轮播第3张 - 标题</label><input type="text" id="e-s3-headline" value="${escHtml(c.slide3Headline||'')}"></div>
     <div class="admin-group"><label>轮播第3张 - 按钮文字</label><input type="text" id="e-s3-cta" value="${escHtml(c.slide3Cta||'')}"></div>
+    <div class="admin-group"><label>轮播第3张 - 背景图URL</label><input type="url" id="e-s3-bg" value="${escHtml(c.slide3Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
+    <div class="admin-group"><label>轮播第3张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(3)">选择本地图片</button></div>
     <div class="admin-group"><label>内容分区 - 眉题</label><input type="text" id="e-sec-eyebrow" value="${escHtml(c.contentEyebrow||'')}"></div>
     <div class="admin-group"><label>内容分区 - 标题</label><input type="text" id="e-sec-headline" value="${escHtml(c.contentHeadline||'')}"></div>
     <div class="admin-group"><label>内容分区 - 描述</label><textarea id="e-sec-desc">${escHtml(c.contentDesc||'')}</textarea></div>
@@ -1155,12 +1172,15 @@ function saveAdmin(){
   data.content=data.content||{};
   data.content.slide1Eyebrow=document.getElementById('e-s1-eyebrow')?.value.trim()||'';
   data.content.slide1Cta=document.getElementById('e-s1-cta')?.value.trim()||'';
+  data.content.slide1Bg=document.getElementById('e-s1-bg')?.value.trim()||data.content.slide1Bg||'';
   data.content.slide2Eyebrow=document.getElementById('e-s2-eyebrow')?.value.trim()||'';
   data.content.slide2Headline=document.getElementById('e-s2-headline')?.value.trim()||'';
   data.content.slide2Cta=document.getElementById('e-s2-cta')?.value.trim()||'';
+  data.content.slide2Bg=document.getElementById('e-s2-bg')?.value.trim()||data.content.slide2Bg||'';
   data.content.slide3Eyebrow=document.getElementById('e-s3-eyebrow')?.value.trim()||'';
   data.content.slide3Headline=document.getElementById('e-s3-headline')?.value.trim()||'';
   data.content.slide3Cta=document.getElementById('e-s3-cta')?.value.trim()||'';
+  data.content.slide3Bg=document.getElementById('e-s3-bg')?.value.trim()||data.content.slide3Bg||'';
   data.content.contentEyebrow=document.getElementById('e-sec-eyebrow')?.value.trim()||'';
   data.content.contentHeadline=document.getElementById('e-sec-headline')?.value.trim()||'';
   data.content.contentDesc=document.getElementById('e-sec-desc')?.value.trim()||'';
@@ -1187,14 +1207,16 @@ function deleteTestimonialPanel(i){}
 // Gallery CRUD
 function addGallery(){if(!data.gallery)data.gallery=[];data.gallery.push({image:'',caption:'新照片',date:new Date().toISOString().slice(0,10)});saveData(false);showAdminPanel();}
 function removeGallery(i){data.gallery.splice(i,1);saveData(false);showAdminPanel();}
-let _pendG=-1;
+let _pendG=-1, _pendCb=-1;
 function uploadGalleryImg(i){_pendG=i;document.getElementById('gallery-image')?.click();}
+function uploadCarouselBg(n){_pendCb=n;document.getElementById('carousel-bg-image')?.click();}
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('show');}
 function resetData(){data=JSON.parse(JSON.stringify(DEFAULT_DATA));dbDel(LS_KEY).catch(()=>{});fetchWithRetry(API_URL+'/data',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer xiaoaijiang2026'},body:JSON.stringify(DEFAULT_DATA)}).catch(()=>{});applyAll();}
 let _pendPf=-1;
 function uploadPortfolioImg(i){_pendPf=i;document.getElementById('portfolio-image').click();}
 document.getElementById('portfolio-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendPf>=0&&data.portfolio[_pendPf]){data.portfolio[_pendPf].image=ev.target.result;saveData();showAdminPanel();toast('图片已上传','success');}_pendPf=-1;};r.readAsDataURL(f);e.target.value='';};
 document.getElementById('gallery-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendG>=0&&data.gallery&&data.gallery[_pendG]){data.gallery[_pendG].image=ev.target.result;saveData();showAdminPanel();toast('照片已上传','success');}_pendG=-1;};r.readAsDataURL(f);e.target.value='';};
+document.getElementById('carousel-bg-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendCb>0){data.content=data.content||{};const bgKey='slide'+_pendCb+'Bg';data.content[bgKey]=ev.target.result;saveData();showAdminPanel();toast('轮播背景'+_pendCb+'已上传','success');}_pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
 function exportConfig(){const exp=JSON.parse(JSON.stringify(data));if(exp.profile.avatar?.startsWith('data:'))exp.profile.avatar='[base64 removed]';(exp.wallpaper.images||[]).forEach((u,i)=>{if(u.startsWith('data:'))exp.wallpaper.images[i]='[base64 removed]';});(exp.portfolio||[]).forEach(it=>{if(it.image?.startsWith('data:'))it.image='[base64 removed]';});const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='xiaoaijiang-config-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('配置已导出','success');}
 
 // ============================================================
