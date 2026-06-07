@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-06T22:10:00.000Z",
+  "title": "Design System: 小爱酱 | 幻想之境",
+  "extensions": {
+    "colorMeta": {
+      "void":               { "role": "neutral",  "displayName": "虚空 Void",            "canonical": "#0B0E14", "tonalRamp": ["#060810","#0B0E14","#11162A","#181E38","#1C2342","#253050","#304068","#3D5080"] },
+      "astral":             { "role": "neutral",  "displayName": "星界 Astral",          "canonical": "#11162A", "tonalRamp": ["#0B0E14","#11162A","#181E38","#1C2342","#222B48","#2A3560","#344078","#405090"] },
+      "parchment":          { "role": "neutral",  "displayName": "羊皮纸 Parchment",      "canonical": "#F2E8D5", "tonalRamp": ["#2D2418","#5C4E3A","#8A7B65","#C4B08A","#D4C4A2","#EDE0C8","#F2E8D5","#F8F2E8"] },
+      "gold":               { "role": "primary",  "displayName": "星芒金 Gold",           "canonical": "#D4A843", "tonalRamp": ["#2D1E08","#5C3E10","#8A5E18","#B88020","#D4A843","#E8C456","#F0D878","#F8E8A0"] },
+      "gold-bright":        { "role": "primary",  "displayName": "亮金 Bright",           "canonical": "#E8C456" },
+      "gold-pale":          { "role": "primary",  "displayName": "暗金 Pale",             "canonical": "#B8943A" },
+      "magic":              { "role": "secondary","displayName": "魔法紫 Magic",          "canonical": "#9075D9" },
+      "crimson":            { "role": "functional","displayName":"封印朱红 Crimson",     "canonical": "#A82D3F" },
+      "ink":                { "role": "neutral",  "displayName": "墨 Ink",                "canonical": "#2D2418" },
+      "text-primary":       { "role": "neutral",  "displayName": "主文字 Text Primary",   "canonical": "#E8E2D9" },
+      "glass-bg":           { "role": "neutral",  "displayName": "玻璃底 Glass BG",       "canonical": "rgba(17,22,42,0.75)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero carousel headlines, section titles. Cinzel Latin + CJK fallback. 800 weight, clamp(1.5rem,4vw,2.8rem)." },
+      "body":    { "displayName": "Body",    "purpose": "All running text. System CJK stack. 400 weight, 16px, 1.75 line-height, max 65ch." },
+      "mono":    { "displayName": "Mono",    "purpose": "Date labels, version numbers. Cascadia Code / JetBrains Mono." }
+    },
+    "shadows": [
+      { "name": "card",       "value": "0 4px 24px rgba(0,0,0,0.4)",                                   "purpose": "Default depth for parchment and dark cards." },
+      { "name": "card-hover", "value": "0 8px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212,168,67,0.25)",  "purpose": "Hover state: lift + gold glow." }
+    ],
+    "motion": [
+      { "name": "ease-out",   "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for hover lifts, fade transitions, carousel slides." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Gold CTA button. Pill shape, dark text on gold background.",
+      "html": "<button class=\"ds-btn-primary\">EXPLORE</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 36px; background: #D4A843; color: #0B0E14; border: none; border-radius: 9999px; font-weight: 700; font-size: 0.92em; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; letter-spacing: 0.03em; cursor: pointer; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 4px 24px rgba(212,168,67,0.25); } .ds-btn-primary:hover { background: #E8C456; transform: translateY(-2px); box-shadow: 0 6px 32px rgba(212,168,67,0.25); } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary transparent button with subtle border.",
+      "html": "<button class=\"ds-btn-ghost\">LEARN MORE</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 28px; background: transparent; color: #A09888; border: 1px solid rgba(255,255,255,0.1); border-radius: 9999px; font-weight: 600; font-size: 0.88em; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; letter-spacing: 0.02em; cursor: pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-btn-ghost:hover { background: rgba(255,255,255,0.04); border-color: #D4A843; color: #E8C456; transform: translateY(-1px); }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Pill-shaped nav link inside the glass top bar. Active state highlights in gold.",
+      "html": "<nav style=\"display:flex;gap:4px\"><button class=\"ds-nav-item ds-nav-active\">Home</button><button class=\"ds-nav-item\">Content</button></nav>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 9999px; cursor: pointer; color: #A09888; font-size: 0.82em; font-weight: 500; font-family: 'PingFang SC','Microsoft YaHei',sans-serif; letter-spacing: 0.02em; background: transparent; border: none; white-space: nowrap; transition: all 0.25s cubic-bezier(0.16,1,0.3,1); } .ds-nav-item:hover { color: #E8E2D9; background: rgba(255,255,255,0.04); } .ds-nav-active { color: #E8C456; background: rgba(212,168,67,0.08); font-weight: 600; }"
+    },
+    {
+      "name": "Parchment Card",
+      "kind": "card",
+      "refersTo": "card-parchment",
+      "description": "Warm parchment card with star corner decorations. The primary content surface.",
+      "html": "<div class=\"ds-card-parchment\"><span class=\"ds-card-label\">FEATURED</span><h3 class=\"ds-card-heading\">Card Title</h3><p class=\"ds-card-text\">Body text on warm parchment — readable and inviting against the dark astral backdrop.</p></div>",
+      "css": ".ds-card-parchment { position: relative; background: radial-gradient(ellipse at 30% 20%, rgba(212,168,67,0.06) 0%, transparent 60%), linear-gradient(160deg, #F2E8D5 0%, #EDE0C8 40%, #E8DCC8 100%); border: 1px solid #C4B08A; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); padding: 32px; color: #2D2418; transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1); } .ds-card-parchment:hover { transform: translateY(-4px); box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212,168,67,0.25); } .ds-card-label { font-family: Cinzel,'PingFang SC',serif; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.15em; color: #B8943A; margin-bottom: 12px; } .ds-card-heading { font-family: Cinzel,'PingFang SC',serif; font-size: 1.15em; font-weight: 700; color: #2D2418; margin-bottom: 8px; line-height: 1.3; } .ds-card-text { font-size: 0.88em; color: #5C4E3A; line-height: 1.8; }"
+    },
+    {
+      "name": "Dark Card",
+      "kind": "card",
+      "refersTo": "card-dark",
+      "description": "Dark astral card for secondary content. Purple accent label.",
+      "html": "<div class=\"ds-card-dark\"><span class=\"ds-card-label-dark\">CONTACT</span><h3 class=\"ds-card-heading-dark\">Card Title</h3><p class=\"ds-card-text-dark\">Secondary content on the dark astral surface.</p></div>",
+      "css": ".ds-card-dark { background: #181E38; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 32px; transition: all 0.35s cubic-bezier(0.16,1,0.3,1); } .ds-card-dark:hover { border-color: rgba(255,255,255,0.1); box-shadow: 0 8px 40px rgba(0,0,0,0.4); } .ds-card-label-dark { font-family: Cinzel,'PingFang SC',serif; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.15em; color: #9075D9; margin-bottom: 12px; } .ds-card-heading-dark { font-family: Cinzel,'PingFang SC',serif; font-size: 1.15em; font-weight: 700; color: #E8E2D9; margin-bottom: 8px; line-height: 1.3; } .ds-card-text-dark { font-size: 0.88em; color: #A09888; line-height: 1.8; }"
+    },
+    {
+      "name": "Carousel Slide",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Full-viewport carousel with background image, vignette, centered content.",
+      "html": "<div class=\"ds-slide-content\" style=\"text-align:center;max-width:720px\"><p class=\"ds-slide-eyebrow\">FANTASY REALM</p><h1 class=\"ds-slide-headline\">Welcome to the Realm</h1><p class=\"ds-slide-bio\">A magical corner of the internet, recording every star along the journey.</p><button class=\"ds-btn-primary\">EXPLORE</button></div>",
+      "css": ".ds-slide-eyebrow { font-family: Cinzel,'PingFang SC',serif; font-size: 0.7em; letter-spacing: 0.2em; color: #D4A843; text-transform: uppercase; margin-bottom: 16px; } .ds-slide-headline { font-family: Cinzel,'PingFang SC',serif; font-size: clamp(1.5rem,4vw,2.8rem); font-weight: 800; color: #FFFFFF; line-height: 1.15; margin-bottom: 16px; text-shadow: 0 2px 30px rgba(0,0,0,0.5); } .ds-slide-bio { font-size: 0.95em; color: rgba(255,255,255,0.7); line-height: 1.9; margin-bottom: 32px; max-width: 55ch; margin-left: auto; margin-right: auto; }"
+    },
+    {
+      "name": "Glass Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Fixed top nav: transparent at top, frosted glass on scroll.",
+      "html": "<header class=\"ds-topnav scrolled\"><div class=\"ds-nav-brand\">✦ Brand</div><nav style=\"display:flex;gap:4px\"><button class=\"ds-nav-item ds-nav-active\">Home</button><button class=\"ds-nav-item\">Content</button></nav></header>",
+      "css": ".ds-topnav { position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; background: transparent; border-bottom: 1px solid transparent; transition: background 0.5s, border-color 0.5s; } .ds-topnav.scrolled { background: rgba(17,22,42,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); box-shadow: 0 1px 20px rgba(0,0,0,0.3); } .ds-nav-brand { font-family: Cinzel,'PingFang SC',serif; font-size: 1.05em; font-weight: 700; color: #E8E2D9; display: flex; align-items: center; gap: 12px; letter-spacing: 0.04em; cursor: pointer; } .ds-nav-brand:hover { color: #D4A843; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "星界图书馆",
+    "overview": "这是一个悬浮在星云深处的魔法图书馆。访客穿越黑暗虚空，推开玻璃门，眼前是漂浮在星辉中的羊皮纸卷轴——金色的星芒标记着每一段重要的记忆。东西不多但每件都用心，光线来自星体本身，暗而不冷。核心张力：暗色星界的宏大感 vs 羊皮纸卡片的亲切感。Cinzel 拉丁标题营造史诗氛围，中文系统字体保持阅读舒适。金色是唯一的亮色——出现在星芒装饰、按钮、激活态——恰如星空中最亮的那颗。",
+    "keyCharacteristics": [
+      "星界暗底（#0B0E14）为唯一页面基调",
+      "暖羊皮纸卡片（#F2E8D5）承载所有正文内容",
+      "星芒金（#D4A843）覆盖 ≤5% 画面",
+      "SVG Mask 星芒伪元素装饰卡片四角",
+      "12 列 Bento Grid 承载内容分区",
+      "Cinzel Display 仅用于英文标题/眉题"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "星芒金覆盖不超过任何一屏 5% 的面积。", "section": "colors" },
+      { "name": "The Parchment Island Rule", "body": "羊皮纸色只在卡片容器内出现。背景永远是暗色星界系。", "section": "colors" },
+      { "name": "The One Display Rule", "body": "Cinzel 仅用于英文。中文使用系统字体继承。", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "卡片静止时投影仅用一层。金色外发光只在 hover 态叠加。", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 用星芒金作为唯一 accent——仅在按钮、星芒角、导航激活态出现",
+      "Do 保持暗色星界基底贯穿全页",
+      "Do 给每张卡片明确的 hover 反馈——上浮 4px + 金辉外发光",
+      "Do 对羊皮纸卡片使用星芒角装饰",
+      "Do 尊重 prefers-reduced-motion"
+    ],
+    "donts": [
+      "Don't 在羊皮纸卡片以外的区域使用暖色调背景",
+      "Don't 引入第二个饱和 accent 色与金色平起平坐",
+      "Don't 在导航栏之外使用毛玻璃",
+      "Don't 使用企业官网式商务冷淡排版",
+      "Don't 套用千篇一律 SaaS 落地页模板",
+      "Don't 使用 AI 默认紫/蓝渐变",
+      "Don't 堆叠卡片（card inside card）"
+    ]
+  }
+}
