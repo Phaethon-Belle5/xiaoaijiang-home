@@ -1,4 +1,4 @@
-# 小爱酱 | 幻想之境
+# 伶俜 | 幻想之境
 
 个人主页项目，单文件 `index.html` 部署于 Cloudflare Pages（`home.xiaoaijiang.cloud`）。
 
@@ -6,7 +6,7 @@
 
 ### Issue tracker
 
-Issues live in GitHub Issues, accessed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues at `FrostZephyr5/xiaoaijiang-home`, accessed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
