@@ -105,20 +105,6 @@
   background:radial-gradient(circle at 35% 30%,#fff,#c0392b 60%,#8a2222);box-shadow:0 2px 4px rgba(0,0,0,0.3)}
 .memo-text{font-size:0.95em;color:#3a3320;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 .memo-date{display:block;margin-top:var(--space-4);font-family:var(--font-mono);font-size:0.72em;color:#8a7b5a;text-align:right}
-/* 照片墙：按日期相册 + 封面扇子 */
-.album{margin-bottom:var(--space-16);max-width:var(--container-max);margin-left:auto;margin-right:auto;padding:0 var(--container-padding)}
-.album-cover{position:relative;width:280px;height:200px;margin:0 auto;display:block;background:transparent;cursor:pointer;border:none;padding:0}
-.album-cover .cover-photo{position:absolute;inset:6px;object-fit:cover;border-radius:10px;border:2px solid var(--wf-canvas);box-shadow:var(--shadow-card);transition:transform .35s var(--ease-out),filter .3s}
-.album-cover .cover-photo.p0{transform:rotate(-5deg) translateX(-10px)}
-.album-cover .cover-photo.p1{transform:rotate(0) translateY(0)}
-.album-cover .cover-photo.p2{transform:rotate(5deg) translateX(10px)}
-.album-cover:hover .cover-photo.p0{transform:rotate(-14deg) translateX(-22px) translateY(-8px)}
-.album-cover:hover .cover-photo.p2{transform:rotate(14deg) translateX(22px) translateY(-8px)}
-.album-cover:hover .cover-photo.p1{transform:translateY(-12px) scale(1.03)}
-.album-cover:hover .cover-photo:not(.p1){filter:brightness(0.92)}
-.album-badge{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);z-index:3;background:var(--glass-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);color:var(--text-primary);font-size:.78em;padding:4px 14px;border-radius:9999px;white-space:nowrap}
-.album-photos{display:none;margin-top:var(--space-12)}
-.album.expanded .album-photos{display:block;animation:viewIn .4s var(--ease-out)}
 /* 引力相册（Matter.js 物理） */
 .gravity-btn{display:inline-flex;align-items:center;gap:var(--space-2);margin:0 auto var(--space-12);padding:14px 34px;background:var(--glass-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-border);border-radius:var(--radius-pill);color:var(--text-primary);font-size:1em;cursor:pointer;transition:all .25s var(--ease-out);box-shadow:var(--shadow-card)}
 .gravity-btn:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
@@ -137,6 +123,22 @@
 .gravity-gallery-frame .gf-corner.bl{bottom:0;left:0;border-right:none;border-top:none;border-bottom-left-radius:10px}
 .gravity-gallery-frame .gf-corner.br{bottom:0;right:0;border-left:none;border-top:none;border-bottom-right-radius:10px}
 .gravity-gallery-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.5);font-size:.78em;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:2}
+/* 地图相册 */
+.map-wrap{max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding)}
+#china-map{width:100%;height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:var(--astral);box-shadow:var(--shadow-card)}
+.map-city-panel{display:none;margin-top:var(--space-8)}
+.map-city-panel.show{display:block;animation:viewIn .4s var(--ease-out)}
+.map-city-head{display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-5)}
+.map-city-head h3{font-family:var(--font-display);font-size:1.3em;color:var(--gold-bright)}
+.map-city-head span{color:var(--text-muted);font-size:.85em}
+.map-city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-4)}
+.map-photo{position:relative;border-radius:var(--radius-md);overflow:hidden;cursor:pointer;border:1px solid var(--glass-border);background:var(--astral-elevated);transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out)}
+.map-photo:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover)}
+.map-photo img{width:100%;height:140px;object-fit:cover;display:block}
+.map-photo-cap{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;font-size:.72em;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,0.7))}
+.map-unlocated{margin-top:var(--space-8)}
+.map-unlocated summary{cursor:pointer;color:var(--text-secondary);font-size:.9em;margin-bottom:var(--space-4);list-style:none}
+.map-empty{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:.9em}
 /* ---- Reset ---- */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;overflow-x:hidden}
@@ -641,6 +643,7 @@ function renderViewState(){
     const r=el.getBoundingClientRect();
     if(r.top<window.innerHeight&&r.bottom>0)el.classList.add('visible');
   });
+  if(currentView==='gallery')initMapAlbum();else disposeMap();
 }
 function navigateTo(view,opts){
   opts=opts||{};
@@ -1150,23 +1153,10 @@ function renderMain(){
       <div class="section-divider"></div>
       ${(data.gallery||[]).length?`
       <button class="gravity-btn reveal" onclick="openGravityGallery()"><span style="font-size:1.2em">🧲</span> 开启引力相册 · 拖拽抛掷</button>
-      <div id="album-list">
-        ${groupGalleryByDate(data.gallery).map(([date,photos])=>`
-          <div class="album reveal" data-date="${escHtml(date)}">
-            <button class="album-cover" onclick="toggleAlbum('${escHtml(date).replace(/'/g,"\\'")}')" aria-expanded="false" aria-label="展开相册 ${escHtml(date)}">
-              ${photos.slice(0,3).map((p,j)=>`<img class="cover-photo p${j}" src="${p.image||''}" alt="" loading="lazy" onerror="this.style.display='none'">`).join('')}
-              <span class="album-badge">${escHtml(date)} · ${photos.length}张</span>
-            </button>
-            <div class="album-photos">
-              <div class="gallery-grid">
-                ${photos.map(p=>`
-                  <div class="gallery-item reveal" onclick="openLightbox(${p.gIndex})" role="button" tabindex="0" aria-label="${escHtml(p.caption||'照片')}">
-                    <img src="${p.image||''}" alt="${escHtml(p.caption||'')}" loading="lazy" onerror="this.src='https://picsum.photos/seed/gallery'+${p.gIndex}+'/600/400'">
-                    <div class="gallery-caption"><span class="g-cap-text">${escHtml(p.caption||'')}</span><span class="g-cap-date">${p.date||''}</span></div>
-                  </div>`).join('')}
-              </div>
-            </div>
-          </div>`).join('')}
+      <div class="map-wrap">
+        <div id="china-map" class="reveal"></div>
+        <div id="city-photo-panel" class="map-city-panel"></div>
+        <div id="map-unlocated" class="map-unlocated"></div>
       </div>`:`
       <p class="empty-text" style="text-align:center;color:var(--text-muted)">还没有照片，去管理面板添加吧。</p>`}
     </section>
@@ -1261,25 +1251,6 @@ function carouselPrev(){goToSlide(currentSlide-1);resetCarouselTimer();}
 function resetCarouselTimer(){clearInterval(carouselTimer);carouselTimer=null;startCarousel();}
 
 // ============================================================
-// PHOTO WALL: 按日期分组相册
-// ============================================================
-function groupGalleryByDate(items){
-  const map=new Map();
-  (items||[]).forEach((it,i)=>{
-    const d=it.date||'未标注';
-    if(!map.has(d))map.set(d,[]);
-    map.get(d).push(Object.assign({},it,{gIndex:i}));
-  });
-  return [...map.entries()].sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
-}
-function toggleAlbum(date){
-  const el=document.querySelector('.album[data-date="'+String(date).replace(/"/g,'\\"')+'"]');
-  if(!el)return;
-  const open=el.classList.toggle('expanded');
-  const btn=el.querySelector('.album-cover');if(btn)btn.setAttribute('aria-expanded',String(open));
-  initReveal();
-}
-
 // ============================================================
 // GRAVITY ALBUM（Matter.js 物理相册）
 // ============================================================
@@ -1439,6 +1410,115 @@ function closeGravityGallery(){
 document.getElementById('gravityGalleryClose').addEventListener('click',closeGravityGallery);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('gravityGallery').classList.contains('active'))closeGravityGallery();});
 
+// ============================================================
+// 地图相册（ECharts 中国城市足迹）
+// ============================================================
+let mapChart=null,mapCityPoints=[],mapUnlocated=[],mapCurrentCity=null;
+let _mapDepsLoaded=false;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error('加载失败 '+src));document.head.appendChild(s);});}
+async function ensureMapDeps(){
+  if(_mapDepsLoaded)return;
+  if(!window.echarts){
+    const cdns=['https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js','https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js'];
+    let ok=false;
+    for(const c of cdns){try{await loadScript(c);if(window.echarts){ok=true;break;}}catch(e){}}
+    if(!ok)throw new Error('ECharts 不可用');
+  }
+  if(!window.CHINA_GEO)await loadScript('assets/china-geo.js');
+  if(!window.CITIES_GEO)await loadScript('assets/cities-geo.js');
+  _mapDepsLoaded=true;
+}
+function normalizeCity(name){
+  const raw=String(name||'').trim();
+  if(!raw||!window.CITIES_GEO)return null;
+  if(CITIES_GEO[raw])return raw;
+  const strip=s=>s.replace(/[市区县盟州地区特别行政区自治州]+$/,'');
+  const clean=strip(raw);
+  if(!clean)return null;
+  for(const k of Object.keys(CITIES_GEO)){if(strip(k)===clean)return k;}
+  // 省名/包含匹配
+  const hit=Object.keys(CITIES_GEO).find(k=>k===raw||k.includes(clean)&&clean.length>=2);
+  return hit||null;
+}
+function buildMapData(){
+  const byKey=new Map();
+  const unlocated=[];
+  (data.gallery||[]).forEach((item,i)=>{
+    const loc=normalizeCity(item.location);
+    if(loc&&CITIES_GEO[loc]){
+      const c=CITIES_GEO[loc];
+      const key=c[0]+','+c[1];
+      if(!byKey.has(key))byKey.set(key,{name:c[2]||loc,cityName:loc,coords:[c[0],c[1]],photos:[]});
+      byKey.get(key).photos.push(Object.assign({index:i},item));
+    }else if(item.location&&String(item.location).trim()){
+      unlocated.push(Object.assign({index:i},item));
+    }
+  });
+  return {cities:[...byKey.values()],unlocated};
+}
+function renderMap(){
+  const el=document.getElementById('china-map');
+  if(!el)return;
+  if(mapChart){mapChart.dispose();mapChart=null;}
+  const {cities,unlocated}=buildMapData();
+  mapCityPoints=cities;mapUnlocated=unlocated;mapCurrentCity=null;
+  document.getElementById('city-photo-panel')?.classList.remove('show');
+  renderMapUnlocated();
+  if(!cities.length){el.innerHTML='<div class="map-empty">还没有标记地点的照片 —— 在管理后台给照片填「地点(城市)」，就能点亮地图</div>';return;}
+
+  mapChart=echarts.init(el,{renderer:'canvas'});
+  echarts.registerMap('china',window.CHINA_GEO);
+  const provSet=new Set(cities.map(c=>c.name).filter(Boolean));
+  const regions=window.CHINA_GEO.features.map(f=>{
+    const n=f.properties.name;
+    const lit=provSet.has(n);
+    return {name:n,itemStyle:{areaColor:lit?'rgba(56,189,248,0.22)':'rgba(5,8,14,0.55)',borderColor:lit?'#38bdf8':'#475569',borderWidth:lit?1.5:0.8}};
+  });
+  const scatterData=cities.map(c=>({name:c.cityName,value:[c.coords[0],c.coords[1]],cityName:c.cityName,province:c.name,photos:c.photos}));
+  mapChart.setOption({
+    backgroundColor:'transparent',animation:false,
+    tooltip:{trigger:'item',backgroundColor:'rgba(8,8,8,.92)',borderColor:'rgba(212,168,67,.5)',textStyle:{color:'#f8fafc',fontSize:12},formatter:p=>{
+      if(p.seriesType==='effectScatter'){const n=(p.data.photos||[]).length;return '<b>'+p.data.cityName+'</b><br/>'+n+' 张照片<br/><span style="color:#94a3b8;font-size:11px">点击查看照片</span>';}
+      return p.name;
+    }},
+    geo:{map:'china',roam:true,zoom:1.18,center:[108,35.5],scaleLimit:{min:0.8,max:14},z:1,
+      itemStyle:{areaColor:'rgba(5,8,14,0.55)',borderColor:'#475569',borderWidth:0.8},
+      regions:regions,label:{show:true,color:'#7d8aa0',fontSize:10},
+      emphasis:{itemStyle:{areaColor:'rgba(56,189,248,0.3)'},label:{color:'#f8fafc'}}},
+    series:[{name:'已记录城市',type:'effectScatter',coordinateSystem:'geo',data:scatterData,
+      symbolSize:12,rippleEffect:{brushType:'stroke',scale:4,period:4},
+      label:{show:true,formatter:p=>p.data.photos.length,color:'#e2e8f0',fontSize:11,position:'right'},
+      itemStyle:{color:'#38bdf8',shadowBlur:14,shadowColor:'rgba(56,189,248,.6)'},z:6}]
+  });
+  mapChart.on('click',p=>{if(p.seriesType==='effectScatter'&&p.data&&p.data.photos)showCityPhotos(p.data);});
+}
+function showCityPhotos(city){
+  mapCurrentCity=city;
+  const panel=document.getElementById('city-photo-panel');
+  if(!panel)return;
+  panel.innerHTML='<div class="map-city-head"><h3>'+escHtml(city.cityName)+'</h3><span>'+city.photos.length+' 张照片</span></div><div class="map-city-grid">'+
+    city.photos.map(p=>'<div class="map-photo reveal" onclick="openLightbox('+p.index+')" role="button" tabindex="0"><img src="'+p.image+'" alt="" loading="lazy"><span class="map-photo-cap">'+escHtml(p.caption||'')+'</span></div>').join('')+
+    '</div>';
+  panel.classList.add('show');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  initReveal();
+}
+function renderMapUnlocated(){
+  const wrap=document.getElementById('map-unlocated');
+  if(!wrap)return;
+  if(!mapUnlocated.length){wrap.innerHTML='';return;}
+  wrap.innerHTML='<details><summary>未标注地点的照片（'+mapUnlocated.length+' 张）▾</summary><div class="map-city-grid">'+
+    mapUnlocated.map(p=>'<div class="map-photo reveal" onclick="openLightbox('+p.index+')" role="button" tabindex="0"><img src="'+p.image+'" alt="" loading="lazy"><span class="map-photo-cap">'+escHtml(p.caption||'')+'</span></div>').join('')+
+    '</div></details>';
+}
+function initMapAlbum(){
+  if(currentView!=='gallery')return;
+  if(!document.getElementById('china-map'))return;
+  ensureMapDeps().then(()=>{if(currentView==='gallery'&&document.getElementById('china-map'))renderMap();})
+    .catch(e=>{if(window.toast)toast('地图加载失败：'+e.message,'error');});
+}
+function disposeMap(){if(mapChart){mapChart.dispose();mapChart=null;}}
+
 // LIGHTBOX
 // ============================================================
 let lbIndex=0;
@@ -1587,7 +1667,8 @@ function showAdminPanel(){
         <div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">
           ${item.image?'<img src="'+item.image+'" style="width:48px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0" alt="">':'<div style="width:48px;height:36px;background:var(--astral);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-muted)">无</div>'}
           <input type="text" value="${escHtml(item.caption||'')}" data-g-idx="${i}" data-g-field="caption" placeholder="照片说明" style="flex:1">
-          <input type="text" value="${escHtml(item.date||'')}" data-g-idx="${i}" data-g-field="date" placeholder="日期" style="width:100px" aria-label="日期">
+          <input type="text" value="${escHtml(item.date||'')}" data-g-idx="${i}" data-g-field="date" placeholder="日期" style="width:88px" aria-label="日期">
+          <input type="text" value="${escHtml(item.location||'')}" data-g-idx="${i}" data-g-field="location" placeholder="地点(城市)" style="width:96px" aria-label="地点">
           <button class="btn btn-ghost btn-sm" style="padding:3px 7px;white-space:nowrap" onclick="uploadGalleryImg(${i})">上传</button>
           <button class="btn btn-ghost btn-sm" style="padding:3px 7px;white-space:nowrap;color:var(--crimson)" onclick="removeGallery(${i})">x</button>
         </div>
