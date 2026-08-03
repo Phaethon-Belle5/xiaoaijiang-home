@@ -397,7 +397,40 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 #admin-entry-btn:hover{opacity:1;color:#fff;border-color:#555;transform:scale(1.05)}
 
 /* ---- Back to Top ---- */
-#back-to-top{position:fixed;bottom:28px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
+#back-to-top{position:fixed;bottom:88px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
+/* 悬浮音乐播放器 */
+.music-float{position:fixed;bottom:24px;right:24px;z-index:995;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.music-fab{width:52px;height:52px;border-radius:50%;background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-border);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s var(--ease-out);user-select:none}
+.music-fab:hover{border-color:var(--gold);transform:scale(1.06)}
+.music-fab .m-note{font-size:20px;color:var(--gold)}
+.music-fab .m-eq{display:none;align-items:flex-end;gap:2px;height:18px}
+.music-fab.playing .m-note{display:none}
+.music-fab.playing .m-eq{display:flex}
+.music-fab .m-eq i{width:3px;background:var(--gold);border-radius:2px;animation:eqbounce 1s ease-in-out infinite}
+.music-fab .m-eq i:nth-child(2){animation-delay:.15s}
+.music-fab .m-eq i:nth-child(3){animation-delay:.3s}
+@keyframes eqbounce{0%,100%{height:5px}50%{height:18px}}
+.music-panel{display:none;width:280px;background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:16px;box-shadow:var(--shadow-card);padding:14px 16px}
+.music-panel.open{display:block;animation:viewIn .3s var(--ease-out)}
+.music-title{font-size:.85em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}
+.music-progress{height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;margin-bottom:10px;position:relative}
+.music-progress .bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));border-radius:3px;width:0%}
+.music-controls{display:flex;align-items:center;gap:8px}
+.music-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85em;transition:all .2s;flex-shrink:0}
+.music-btn:hover{border-color:var(--gold);color:var(--gold)}
+.music-btn.play{width:38px;height:38px;background:var(--gold);color:#0B0E14;border-color:transparent}
+.music-vol{flex:1;display:flex;align-items:center;gap:6px;color:var(--text-muted);min-width:0}
+.music-vol input{flex:1;min-width:0;accent-color:var(--gold);height:4px}
+/* 自定义光标（仅指针设备） */
+@media (pointer:fine){
+  body.custom-cursor,body.custom-cursor *{cursor:none!important}
+  body.custom-cursor input,body.custom-cursor textarea,body.custom-cursor select{cursor:auto!important}
+}
+.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:100000;border-radius:50%;display:none}
+.cursor-dot{width:6px;height:6px;background:var(--gold);box-shadow:0 0 6px var(--gold-glow)}
+.cursor-ring{width:32px;height:32px;border:1.5px solid rgba(212,168,67,0.6);transition:width .2s,height .2s,border-color .2s,background .2s}
+.cursor-ring.hover{width:52px;height:52px;border-color:var(--gold);background:rgba(212,168,67,0.12)}
+body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 #back-to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
 #back-to-top:hover{background:var(--gold);color:var(--void);border-color:var(--gold)}
 
@@ -476,7 +509,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
   .carousel-arrow{width:36px;height:36px;font-size:0.9em}
   .carousel-arrow.prev{left:var(--space-3)}.carousel-arrow.next{right:var(--space-3)}
   .wp-controls{bottom:20px;right:60px}
-  #back-to-top{bottom:20px;right:16px}
+  #back-to-top{bottom:80px;right:16px}
   #admin-entry-btn{bottom:20px;left:14px}
   .form-row{flex-direction:column}
 }
@@ -553,6 +586,26 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
   </div>
 </div>
 <div id="toast-container"></div>
+<!-- 悬浮音乐播放器 -->
+<div id="music-float" class="music-float">
+  <div id="music-panel" class="music-panel" aria-hidden="true">
+    <div id="music-title" class="music-title">未在播放</div>
+    <div id="music-progress" class="music-progress"><div class="bar" id="music-bar"></div></div>
+    <div class="music-controls">
+      <button id="music-prev" class="music-btn" title="上一首">⏮</button>
+      <button id="music-play" class="music-btn play" title="播放/暂停">▶</button>
+      <button id="music-next" class="music-btn" title="下一首">⏭</button>
+      <div class="music-vol"><span>🔊</span><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.7"></div>
+    </div>
+  </div>
+  <button id="music-fab" class="music-fab" title="音乐播放器" aria-label="音乐播放器">
+    <span class="m-note">♪</span>
+    <span class="m-eq"><i></i><i></i><i></i></span>
+  </button>
+</div>
+<!-- 自定义光标 -->
+<div id="cursor-dot" class="cursor-dot"></div>
+<div id="cursor-ring" class="cursor-ring"></div>
 <!-- 引力相册（Matter.js 物理相册）浮层 -->
 <div id="gravityGallery" class="gravity-gallery-overlay" aria-hidden="true">
   <div class="gravity-gallery-header">
@@ -1519,6 +1572,79 @@ function initMapAlbum(){
 }
 function disposeMap(){if(mapChart){mapChart.dispose();mapChart=null;}}
 
+// ============================================================
+// 悬浮音乐播放器（直链 + MetingJS 网易云歌单）
+// ============================================================
+let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false;
+function getAudio(){if(!_audio)_audio=document.getElementById('bgm-audio')||new Audio();return _audio;}
+function playSrc(src,name){
+  const a=getAudio();a.src=src;a.dataset.name=name;
+  a.play().catch(()=>{toast('音频播放失败','error');});
+  refreshMusicUI();
+}
+function nextSong(){if(!_playlist.length)return;_plIdx=(_plIdx+1)%_playlist.length;playSrc(_playlist[_plIdx].src,_playlist[_plIdx].name);}
+function prevSong(){if(!_playlist.length)return;_plIdx=(_plIdx-1+_playlist.length)%_playlist.length;playSrc(_playlist[_plIdx].src,_playlist[_plIdx].name);}
+function refreshMusicUI(){
+  const fab=document.getElementById('music-fab'),playBtn=document.getElementById('music-play'),title=document.getElementById('music-title');
+  if(!fab)return;
+  const a=getAudio();const playing=!a.paused&&!a.ended&&a.src;
+  fab.classList.toggle('playing',playing);
+  if(playBtn)playBtn.textContent=playing?'⏸':'▶';
+  if(title)title.textContent=(_playlist[_plIdx]&&_playlist[_plIdx].name)||'未在播放';
+}
+function loadMetingPlaylist(pid){
+  const a=getAudio();
+  fetch('https://api.i-meto.com/meting/api?server=netease&type=playlist&id='+pid)
+    .then(r=>r.json()).then(list=>{
+      if(!Array.isArray(list)||!list.length)throw new Error('empty');
+      _playlist=list.map(s=>({name:(s.title||'')+' - '+(s.author||''),src:s.url})).filter(s=>s.src);
+      _plIdx=0;
+      document.getElementById('music-title').textContent=_playlist[0].name;
+      playSrc(_playlist[0].src,_playlist[0].name);
+    }).catch(()=>{
+      if(/^https?:/.test(data.bgm||''))playSrc(data.bgm,'背景音乐');
+      else toast('歌单加载失败，可在后台设置音频直链','info');
+    });
+}
+function syncMusicSource(){
+  const fab=document.getElementById('music-fab');
+  if(!fab)return;
+  const bgm=String(data.bgm||'').trim();
+  if(!bgm){fab.style.display='none';return;}
+  fab.style.display='flex';
+  const a=getAudio();
+  if(/^netease:/.test(bgm)){loadMetingPlaylist(bgm.replace(/^netease:/,''));return;}
+  if(/^\d+$/.test(bgm)){loadMetingPlaylist(bgm);return;}
+  // 直链：仅当当前 src 不同才更新
+  if(a.src!==bgm&&(!_playlist.length||a.dataset.name!=='背景音乐')){_playlist=[{name:'背景音乐',src:bgm}];_plIdx=0;playSrc(bgm,'背景音乐');}
+}
+function initMusicPlayer(){
+  if(_musicInitDone){syncMusicSource();return;}
+  _musicInitDone=true;
+  const fab=document.getElementById('music-fab'),panel=document.getElementById('music-panel'),
+        playBtn=document.getElementById('music-play'),prog=document.getElementById('music-progress'),
+        bar=document.getElementById('music-bar'),volInp=document.getElementById('music-vol');
+  if(!fab)return;
+  const a=getAudio();
+  a.volume=parseFloat(localStorage.getItem('xiaoaijiang-vol')||'0.7');
+  if(volInp)volInp.value=a.volume;
+  a.addEventListener('play',refreshMusicUI);
+  a.addEventListener('pause',refreshMusicUI);
+  a.addEventListener('ended',()=>{_playlist.length>1?nextSong():refreshMusicUI();});
+  a.addEventListener('timeupdate',()=>{if(a.duration&&bar)bar.style.width=(a.currentTime/a.duration*100)+'%';});
+  fab.addEventListener('click',e=>{
+    e.stopPropagation();
+    panel.classList.toggle('open');
+    panel.setAttribute('aria-hidden',String(!panel.classList.contains('open')));
+  });
+  playBtn.addEventListener('click',e=>{e.stopPropagation();if(a.src){(a.paused?a.play():a.pause()).catch(()=>{});}else toast('后台还没设置音乐','info');});
+  document.getElementById('music-prev').addEventListener('click',e=>{e.stopPropagation();prevSong();});
+  document.getElementById('music-next').addEventListener('click',e=>{e.stopPropagation();nextSong();});
+  prog.addEventListener('click',e=>{if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;});
+  volInp.addEventListener('input',()=>{a.volume=parseFloat(volInp.value);localStorage.setItem('xiaoaijiang-vol',volInp.value);});
+  syncMusicSource();
+}
+
 // LIGHTBOX
 // ============================================================
 let lbIndex=0;
@@ -1617,6 +1743,7 @@ function showAdminPanel(){
     </div>
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin-bottom:4px" onclick="document.getElementById('wallpaper-upload').click()">上传本地图片</button>
     <div class="admin-group"><label>轮播间隔（秒）</label><input type="text" id="e-wp-int" value="${w.interval}"></div>
+    <div class="admin-group"><label>背景音乐</label><input type="text" id="e-bgm" value="${escHtml(data.bgm||'')}" placeholder="音频直链(https://...) 或 网易云歌单ID"></div>
 
     <h3>关于我</h3>
     <div class="admin-group"><label>内容</label><textarea id="e-about">${escHtml(data.about?.text||'')}</textarea></div>
@@ -1755,6 +1882,7 @@ function saveAdmin(){
   data.accent=document.getElementById('e-accent').value;
   data.wallpaper.type=document.getElementById('e-wp-type').value;
   data.wallpaper.interval=parseInt(document.getElementById('e-wp-int').value)||8;
+  data.bgm=(document.getElementById('e-bgm')?.value||'').trim();
   document.querySelectorAll('[data-v-dur]').forEach(el=>{const i=parseInt(el.dataset.vDur);if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   data.about.text=document.getElementById('e-about').value.trim();
   data.contact=data.contact||{};
@@ -1788,6 +1916,7 @@ function saveAdmin(){
   data.contact.wechat=document.getElementById('e-wechat').value.trim();
   data.contact.other=document.getElementById('e-other').value.trim();
   saveData();applyAll();closeAdmin();toast('已保存','success');
+  try{initMusicPlayer();}catch(e){console.warn(e);}
 }
 function addModule(){data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});saveData();showAdminPanel();}
 function removeModule(i){data.modules.splice(i,1);saveData();showAdminPanel();}
@@ -1832,6 +1961,7 @@ setTimeout(async function(){
   importFromHash();
   applyAll();
   navigateTo(readViewFromHash(),{updateHash:false});
+  try{initMusicPlayer();}catch(e){console.warn('music init:',e);}
   window.addEventListener("load", function(){ if(!document.getElementById("main").innerHTML.length){applyAll();renderViewState();} });
 }, 0);;
 </script>
@@ -1920,6 +2050,72 @@ setTimeout(async function(){
   }
   requestAnimationFrame(loop);
 });
+</script>
+
+<!-- Click Burst Particles -->
+<canvas id="clickfx-canvas" style="position:fixed;inset:0;z-index:999;pointer-events:none"></canvas>
+<script>
+(function(){
+  var canvas=document.getElementById('clickfx-canvas');
+  if(!canvas)return;
+  var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced)return;
+  var ctx=canvas.getContext('2d');
+  var W,H,dpr=Math.min(window.devicePixelRatio||1,1.5);
+  function resize(){W=window.innerWidth;H=window.innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  resize();window.addEventListener('resize',resize);
+  var COLORS=['#D4A843','#E8C456','#9075D9','#FF9FFC','#38bdf8','#f472b6','#4ade80','#fb7185'];
+  var parts=[];
+  var running=false;
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i];
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.life-=0.02;
+      if(p.life<=0){parts.splice(i,1);continue;}
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size*(0.5+p.life),0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    if(parts.length){requestAnimationFrame(loop);}else{running=false;ctx.clearRect(0,0,W,H);}
+  }
+  document.addEventListener('pointerdown',function(e){
+    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#gravityGallery,#lightbox,.music-panel'))return;
+    var n=8+Math.floor(Math.random()*7);
+    for(var i=0;i<n;i++){
+      var ang=Math.random()*Math.PI*2,sp=1+Math.random()*4;
+      parts.push({x:e.clientX,y:e.clientY,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-1.5,g:0.15,life:0.6+Math.random()*0.5,size:1.5+Math.random()*3,color:COLORS[Math.floor(Math.random()*COLORS.length)]});
+    }
+    if(!running){running=true;loop();}
+  },{passive:true});
+})();
+</script>
+
+<!-- Custom Cursor -->
+<script>
+(function(){
+  if(!window.matchMedia||!matchMedia('(pointer:fine)').matches)return;
+  var dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring');
+  if(!dot||!ring)return;
+  document.body.classList.add('custom-cursor');
+  var mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
+  var interactive='a,button,[role="button"],input,textarea,select,.pill-nav-item,.gallery-item,.map-photo,.memo-card,.carousel-arrow,.slide-cta,.gravity-btn,.nav-brand,.music-fab,[data-nav]';
+  document.addEventListener('mousemove',function(e){
+    mx=e.clientX;my=e.clientY;
+    dot.style.transform='translate('+mx+'px,'+my+'px) translate(-50%,-50%)';
+  },{passive:true});
+  (function anim(){
+    rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;
+    ring.style.transform='translate('+rx+'px,'+ry+'px) translate(-50%,-50%)';
+    requestAnimationFrame(anim);
+  })();
+  document.addEventListener('mouseover',function(e){
+    var t=e.target;
+    if(t&&t.closest&&t.closest(interactive))ring.classList.add('hover');else ring.classList.remove('hover');
+  });
+  document.addEventListener('mouseout',function(){ring.classList.remove('hover');});
+})();
 </script>
 
 
