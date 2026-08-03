@@ -28,6 +28,19 @@ colors:
   surface-border-strong: "rgba(255,255,255,0.1)"
   gold-glow: "rgba(212,168,67,0.25)"
   magic-glow: "rgba(144,117,217,0.2)"
+light-theme:
+  void: "#F5F0E8"
+  astral: "#FFFFFF"
+  astral-elevated: "#FFFFFF"
+  astral-surface: "#F2E8D5"
+  text-primary: "#1C2342"
+  text-secondary: "#5C4E3A"
+  text-muted: "#8A7B65"
+  glass-bg: "rgba(255,255,255,0.55)"
+  glass-border: "rgba(0,0,0,0.08)"
+  wf-canvas: "#F5F0E8"
+  wf-ink: "#1C2342"
+  wf-body: "#5C4E3A"
 typography:
   display:
     fontFamily: "Cinzel, PingFang SC, Microsoft YaHei, serif"
