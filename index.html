@@ -813,7 +813,7 @@ async function loadData(){
 
 function mergeData(d,s){
   if(s.profile)d.profile={...d.profile,...s.profile};
-  if(s.wallpaper){d.wallpaper={...d.wallpaper,...s.wallpaper};if(s.wallpaper.images?.length)d.wallpaper.images=s.wallpaper.images;if(s.wallpaper.videos?.length)d.wallpaper.videos=s.wallpaper.videos;else if(s.wallpaper.video)d.wallpaper.videos=[{src:s.wallpaper.video,duration:8}];}
+  if(s.wallpaper){d.wallpaper={...d.wallpaper,...s.wallpaper};if(s.wallpaper.images?.length)d.wallpaper.images=s.wallpaper.images;if(s.wallpaper.videos?.length){/* 云端只存了 duration，保留本地/默认视频的 src */const localVids=d.wallpaper.videos||[];const defVids=DEFAULT_DATA.wallpaper.videos||[];d.wallpaper.videos=s.wallpaper.videos.map((v,i)=>{if(v&&v.src)return v;const cand=(localVids[i]&&localVids[i].src)?localVids[i]:defVids[i];return (cand&&cand.src)?{src:cand.src,duration:(v&&v.duration)||cand.duration}:v;});}else if(s.wallpaper.video)d.wallpaper.videos=[{src:s.wallpaper.video,duration:8}];}
   if(s.about)d.about={...d.about,...s.about};
   if(s.contact)d.contact={...d.contact,...s.contact};
   if(s.accent)d.accent=s.accent;
@@ -837,7 +837,8 @@ async function syncFromCloud(localResult){
     if(!r.ok)return;
     const remote=await r.json();
     if(!remote?.profile)return;
-    if(remote.wallpaper&&(!remote.wallpaper.videos||!remote.wallpaper.videos.length)){
+    const _cloudVids=remote.wallpaper?.videos||[];
+    if(remote.wallpaper&&(!_cloudVids.length||_cloudVids.every(v=>!v.src))){
       var vids=[];
       for(var i=0;i<20;i++){
         try{
@@ -1807,7 +1808,14 @@ function showAdminPanel(){
     </div>
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin-bottom:4px" onclick="document.getElementById('wallpaper-upload').click()">上传本地图片</button>
     <div class="admin-group"><label>轮播间隔（秒）</label><input type="text" id="e-wp-int" value="${w.interval}"></div>
+
+    <h3>音乐播放器</h3>
     <div class="admin-group"><label>背景音乐</label><input type="text" id="e-bgm" value="${escHtml(data.bgm||'')}" placeholder="音频直链(https://...) 或 网易云歌单ID"></div>
+    <p style="font-size:.75em;color:var(--text-muted);margin-top:2px">设置后：首页出现旋转唱片音乐卡 + 右下角悬浮播放器。直链或网易云歌单 ID 均可</p>
+
+    <h3>氛围特效</h3>
+    <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">点击迸发粒子</label><input type="checkbox" id="fx-click" ${localStorage.getItem('xiaoaijiang-fx-click')==='0'?'':'checked'}></div>
+    <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">自定义光标</label><input type="checkbox" id="fx-cursor" ${localStorage.getItem('xiaoaijiang-fx-cursor')==='0'?'':'checked'}></div>
 
     <h3>关于我</h3>
     <div class="admin-group"><label>内容</label><textarea id="e-about">${escHtml(data.about?.text||'')}</textarea></div>
@@ -1912,6 +1920,10 @@ function showAdminPanel(){
   panel.querySelectorAll('[data-p-idx]').forEach(el=>{el.addEventListener('input',()=>{const i=parseInt(el.dataset.pIdx),f=el.dataset.pField;if(data.portfolio[i])data.portfolio[i][f]=el.value;});});
   panel.querySelectorAll('[data-g-idx]').forEach(el=>{el.addEventListener('input',()=>{const i=parseInt(el.dataset.gIdx),f=el.dataset.gField;if(data.gallery[i])data.gallery[i][f]=el.value;});});
   panel.querySelectorAll('[data-memo-idx]').forEach(el=>{const evt=el.type==='checkbox'?'change':'input';el.addEventListener(evt,()=>{const i=parseInt(el.dataset.memoIdx),f=el.dataset.memoField;if(data.memos[i])data.memos[i][f]=el.type==='checkbox'?el.checked:el.value;});});
+  const fxClick=document.getElementById('fx-click');
+  if(fxClick)fxClick.addEventListener('change',e=>{localStorage.setItem('xiaoaijiang-fx-click',e.target.checked?'1':'0');});
+  const fxCursor=document.getElementById('fx-cursor');
+  if(fxCursor)fxCursor.addEventListener('change',e=>{localStorage.setItem('xiaoaijiang-fx-cursor',e.target.checked?'1':'0');applyCursorPref();});
 
   document.getElementById('admin-overlay').classList.add('show');
 
@@ -2145,6 +2157,7 @@ setTimeout(async function(){
     if(parts.length){requestAnimationFrame(loop);}else{running=false;ctx.clearRect(0,0,W,H);}
   }
   document.addEventListener('pointerdown',function(e){
+    if(localStorage.getItem('xiaoaijiang-fx-click')==='0')return;
     if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#gravityGallery,#lightbox,.music-panel'))return;
     var n=8+Math.floor(Math.random()*7);
     for(var i=0;i<n;i++){
@@ -2158,8 +2171,13 @@ setTimeout(async function(){
 
 <!-- Custom Cursor -->
 <script>
+function applyCursorPref(){
+  if(localStorage.getItem('xiaoaijiang-fx-cursor')==='0'){document.body.classList.remove('custom-cursor');}
+  else if(window.matchMedia&&matchMedia('(pointer:fine)').matches){document.body.classList.add('custom-cursor');}
+}
 (function(){
   if(!window.matchMedia||!matchMedia('(pointer:fine)').matches)return;
+  if(localStorage.getItem('xiaoaijiang-fx-cursor')==='0')return;
   var dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring');
   if(!dot||!ring)return;
   document.body.classList.add('custom-cursor');
