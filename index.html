@@ -854,6 +854,7 @@ function mergeData(d,s){
   if(s.gallery?.length)d.gallery=s.gallery;
   if(s.modules?.length)d.modules=s.modules;
   if(s.bgm!==undefined)d.bgm=s.bgm;
+  if(s.cloudMusicIds!==undefined)d.cloudMusicIds=s.cloudMusicIds;
   if(s.content)d.content={...d.content,...s.content};
   d.navItems=VIEW_ITEMS.slice(); // 导航固定为常量，忽略云端旧值
   return d;
@@ -880,7 +881,7 @@ async function syncFromCloud(localResult){
       }
       if(vids.length)remote.wallpaper.videos=vids;
     }
-    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)){
+    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)){
       const preserveImages={};
       if(data.profile?.avatar?.startsWith('data:'))preserveImages.avatar=data.profile.avatar;
       if(data.content){
@@ -910,7 +911,7 @@ function saveData(showToast=true){
 
   // Sync changed keys only (smaller payload, faster sync)
   const hdrs=authHeaders();
-  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos'];
+  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds'];
   let synced=0,authFailed=false;
   const videos=(data.wallpaper?.videos||[]).filter(v=>v.src&&v.src.startsWith('data:'));
   Promise.all(keys.map(k=>{
