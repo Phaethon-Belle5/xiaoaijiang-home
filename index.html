@@ -123,7 +123,7 @@
 .gravity-gallery-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.5);font-size:.78em;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:2}
 /* 地图相册 */
 .map-wrap{max-width:var(--container-max);margin:0 auto;padding:var(--space-6);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-card)}
-#china-map{width:100%;height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:var(--astral);box-shadow:var(--shadow-card)}
+#china-map{width:100%;height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:rgba(8,12,22,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow-card)}
 .map-city-panel{display:none;margin-top:var(--space-8)}
 .map-city-panel.show{display:block;animation:viewIn .4s var(--ease-out)}
 .map-city-head{display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-5)}
@@ -443,6 +443,15 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .mc-eyebrow{font-size:.72em;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:var(--space-2)}
 .mc-title{font-family:var(--font-display);font-size:1.05em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:var(--space-2)}
 .mc-lyric{font-size:.88em;color:var(--gold-bright);min-height:1.6em;margin-bottom:var(--space-3);line-height:1.6;letter-spacing:.02em}
+.mc-list-btn,.music-list-btn{margin-top:var(--space-2);padding:5px 16px;border-radius:9999px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:.74em;cursor:pointer;transition:all .2s}
+.mc-list-btn:hover,.music-list-btn:hover{border-color:var(--gold);color:var(--gold)}
+.mc-playlist,.music-playlist{max-height:190px;overflow-y:auto;margin-top:var(--space-2);border-top:1px solid var(--glass-border);padding-top:var(--space-2)}
+.mc-playlist{text-align:left}
+.mc-playlist::-webkit-scrollbar,.music-playlist::-webkit-scrollbar{width:4px}
+.mc-playlist::-webkit-scrollbar-thumb,.music-playlist::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.4);border-radius:2px}
+.mc-play-item{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.8em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s}
+.mc-play-item:hover{background:rgba(255,255,255,0.08);color:var(--text-primary)}
+.mc-play-item.active{color:var(--gold-bright);background:rgba(212,168,67,0.1);font-weight:600}
 .mc-progress{height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;margin-bottom:var(--space-5);position:relative}
 .mc-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));border-radius:3px}
 .mc-controls{display:flex;align-items:center;gap:var(--space-4);justify-content:center}
@@ -626,6 +635,8 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
       <button id="music-next" class="music-btn" title="下一首">⏭</button>
       <div class="music-vol"><span>🔊</span><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.7"></div>
     </div>
+    <button id="music-list-btn" class="music-list-btn">播放列表</button>
+    <div id="music-playlist" class="music-playlist"></div>
   </div>
   <button id="music-fab" class="music-fab" title="音乐播放器" aria-label="音乐播放器">
     <span class="m-note">♪</span>
@@ -1172,6 +1183,8 @@ function renderMain(){
             <button class="mc-btn mc-play" id="mc-play" title="播放/暂停" aria-label="播放/暂停">▶</button>
             <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首">⏭</button>
           </div>
+          <button id="mc-list-btn" class="mc-list-btn">播放列表</button>
+          <div id="mc-playlist" class="mc-playlist"></div>
         </div>
       </div>
     </section>
@@ -1682,6 +1695,7 @@ function refreshMusicUI(){
   if(playBtn)playBtn.textContent=playing?'⏸':'▶';
   if(title)title.textContent=(_playlist[_plIdx]&&_playlist[_plIdx].name)||'未在播放';
   syncMusicCard();
+  renderPlaylist();
 }
 function updateLyric(){
   const el=document.getElementById('mc-lyric');
@@ -1752,7 +1766,9 @@ function bindMusicCard(){
   document.getElementById('mc-next').onclick=e=>{e.stopPropagation();nextSong();};
   const prog=document.getElementById('mc-progress');
   prog.onclick=e=>{const a=getAudio();if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;};
+  document.getElementById('mc-list-btn').onclick=e=>{e.stopPropagation();const p=document.getElementById('mc-playlist');p.style.display=p.style.display==='block'?'none':'block';};
   syncMusicCard();
+  renderPlaylist();
 }
 function syncMusicCard(){
   const title=document.getElementById('mc-title'),disc=document.getElementById('mc-disc'),
@@ -1766,6 +1782,25 @@ function syncMusicCard(){
   if(playBtn)playBtn.textContent=playing?'⏸':'▶';
   if(a.duration&&bar)bar.style.width=(a.currentTime/a.duration*100)+'%';
   if(lyric&&!playing&&!_activeLyric)lyric.textContent=_curLyrics.length?'♪ 点击播放，歌词同步显示 ♪':'♪ 纯音乐，请欣赏 ♪';
+}
+function renderPlaylist(){
+  const containers=[document.getElementById('mc-playlist'),document.getElementById('music-playlist')];
+  containers.forEach(container=>{
+    if(!container)return;
+    if(!_playlist.length){container.innerHTML='';return;}
+    container.innerHTML=_playlist.map((s,i)=>
+      '<div class="mc-play-item'+(i===_plIdx?' active':'')+'" data-i="'+i+'">'+(i===_plIdx?'♪ ':'')+escHtml(s.name)+'</div>'
+    ).join('');
+  });
+  document.querySelectorAll('.mc-play-item').forEach(el=>{
+    el.addEventListener('click',function(){
+      const i=parseInt(this.dataset.i);
+      if(i===_plIdx){const a=getAudio();if(a.paused)a.play().catch(()=>{});}
+      else{_plIdx=i;playSong(_playlist[i]);}
+    });
+  });
+  document.getElementById('mc-list-btn').textContent='播放列表 ('+_playlist.length+')';
+  document.getElementById('music-list-btn').textContent='播放列表 ('+_playlist.length+')';
 }
 function initMusicPlayer(){
   if(_musicInitDone){syncMusicSource();return;}
@@ -1795,6 +1830,8 @@ function initMusicPlayer(){
   document.getElementById('music-next').addEventListener('click',e=>{e.stopPropagation();nextSong();});
   prog.addEventListener('click',e=>{if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;});
   volInp.addEventListener('input',()=>{a.volume=parseFloat(volInp.value);localStorage.setItem('xiaoaijiang-vol',volInp.value);});
+  document.getElementById('music-list-btn').addEventListener('click',e=>{e.stopPropagation();const p=document.getElementById('music-playlist');p.style.display=p.style.display==='block'?'none':'block';});
+  renderPlaylist();
   syncMusicSource();
 }
 
