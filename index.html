@@ -1237,7 +1237,7 @@ function renderMain(){
               <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src='https://picsum.photos/seed/fallback${i}/400/160'">
               ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
             </div>
-            <div class="portfolio-info"><div class="portfolio-title">${escHtml(item.title)}</div>${hasUrl?'<div class="portfolio-link">'+escHtml(item.url)+'</div>':''}</div>
+            <div class="portfolio-info"><div class="portfolio-title">${escHtml(item.title)}</div>${hasUrl&&item.linkName?'<div class="portfolio-link">'+escHtml(item.linkName)+'</div>':''}</div>
           </div>`;
         }).join('')}
       </div>`:''}
@@ -1980,7 +1980,8 @@ function showAdminPanel(){
           <input type="text" value="${escHtml(item.title)}" data-p-idx="${i}" data-p-field="title" placeholder="作品名" style="flex:1">
           <button class="btn btn-ghost btn-sm" style="padding:3px 7px;white-space:nowrap" onclick="removePortfolio(${i})">x</button>
         </div>
-        <input type="text" value="${escHtml(item.url||'')}" data-p-idx="${i}" data-p-field="url" placeholder="链接（可选）" style="width:100%;margin-bottom:4px">
+        <input type="text" value="${escHtml(item.url||'')}" data-p-idx="${i}" data-p-field="url" placeholder="链接地址（可选）" style="width:100%;margin-bottom:4px">
+        <input type="text" value="${escHtml(item.linkName||'')}" data-p-idx="${i}" data-p-field="linkName" placeholder="链接显示名称（不填则不显示网址）" style="width:100%">
         ${item.image?'<div style="font-size:.7em;color:#38A169;margin-bottom:4px">已有图片</div>':'<div style="font-size:.7em;color:var(--text-secondary);margin-bottom:4px">未上传</div>'}
         <button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadPortfolioImg(${i})">上传图片</button>
       </div>
@@ -2286,7 +2287,7 @@ setTimeout(async function(){
   }
   document.addEventListener('pointerdown',function(e){
     if(localStorage.getItem('xiaoaijiang-fx-click')==='0')return;
-    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#gravityGallery,#lightbox,.music-panel'))return;
+    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#gravityGallery,#lightbox,.music-panel,#pet-container'))return;
     var n=8+Math.floor(Math.random()*7);
     for(var i=0;i<n;i++){
       var ang=Math.random()*Math.PI*2,sp=1+Math.random()*4;
@@ -2385,7 +2386,33 @@ function applyCursorPref(){
     img.src='assets/pet/'+gifs[idx];
     showBubble();
   }
-  pet.addEventListener('click',nextAnim);
+  // 拖拽 + 点击区分（pointer 事件）
+  var dragging=false,moved=false,startX=0,startY=0,origLeft=0,origTop=0;
+  pet.addEventListener('pointerdown',function(e){
+    dragging=true;moved=false;
+    startX=e.clientX;startY=e.clientY;
+    var r=pet.getBoundingClientRect();
+    origLeft=r.left;origTop=r.top;
+    pet.style.left=origLeft+'px';pet.style.top=origTop+'px';
+    pet.style.right='auto';pet.style.bottom='auto';
+    if(pet.setPointerCapture){try{pet.setPointerCapture(e.pointerId);}catch(err){}}
+    e.preventDefault();
+  });
+  pet.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    var dx=e.clientX-startX,dy=e.clientY-startY;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;
+    pet.style.left=(origLeft+dx)+'px';
+    pet.style.top=(origTop+dy)+'px';
+  });
+  pet.addEventListener('pointerup',function(e){
+    if(!dragging)return;
+    dragging=false;
+    if(!moved){nextAnim();return;}
+    var r=pet.getBoundingClientRect();
+    pet.style.left=Math.max(0,Math.min(r.left,window.innerWidth-r.width))+'px';
+    pet.style.top=Math.max(0,Math.min(r.top,window.innerHeight-r.height))+'px';
+  });
   setTimeout(showBubble,2500);
   setInterval(function(){if(!bubble.classList.contains('show'))showBubble();},22000);
 })();
