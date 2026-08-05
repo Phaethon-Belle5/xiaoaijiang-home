@@ -1665,6 +1665,7 @@ function parseLrc(txt){
 function playSong(song){
   const a=getAudio();
   a.src=song.src;a.dataset.name=song.name;
+  a.loop=_playlist.length<=1; // 多曲自动切歌，单曲循环
   _curLyrics=[]; _activeLyric='';
   if(_lyricTimer){clearInterval(_lyricTimer);_lyricTimer=null;}
   if(song.cover){
