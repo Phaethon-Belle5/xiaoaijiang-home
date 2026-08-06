@@ -432,7 +432,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 /* 主页音乐卡片 */
 .music-card-section{max-width:var(--container-max);margin:0 auto;padding:var(--space-16) var(--container-padding) var(--space-24)}
 .music-card{display:flex;align-items:center;gap:var(--space-10);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-8) var(--space-10);box-shadow:var(--shadow-card);justify-content:center}
-.mc-disc{width:120px;height:120px;border-radius:50%;background:repeating-radial-gradient(circle,#2a2a2a 0 2px,#151515 2px 4px);flex-shrink:0;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.mc-disc{width:170px;height:170px;border-radius:50%;background:repeating-radial-gradient(circle,#2a2a2a 0 2px,#151515 2px 4px);flex-shrink:0;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .mc-disc.playing{animation:discspin 8s linear infinite}
 @keyframes discspin{to{transform:rotate(360deg)}}
 .mc-disc::before{content:'';position:absolute;inset:16px;border-radius:50%;background:radial-gradient(circle at 32% 30%,var(--gold-bright),var(--gold-pale));opacity:.92}
@@ -442,11 +442,13 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .mc-info{flex:1;max-width:440px;min-width:0}
 .mc-eyebrow{font-size:.72em;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:var(--space-2)}
 .mc-title{font-family:var(--font-display);font-size:1.05em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:var(--space-2)}
-.mc-lyric{font-size:.88em;color:var(--gold-bright);min-height:1.6em;margin-bottom:var(--space-3);line-height:1.6;letter-spacing:.02em}
+.mc-stage{position:relative;height:120px;margin-bottom:var(--space-3)}
+.mc-lyric{font-size:.9em;color:var(--gold-bright);height:100%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.6;letter-spacing:.02em;padding:0 var(--space-2)}
 .mc-list-btn,.music-list-btn{margin-top:var(--space-2);padding:5px 16px;border-radius:9999px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:.74em;cursor:pointer;transition:all .2s}
 .mc-list-btn:hover,.music-list-btn:hover{border-color:var(--gold);color:var(--gold)}
-.mc-playlist,.music-playlist{max-height:190px;overflow-y:auto;margin-top:var(--space-2);border-top:1px solid var(--glass-border);padding-top:var(--space-2)}
-.mc-playlist{text-align:left}
+.music-playlist{max-height:190px;overflow-y:auto;margin-top:var(--space-2);border-top:1px solid var(--glass-border);padding-top:var(--space-2)}
+.mc-playlist{position:absolute;inset:0;overflow-y:auto;text-align:left;display:none;border:1px solid var(--glass-border);border-radius:10px;background:rgba(10,16,30,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:var(--space-2)}
+[data-theme="light"] .mc-playlist{background:rgba(255,255,255,0.6)}
 .mc-playlist::-webkit-scrollbar,.music-playlist::-webkit-scrollbar{width:4px}
 .mc-playlist::-webkit-scrollbar-thumb,.music-playlist::-webkit-scrollbar-thumb{background:rgba(212,168,67,0.4);border-radius:2px}
 .mc-play-item{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.8em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s}
@@ -1177,7 +1179,10 @@ function renderMain(){
         <div class="mc-info">
           <p class="mc-eyebrow">♪ Music Player</p>
           <h3 class="mc-title" id="mc-title">未在播放</h3>
-          <p class="mc-lyric" id="mc-lyric">♪ 设置网易云歌曲ID后，这里同步显示歌词 ♪</p>
+          <div class="mc-stage">
+            <p class="mc-lyric" id="mc-lyric">♪ 设置网易云歌曲ID后，这里同步显示歌词 ♪</p>
+            <div class="mc-playlist" id="mc-playlist"></div>
+          </div>
           <div class="mc-progress" id="mc-progress"><div class="mc-bar" id="mc-bar"></div></div>
           <div class="mc-controls">
             <button class="mc-btn" id="mc-prev" title="上一首" aria-label="上一首">⏮</button>
@@ -1185,7 +1190,6 @@ function renderMain(){
             <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首">⏭</button>
           </div>
           <button id="mc-list-btn" class="mc-list-btn">播放列表</button>
-          <div id="mc-playlist" class="mc-playlist"></div>
         </div>
       </div>
     </section>
@@ -1768,7 +1772,13 @@ function bindMusicCard(){
   document.getElementById('mc-next').onclick=e=>{e.stopPropagation();nextSong();};
   const prog=document.getElementById('mc-progress');
   prog.onclick=e=>{const a=getAudio();if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;};
-  document.getElementById('mc-list-btn').onclick=e=>{e.stopPropagation();const p=document.getElementById('mc-playlist');p.style.display=p.style.display==='block'?'none':'block';};
+  document.getElementById('mc-list-btn').onclick=e=>{
+    e.stopPropagation();
+    const p=document.getElementById('mc-playlist'),ly=document.getElementById('mc-lyric');
+    const showing=p.style.display==='block';
+    p.style.display=showing?'none':'block';
+    ly.style.display=showing?'flex':'none';
+  };
   syncMusicCard();
   renderPlaylist();
 }
