@@ -431,7 +431,8 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 @media (max-width:768px){.pet-img{width:88px}.pet-bubble{width:168px}.pet-msg{font-size:.7em;padding:2px 18px}}
 /* 主页音乐卡片 */
 .music-card-section{max-width:var(--container-max);margin:0 auto;padding:var(--space-16) var(--container-padding) var(--space-24)}
-.music-card{display:flex;align-items:center;gap:var(--space-10);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-8) var(--space-10);box-shadow:var(--shadow-card);justify-content:center}
+.music-card{display:flex;align-items:center;gap:var(--space-6);max-width:760px;margin:0 auto;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-6) var(--space-8);box-shadow:var(--shadow-card);justify-content:center}
+.music-card-section{padding-left:var(--space-6);padding-right:var(--space-6)}
 .mc-disc{width:170px;height:170px;border-radius:50%;background:repeating-radial-gradient(circle,#2a2a2a 0 2px,#151515 2px 4px);flex-shrink:0;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .mc-disc.playing{animation:discspin 8s linear infinite}
 @keyframes discspin{to{transform:rotate(360deg)}}
@@ -1733,8 +1734,20 @@ function loadMetingSongs(ids){
       const s=(Array.isArray(res)?res[0]:res)||{};
       if(s&&s.url)songs.push({name:(s.name||s.title||'未知歌曲')+' - '+(s.artist||s.author||'未知歌手'),src:s.url,cover:s.pic||s.cover||'',lrc:s.lrc||''});
     });
-    if(songs.length){_playlist=songs;_plIdx=0;playSong(_playlist[0]);}
-    else toast('歌曲加载失败，检查歌曲ID','info');
+    // 高清封面：跟随 pic 重定向拿到 CDN URL，param 90y90→500y500
+    Promise.all(songs.map(s=>
+      s.cover?fetch(s.cover,{method:'HEAD',redirect:'follow'}).then(r=>{
+        const u=r.url||'';
+        return (u.includes('param=90y90'))?u.replace('param=90y90','param=500y500'):(u||s.cover);
+      }).catch(()=>s.cover):Promise.resolve('')
+    )).then(covers=>{
+      songs.forEach((s,i)=>{if(covers[i])s.cover=covers[i];});
+      if(songs.length){_playlist=songs;_plIdx=0;playSong(_playlist[0]);}
+      else toast('歌曲加载失败，检查歌曲ID','info');
+    }).catch(()=>{
+      if(songs.length){_playlist=songs;_plIdx=0;playSong(_playlist[0]);}
+      else toast('歌曲加载失败，检查歌曲ID','info');
+    });
   }).catch(()=>toast('音乐加载失败','info'));
 }
 function loadMetingPlaylist(pid){
