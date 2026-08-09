@@ -788,7 +788,7 @@ const DEFAULT_DATA={
   modules:[{id:"mod_1781362237420",title:"个人成就",icon:"🏆",text:"🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2019年COVID幸存者\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人\n🏆蜜雪冰城大雪人\n🏆家里蹲大学优秀毕业生\n🏆国家绝密资料使用者\n🏆百亿项目合作者"},{id:"mod_1781448443500",title:"爱好",icon:"",text:"华山、恒山、衡山、泰山\n南宫山、岳麓山、武功山\n希望未来能看遍名川大山。"}],
   contact:{email:"2918762608@qq.com",wechat:"ZYH2918762608",other:""},
   bgm:"",
-  cloudMusicIds:"",
+  cloudMusicIds:"494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373",
   navItems:[{id:"home",label:"首页"},{id:"content",label:"内容"},{id:"memos",label:"说说"},{id:"gallery",label:"映像馆"},{id:"contact",label:"联系"}],
   content:{
     slide1Eyebrow:"Fantasy Realm", slide1Cta:"探索世界", slide1Bg:"",
@@ -1961,6 +1961,7 @@ function showAdminPanel(){
 
     <h3>音乐播放器</h3>
     <div class="admin-group"><label>网易云歌曲ID（多个用英文逗号分隔）</label><input type="text" id="e-music-ids" value="${escHtml(data.cloudMusicIds||'')}" placeholder="例如 1901371647,1387090681"></div>
+    <div class="admin-group"><label>调整歌曲顺序（↑↓ 上下移动，自动识别歌名）</label><div id="music-id-order"></div></div>
     <div class="admin-group"><label>背景音乐直链（可选，未填歌曲ID时用）</label><input type="text" id="e-bgm" value="${escHtml(data.bgm||'')}" placeholder="音频直链(https://...)" style="margin-top:4px"></div>
     <p style="font-size:.75em;color:var(--text-muted);margin-top:2px">填歌曲ID后：首页音乐卡显示封面 + 歌词打字机。也可用直链作为兜底</p>
 
@@ -2076,6 +2077,10 @@ function showAdminPanel(){
   if(fxClick)fxClick.addEventListener('change',e=>{localStorage.setItem('xiaoaijiang-fx-click',e.target.checked?'1':'0');});
   const fxCursor=document.getElementById('fx-cursor');
   if(fxCursor)fxCursor.addEventListener('change',e=>{localStorage.setItem('xiaoaijiang-fx-cursor',e.target.checked?'1':'0');applyCursorPref();});
+  const eMusicIds=document.getElementById('e-music-ids');
+  if(eMusicIds)eMusicIds.addEventListener('input',()=>{renderMusicIdOrder();clearTimeout(_mioDebounce);_mioDebounce=setTimeout(fetchMusicOrderNames,400);});
+  renderMusicIdOrder();
+  fetchMusicOrderNames();
 
   document.getElementById('admin-overlay').classList.add('show');
 
@@ -2101,6 +2106,49 @@ document.getElementById('wallpaper-video').onchange=function(e){
 };
 function deleteVideo(i){if(!confirm('删除？'))return;data.wallpaper.videos.splice(i,1);if(!data.wallpaper.videos.length)data.wallpaper.type='image';saveData();showAdminPanel();toast('已删除','info');}
 function moveVideo(i,dir){const v=data.wallpaper.videos;const j=i+dir;if(j<0||j>=v.length)return;[v[i],v[j]]=[v[j],v[i]];saveData();showAdminPanel();}
+
+// 音乐歌单顺序调整（管理面板）
+const _musicNameCache={};
+let _mioDebounce=null,_mioSaveTimer=null;
+function musicIdList(){const v=document.getElementById('e-music-ids');return v?(v.value.split(',').map(s=>s.trim()).filter(Boolean)):[];}
+function setMusicIdList(ids){const v=document.getElementById('e-music-ids');if(v)v.value=ids.join(',');}
+function renderMusicIdOrder(){
+  const box=document.getElementById('music-id-order');
+  if(!box)return;
+  const ids=musicIdList();
+  box.innerHTML=ids.length?ids.map((id,i)=>`
+    <div class="mio-row" data-mio="${i}" style="padding:5px 8px;background:var(--astral-elevated);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:6px">
+      <span style="font-size:.72em;color:var(--text-secondary);white-space:nowrap">#${i+1}</span>
+      <span class="mio-name" data-mio-id="${escHtml(id)}" style="flex:1;min-width:0;font-size:.78em;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(_musicNameCache[id]||'加载歌名中...')}</span>
+      <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.7em" onclick="moveMusicId(${i},-1)" ${i===0?'disabled':''}>↑</button>
+      <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.7em" onclick="moveMusicId(${i},1)" ${i===ids.length-1?'disabled':''}>↓</button>
+    </div>`).join(''):'<p style="font-size:.78em;color:var(--text-secondary)">暂无歌曲，在上方输入歌曲ID</p>';
+}
+function moveMusicId(i,dir){
+  const ids=musicIdList();const j=i+dir;
+  if(j<0||j>=ids.length)return;
+  [ids[i],ids[j]]=[ids[j],ids[i]];
+  setMusicIdList(ids);
+  data.cloudMusicIds=ids.join(','); // 同步到 data；保存做防抖合并，避免连点竞态
+  renderMusicIdOrder();
+  clearTimeout(_mioSaveTimer);
+  _mioSaveTimer=setTimeout(()=>{saveData();toast('顺序已保存','success');},700);
+}
+function fetchMusicOrderNames(){
+  const ids=musicIdList();
+  ids.forEach(id=>{
+    if(_musicNameCache[id])return;
+    fetch('https://api.injahow.cn/meting/?server=netease&type=song&id='+id,{signal:AbortSignal.timeout(8000)})
+      .then(r=>r.ok?r.json():null).catch(()=>null)
+      .then(res=>{
+        const s=(Array.isArray(res)?res[0]:res)||{};
+        _musicNameCache[id]=((s.name||s.title||'')+' - '+(s.artist||s.author||'未知歌手')).trim();
+        if(_musicNameCache[id]===' - '||_musicNameCache[id]==='')_musicNameCache[id]='(未知歌名)';
+        const box=document.getElementById('music-id-order');
+        if(box){const el=box.querySelector('.mio-name[data-mio-id="'+id+'"]');if(el)el.textContent=_musicNameCache[id];}
+      }).catch(()=>{_musicNameCache[id]='ID '+id;});
+  });
+}
 
 // Save / Module / Portfolio / Reset
 function saveAdmin(){
