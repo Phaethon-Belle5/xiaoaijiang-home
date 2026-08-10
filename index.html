@@ -788,7 +788,7 @@ const DEFAULT_DATA={
   modules:[{id:"mod_1781362237420",title:"个人成就",icon:"🏆",text:"🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2019年COVID幸存者\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人\n🏆蜜雪冰城大雪人\n🏆家里蹲大学优秀毕业生\n🏆国家绝密资料使用者\n🏆百亿项目合作者"},{id:"mod_1781448443500",title:"爱好",icon:"",text:"华山、恒山、衡山、泰山\n南宫山、岳麓山、武功山\n希望未来能看遍名川大山。"}],
   contact:{email:"2918762608@qq.com",wechat:"ZYH2918762608",other:""},
   bgm:"",
-  cloudMusicIds:"494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373",
+  cloudMusicIds:"1487502186,06347677,1461262038,2100334024,1492276419,1818031620,2755332551,3343287820,2666660479,2657833355,494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373",
   navItems:[{id:"home",label:"首页"},{id:"content",label:"内容"},{id:"memos",label:"说说"},{id:"gallery",label:"映像馆"},{id:"contact",label:"联系"}],
   content:{
     slide1Eyebrow:"Fantasy Realm", slide1Cta:"探索世界", slide1Bg:"",
@@ -2142,8 +2142,8 @@ function fetchMusicOrderNames(){
       .then(r=>r.ok?r.json():null).catch(()=>null)
       .then(res=>{
         const s=(Array.isArray(res)?res[0]:res)||{};
-        _musicNameCache[id]=((s.name||s.title||'')+' - '+(s.artist||s.author||'未知歌手')).trim();
-        if(_musicNameCache[id]===' - '||_musicNameCache[id]==='')_musicNameCache[id]='(未知歌名)';
+        const nm=(s.name||s.title||'').trim(),ar=(s.artist||s.author||'').trim();
+        _musicNameCache[id]=(nm||ar)?((nm||'未知歌曲')+(ar?' - '+ar:'')):('(无法解析，ID '+id+')');
         const box=document.getElementById('music-id-order');
         if(box){const el=box.querySelector('.mio-name[data-mio-id="'+id+'"]');if(el)el.textContent=_musicNameCache[id];}
       }).catch(()=>{_musicNameCache[id]='ID '+id;});
