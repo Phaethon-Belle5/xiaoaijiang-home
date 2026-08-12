@@ -35,7 +35,7 @@
   --gold:#D4A843;--gold-bright:#E8C456;--gold-pale:#B8943A;--gold-glow:rgba(212,168,67,0.25);
   --magic:#9075D9;--magic-glow:rgba(144,117,217,0.2);
   --crimson:#A82D3F;--crimson-hover:#C23A4F;
-  --text-primary:#E8E2D9;--text-secondary:#A09888;--text-muted:#6B6458;
+  --text-primary:#E8E2D9;--text-secondary:#A09888;--text-muted:#817769;
   --glass-bg:rgba(17,22,42,0.75);--glass-border:rgba(255,255,255,0.06);
   --surface-border:rgba(255,255,255,0.06);--surface-border-strong:rgba(255,255,255,0.1);
   --radius-sm:6px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-pill:9999px;
@@ -62,7 +62,7 @@
   --void:#F5F0E8; --astral:#FFFFFF; --astral-elevated:#FFFFFF; --astral-surface:#F2E8D5;
   --parchment:#F2E8D5; --parchment-warm:#EDE0C8; --parchment-dark:#D4C4A2; --parchment-border:#C4B08A;
   --ink:#2D2418; --ink-muted:#5C4E3A; --ink-faint:#8A7B65;
-  --text-primary:#1C2342; --text-secondary:#5C4E3A; --text-muted:#8A7B65;
+  --text-primary:#1C2342; --text-secondary:#5C4E3A; --text-muted:#6B5D49;
   --glass-bg:rgba(255,255,255,0.55); --glass-border:rgba(0,0,0,0.08);
   --surface-border:rgba(0,0,0,0.08); --surface-border-strong:rgba(0,0,0,0.14);
   --shadow-card:0 4px 24px rgba(31,38,60,0.10); --shadow-card-hover:0 8px 40px rgba(31,38,60,0.16);
@@ -80,6 +80,10 @@
 [data-theme="light"] #admin-panel .admin-group input[type="text"],[data-theme="light"] #admin-panel .admin-group textarea,[data-theme="light"] #admin-panel .admin-group input[type="url"],[data-theme="light"] #admin-panel .admin-group input[type="color"],[data-theme="light"] #admin-panel .admin-group select,[data-theme="light"] #login-box input{background:#f7f5f0;color:#333;border-color:#ddd}
 [data-theme="light"] #admin-panel .wp-list-item{background:#f7f5f0}
 [data-theme="light"] #admin-panel .wp-list-actions button{background:#f0ede6;border-color:#ddd;color:#555}
+[data-theme="light"] #admin-panel .admin-tab{background:#f0ede6;border-color:#ddd;color:#555}
+[data-theme="light"] #admin-panel .admin-tab:hover{color:#1C2342;border-color:#bbb;background:#eae6dd}
+[data-theme="light"] #admin-panel .admin-tab.active{background:var(--gold);color:#1a1a1a;border-color:var(--gold)}
+[data-theme="light"] #admin-panel .admin-btn-row{background:#fff;border-top-color:#ddd}
 [data-theme="light"] .slide-cta:hover,[data-theme="light"] .glass-btn:hover{background:rgba(0,0,0,0.08)}
 [data-theme="light"] .carousel-arrow{background:rgba(255,255,255,0.5);border-color:rgba(0,0,0,0.12)}
 [data-theme="light"] .carousel-arrow:hover{background:rgba(255,255,255,0.8);border-color:var(--gold);color:var(--gold)}
@@ -124,6 +128,7 @@
 /* 地图相册 */
 .map-wrap{max-width:var(--container-max);margin:0 auto;padding:var(--space-6);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-card)}
 #china-map{width:100%;height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:rgba(8,12,22,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow-card)}
+.map-hint{color:var(--text-secondary);font-size:.9em;margin:var(--space-2) 0 var(--space-5);opacity:.85}
 .map-city-panel{display:none;margin-top:var(--space-8)}
 .map-city-panel.show{display:block;animation:viewIn .4s var(--ease-out)}
 .map-city-head{display:flex;align-items:baseline;gap:var(--space-3);margin-bottom:var(--space-5)}
@@ -142,6 +147,8 @@
 html{scroll-behavior:smooth;overflow-x:hidden}
 body{font-family:var(--font-body);color:var(--wf-body);background:var(--wf-canvas);min-height:100vh;line-height:1.75;font-size:16px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 /* ---- Splash Screen ---- */
+.skip-link{position:absolute;left:-9999px;top:0;z-index:200000;padding:10px 18px;background:var(--gold);color:var(--void);border-radius:0 0 8px 0;font-weight:600}
+.skip-link:focus{left:0}
 #splash-overlay{position:fixed;inset:0;z-index:100000;background:#0B0E14;display:flex;align-items:center;justify-content:center;transition:opacity 0.8s ease,visibility 0.8s ease}
 #splash-overlay.fade-out{opacity:0;visibility:hidden;pointer-events:none}
 #splash-video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
@@ -204,10 +211,10 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;color:inhe
 @keyframes bgDrift{0%{transform:scale(1.05) translate(0,0)}50%{transform:scale(1.08) translate(-1%,-1%)}100%{transform:scale(1.05) translate(0,0)}}
 @keyframes blurIn{from{filter:blur(12px);opacity:0}to{filter:blur(0);opacity:1}}
 @keyframes shinySweep{0%{background-position:200% 0}100%{background-position:-200% 0}}
-h1,h2,h3,h4,p,.slide-eyebrow,.slide-bio,.card-text,.card-heading,.header-desc,.footer-tagline,.footer-link,.pill-nav-item,.empty-text,.t-date,.t-author,.t-text,.portfolio-title,.portfolio-link,.g-cap-text,.g-cap-date,.contact-item{background:linear-gradient(110deg,var(--grad-a) 30%,var(--grad-b) 48%,var(--grad-b) 52%,var(--grad-a) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:none!important}
+h1,h2,h3,h4,.card-heading,.portfolio-title{background:linear-gradient(110deg,var(--grad-a) 30%,var(--grad-b) 48%,var(--grad-b) 52%,var(--grad-a) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:none!important}
 .shiny-text{animation:none!important;display:inline-block}
 .shiny-text-gold{animation:none!important;display:inline-block}
-button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-brand,.footer-logo,.nav-brand-star,.parchment-card,.parchment-card *,.bento-parchment,.bento-parchment *,.news-card,.news-card *,.testimonial-card,.testimonial-card *,.contact-card,.contact-card *,.dark-card,.dark-card *,.bento-dark,.bento-dark *{-webkit-text-fill-color:initial!important;background:initial!important}
+button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-brand,.footer-logo,.nav-brand-star,.parchment-card,.parchment-card *,.bento-parchment,.bento-parchment *,.news-card,.news-card *,.testimonial-card,.testimonial-card *,.contact-card,.contact-card *,.dark-card,.dark-card *,.bento-dark,.bento-dark *{-webkit-text-fill-color:initial!important;background-clip:border-box!important}
 .reveal{opacity:0;transition:opacity 0.7s var(--ease-out),transform 0.7s var(--ease-out)}
 .reveal-up{transform:translateY(28px)}.reveal-left{transform:translateX(-20px)}.reveal-right{transform:translateX(20px)}.reveal-scale{transform:scale(0.92)}
 .reveal-left{transform:translateX(-24px)}
@@ -220,7 +227,8 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .carousel-slide.active .slide-eyebrow{animation:heroReveal 0.8s .2s var(--ease-out) both}
 .carousel-slide.active .slide-headline{animation:heroReveal 0.8s .35s var(--ease-out) both}
 .carousel-slide.active .slide-bio{animation:heroReveal 0.8s .5s var(--ease-out) both}
-.carousel-slide.active .slide-cta{animation:heroReveal 0.8s .65s var(--ease-out) both;animation:pulse 2.5s 1.5s ease-out infinite}
+.carousel-slide.active .slide-cta{animation:heroReveal 0.8s .65s var(--ease-out) both}
+.carousel-slide.active .slide-cta:hover{animation:pulse 2.5s 1.5s ease-out infinite}
 .carousel-slide.active .slide-avatar{animation:heroReveal 0.8s .1s var(--ease-out) both}
 .carousel-slide.active .slide-bg{animation:bgDrift 12s ease-in-out infinite}
 .star-corners:hover::before,.star-corners:hover::after,.star-corners-4:hover::before,.star-corners-4:hover::after{animation:starTwinkle 2s ease-in-out infinite}
@@ -276,6 +284,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .carousel-slide .slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(0.45);transform:scale(1.05);transition:transform 8s ease}
 .carousel-slide.active .slide-bg{transform:scale(1)}
 .carousel-slide .slide-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(255,255,255,0.3) 100%),linear-gradient(to top,var(--wf-canvas) 0%,transparent 40%)}
+.carousel-slide[data-index="0"] .slide-vignette{background:radial-gradient(ellipse at 28% 38%,rgba(144,117,217,0.22),transparent 60%),linear-gradient(to top,var(--wf-canvas) 0%,transparent 40%)}
+.carousel-slide[data-index="1"] .slide-vignette{background:radial-gradient(ellipse at 72% 26%,rgba(212,168,67,0.20),transparent 60%),linear-gradient(to top,var(--wf-canvas) 0%,transparent 40%)}
+.carousel-slide[data-index="2"] .slide-vignette{background:radial-gradient(ellipse at 50% 80%,rgba(168,45,63,0.18),transparent 60%),linear-gradient(to top,var(--wf-canvas) 0%,transparent 40%)}
 .carousel-slide .slide-content{position:relative;z-index:2;text-align:center;max-width:720px;padding:var(--space-8) var(--space-10);background:rgba(10,16,30,0.35);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.14);border-radius:var(--radius-xl);box-shadow:var(--shadow-card)}
 [data-theme="light"] .carousel-slide .slide-content{background:rgba(255,255,255,0.35);border:1px solid rgba(0,0,0,0.08)}
 .slide-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto var(--space-5);border:3px solid var(--gold);box-shadow:0 0 40px var(--gold-glow);cursor:pointer;transition:transform 0.3s}
@@ -421,7 +432,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .music-vol{flex:1;display:flex;align-items:center;gap:6px;color:var(--text-muted);min-width:0}
 .music-vol input{flex:1;min-width:0;accent-color:var(--gold);height:4px}
 /* 桌宠 */
-.pet-container{position:fixed;bottom:10px;right:10px;z-index:996;display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none}
+.pet-container{position:fixed;bottom:100px;left:12px;z-index:996;display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none}
 .pet-img{width:120px;height:auto;display:block;pointer-events:none;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.45))}
 .pet-bubble{position:relative;width:210px;margin-bottom:4px;display:none;transform-origin:bottom center}
 .pet-bubble.show{display:block;animation:bubbleIn .3s var(--ease-out)}
@@ -480,7 +491,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 #wp-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85)}
 #wp-stage .wp-img.on{opacity:1}
-.wp-controls{position:fixed;bottom:28px;right:24px;z-index:998;display:flex;gap:6px;align-items:center}
+.wp-controls{position:fixed;bottom:84px;right:150px;z-index:998;display:flex;gap:6px;align-items:center}
 .wp-dot{width:9px;height:9px;border-radius:50%;background:rgba(212,168,67,0.35);cursor:pointer;transition:all 0.2s}
 .wp-dot.on,.wp-dot:hover{background:var(--gold);transform:scale(1.3)}
 .wp-video-toggle{width:26px;height:26px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s}
@@ -489,13 +500,21 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 /* ---- Admin Panel (Dark) ---- */
 #admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;display:none;align-items:center;justify-content:center}
 #admin-overlay.show{display:flex}
-#admin-panel{background:#1a1a1a;border:1px solid #333;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);padding:var(--space-8) var(--space-8);max-width:620px;width:94vw;max-height:88vh;overflow-y:auto;z-index:9999;color:#e0e0e0}
-#admin-panel h3{font-family:var(--font-display);font-size:0.95em;font-weight:600;margin-bottom:14px;margin-top:24px;color:#fff;letter-spacing:0.04em}
-#admin-panel h3:first-child{margin-top:0}
+#admin-panel{background:#1a1a1a;border:1px solid #333;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);max-width:640px;width:94vw;max-height:88vh;z-index:9999;color:#e0e0e0;display:flex;flex-direction:column;overflow:hidden}
+#admin-panel h3{font-family:var(--font-display);font-size:0.95em;font-weight:600;color:#fff;letter-spacing:0.04em}
+.admin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 20px 0}
+.admin-head h3{margin:0}
+.admin-tabs{display:flex;gap:6px;padding:14px 20px 0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;flex-shrink:0}
+.admin-tab{flex-shrink:0;padding:7px 14px;border-radius:6px;font-size:.78em;color:#bbb;background:#2a2a2a;border:1px solid #3a3a3a;cursor:pointer;user-select:none;white-space:nowrap;transition:all .15s;font-family:var(--font-body)}
+.admin-tab:hover{color:#fff;border-color:#555}
+.admin-tab.active{background:var(--gold);color:#1a1a1a;border-color:var(--gold);font-weight:600}
+.admin-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 20px}
+.tab-page{display:none}
+.tab-page.active{display:block}
 .admin-group label{display:block;font-size:0.74em;color:#999;margin-bottom:4px;letter-spacing:.02em}
 .admin-group input[type="text"],.admin-group textarea,.admin-group input[type="url"],.admin-group input[type="color"],.admin-group select{width:100%;padding:9px 12px;border:1px solid #444;border-radius:4px;font-family:var(--font-body);font-size:.85em;color:#e0e0e0;background:#2a2a2a;outline:none;transition:border-color 0.2s}
 .admin-group input:focus,.admin-group textarea:focus,.admin-group select:focus{border-color:#666}
-.admin-btn-row{display:flex;gap:8px;margin-top:24px;justify-content:flex-end;flex-wrap:wrap}
+.admin-btn-row{display:flex;gap:8px;padding:14px 20px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid #333;background:#1a1a1a;flex-shrink:0}
 
 /* Wallpaper list items */
 .wp-list{margin-bottom:12px}
@@ -550,6 +569,8 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   .carousel-arrow{width:36px;height:36px;font-size:0.9em}
   .carousel-arrow.prev{left:var(--space-3)}.carousel-arrow.next{right:var(--space-3)}
   .wp-controls{bottom:20px;right:60px}
+  .admin-tabs{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
+  .admin-tab{padding:6px 10px;font-size:.72em}
   #back-to-top{bottom:140px;right:16px}
   #admin-entry-btn{bottom:20px;left:14px}
   .form-row{flex-direction:column}
@@ -558,6 +579,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">跳到主要内容</a>
 
 <!-- Splash Screen -->
 <div id="splash-overlay">
@@ -686,6 +708,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   var video=document.getElementById('splash-video');
   var skip=document.getElementById('splash-skip');
   if(!overlay||!video)return;
+  try{if(sessionStorage.getItem('splashSeen')){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);return;}sessionStorage.setItem('splashSeen','1');}catch(e){}
   var done=false;
   function hide(){
     if(done)return;done=true;
@@ -732,15 +755,31 @@ function startCarousel(){
   if(currentView!=='home'||carouselTimer)return;
   if(!document.querySelector('.carousel-slide'))return;
   carouselTimer=setInterval(carouselNext,CAROUSEL_INTERVAL);
+  bindCarouselPause();
 }
 function stopCarousel(){
   if(carouselTimer){clearInterval(carouselTimer);carouselTimer=null;}
+}
+function resumeCarousel(){if(currentView==='home'&&!carouselTimer&&document.querySelector('.carousel-slide'))startCarousel();}
+function bindCarouselPause(){
+  if(!bindCarouselPause._done){
+    bindCarouselPause._done=true;
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCarousel();else setTimeout(resumeCarousel,400);});
+  }
+  // renderMain 每次重建 track 元素，须按引用重绑（不能在旧元素上永久绑定）
+  const tr=document.getElementById('carousel-track');
+  if(!tr||tr===bindCarouselPause._track)return;
+  bindCarouselPause._track=tr;
+  tr.addEventListener('mouseenter',()=>stopCarousel());
+  tr.addEventListener('mouseleave',()=>setTimeout(resumeCarousel,500));
+  tr.addEventListener('focusin',()=>stopCarousel());
+  tr.addEventListener('focusout',()=>setTimeout(resumeCarousel,500));
 }
 function renderViewState(){
   document.querySelectorAll('#main .view').forEach(v=>v.classList.toggle('active',v.dataset.view===currentView));
   document.querySelectorAll('.pill-nav-item').forEach(l=>l.classList.toggle('on',l.dataset.nav===currentView));
   const on=document.querySelector('.pill-nav-item.on');if(on)updatePill(on);
-  if(currentView==='home')startCarousel();else stopCarousel();
+  if(currentView==='home'){startCarousel();bindCarouselPause();}else stopCarousel();
   initReveal();
   // 立即触发当前视口内 reveal（确定性，不依赖 IO 时序）
   document.querySelectorAll('#main .view.active .reveal').forEach(el=>{
@@ -788,13 +827,14 @@ const DEFAULT_DATA={
   modules:[{id:"mod_1781362237420",title:"个人成就",icon:"🏆",text:"🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2019年COVID幸存者\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人\n🏆蜜雪冰城大雪人\n🏆家里蹲大学优秀毕业生\n🏆国家绝密资料使用者\n🏆百亿项目合作者"},{id:"mod_1781448443500",title:"爱好",icon:"",text:"华山、恒山、衡山、泰山\n南宫山、岳麓山、武功山\n希望未来能看遍名川大山。"}],
   contact:{email:"2918762608@qq.com",wechat:"ZYH2918762608",other:""},
   bgm:"",
-  cloudMusicIds:"1487502186,06347677,1461262038,2100334024,1492276419,1818031620,2755332551,3343287820,2666660479,2657833355,494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373",
+  cloudMusicIds:"1487502186,06347677,1461262038,2100334024,1492276419,1818031620,2755332551,3343287820,2666660479,2657833355,494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373,2639322684,3411999848,2155423467,2155423468,2756019200,2014336709,2729422409,1973296374,2071188549,1951702375,3400682250",
   navItems:[{id:"home",label:"首页"},{id:"content",label:"内容"},{id:"memos",label:"说说"},{id:"gallery",label:"映像馆"},{id:"contact",label:"联系"}],
   content:{
     slide1Eyebrow:"Fantasy Realm", slide1Cta:"探索世界", slide1Bg:"",
     slide2Eyebrow:"About the Realm", slide2Headline:"关于这个世界", slide2Cta:"了解更多", slide2Bg:"",
     slide3Eyebrow:"Resume", slide3Headline:"小小简历", slide3Cta:"Learn more", slide3Bg:"",
     contentEyebrow:"Content Realm", contentHeadline:"内容分区", contentDesc:"探索幻想世界的每一个角落，发现散落的记忆与珍宝。",
+    portfolioEyebrow:"Featured Works", portfolioHeadline:"个人精选",
     galleryEyebrow:"Photo Collection", galleryHeadline:"映像馆", galleryDesc:"用镜头捕捉旅途中的光影瞬间，每一帧都是一个故事。",
     contactEyebrow:"Get in Touch", contactHeadline:"联系方式",
     footerTagline:"一个热爱生活的灵魂，在这片幻想自留地记录星辰与冒险。",
@@ -1133,7 +1173,7 @@ function renderMain(){
          ============================================================ -->
     <div class="view" data-view="home" id="view-home">
     <section id="carousel-section">
-      <div class="carousel-track" id="carousel-track">
+      <div class="carousel-track" id="carousel-track" role="region" aria-roledescription="轮播" aria-label="首页轮播">
         <!-- Slide 1: Profile Hero -->
         <div class="carousel-slide active" data-index="0">
           <div class="slide-vignette"></div>
@@ -1152,17 +1192,17 @@ function renderMain(){
             <p class="slide-eyebrow">${escHtml(c.slide2Eyebrow||'About the Realm')}</p>
             <h1 class="slide-headline">${escHtml(c.slide2Headline||'关于这个世界')}</h1>
             <p class="slide-bio">${escHtml(p.bio)}</p>
-            <button class="slide-cta" onclick="navigateTo('content')">${escHtml(c.slide2Cta||'了解更多')} <span style="font-size:1.1em">→</span></button>
+            <button class="slide-cta" onclick="navigateTo('memos')">${escHtml(c.slide2Cta||'逛逛说说')} <span style="font-size:1.1em">→</span></button>
           </div>
         </div>
         <!-- Slide 3: About text -->
         <div class="carousel-slide" data-index="2">
           <div class="slide-vignette"></div>
           <div class="slide-content">
-            <p class="slide-eyebrow">${escHtml(c.slide3Eyebrow||'Chronicle')}</p>
+            <p class="slide-eyebrow">${escHtml(c.slide3Eyebrow||'冒险编年史')}</p>
             <h1 class="slide-headline">${escHtml(c.slide3Headline||'冒险编年史')}</h1>
             <p class="slide-bio">${escHtml((data.about?.text||'').substring(0,150))}${(data.about?.text||'').length>150?'...':''}</p>
-            <button class="slide-cta" onclick="navigateTo('content')">${escHtml(c.slide3Cta||'了解更多')} <span style="font-size:1.1em">→</span></button>
+            <button class="slide-cta" onclick="navigateTo('gallery')">${escHtml(c.slide3Cta||'去看映像馆')} <span style="font-size:1.1em">→</span></button>
           </div>
         </div>
       </div>
@@ -1228,8 +1268,8 @@ function renderMain(){
       ${(data.portfolio||[]).length?`
       <div id="portfolio-section" style="scroll-margin-top:var(--nav-h)">
 	      <div class="section-header reveal" style="margin-top:var(--space-16)">
-        <p class="header-eyebrow">${escHtml(c.galleryEyebrow||'Gallery')}</p>
-        <h2 class="header-headline" style="font-size:clamp(2rem,4vw,3rem);font-weight:600">个人精选</h2>
+        <p class="header-eyebrow">${escHtml(c.portfolioEyebrow||'Featured Works')}</p>
+        <h2 class="header-headline" style="font-size:clamp(2rem,4vw,3rem);font-weight:600">${escHtml(c.portfolioHeadline||'个人精选')}</h2>
       </div>
       <div class="section-divider"></div>
 	      <div class="portfolio-grid">
@@ -1284,6 +1324,7 @@ function renderMain(){
       <div class="section-divider"></div>
       ${(data.gallery||[]).length?`
       <button class="gravity-btn reveal" onclick="openGravityGallery()"><span style="font-size:1.2em">🧲</span> 开启引力相册 · 拖拽抛掷</button>
+      <p class="map-hint reveal">点击地图上的发光城市，查看在那座城市拍下的照片</p>
       <div class="map-wrap">
         <div id="china-map" class="reveal"></div>
         <div id="city-photo-panel" class="map-city-panel"></div>
@@ -1348,9 +1389,6 @@ function fallbackAvatar(){return'data:image/svg+xml,'+encodeURIComponent('<svg x
 // ============================================================
 // CAROUSEL
 // ============================================================
-var currentSlide=0,totalSlides=0,carouselTimer=null;
-var CAROUSEL_INTERVAL=6000;
-
 function buildCarouselDots(){
   totalSlides=document.querySelectorAll('.carousel-slide').length;
   if(isNaN(currentSlide))currentSlide=0;
@@ -1376,6 +1414,7 @@ function goToSlide(index){
   currentSlide=((index%totalSlides)+totalSlides)%totalSlides;
   slides[currentSlide]?.classList.add('active');
   if(dots[currentSlide])dots[currentSlide].classList.add('active');
+  slides.forEach((s,i)=>s.setAttribute('aria-hidden',String(i!==currentSlide)));
 }
 function carouselNext(){goToSlide(currentSlide+1);resetCarouselTimer();}
 function carouselPrev(){goToSlide(currentSlide-1);resetCarouselTimer();}
@@ -1631,7 +1670,7 @@ function showCityPhotos(city){
     city.photos.map(p=>'<div class="map-photo reveal" onclick="openLightbox('+p.index+')" role="button" tabindex="0"><img src="'+p.image+'" alt="" loading="lazy"><span class="map-photo-cap">'+escHtml(p.caption||'')+'</span></div>').join('')+
     '</div>';
   panel.classList.add('show');
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  panel.scrollIntoView({behavior:'smooth',block:'center'});
   initReveal();
 }
 function renderMapUnlocated(){
@@ -1866,7 +1905,7 @@ let lbIndex=0;
 function openLightbox(i){
   lbIndex=i;const items=data.gallery||[];if(!items.length)return;
   const item=items[lbIndex];
-  const img=document.getElementById('lightbox-img');if(img)img.src=item.image||'';
+  const img=document.getElementById('lightbox-img');if(img){img.src=item.image||'';img.alt=item.caption||item.location||'照片';}
   const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=item.caption||'';
   document.getElementById('lightbox')?.classList.add('show');
 }
@@ -1875,7 +1914,7 @@ function lightboxNav(dir){
   const items=data.gallery||[];if(!items.length)return;
   lbIndex=(lbIndex+dir+items.length)%items.length;
   const item=items[lbIndex];
-  const img=document.getElementById('lightbox-img');if(img)img.src=item.image||'';
+  const img=document.getElementById('lightbox-img');if(img){img.src=item.image||'';img.alt=item.caption||item.location||'照片';}
   const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=item.caption||'';
 }
 document.addEventListener('keydown',e=>{
@@ -1915,13 +1954,29 @@ function closeLogin(){document.getElementById('login-overlay').classList.remove(
 function showAdminPanel(){
   const p=data.profile,w=data.wallpaper,c=data.content||{},panel=document.getElementById('admin-panel');
   panel.innerHTML=`
-    <h3>管理面板 <button class="btn btn-ghost btn-sm" onclick="logout()" style="float:right;font-size:.7em">退出</button> <button class="btn btn-ghost btn-sm" onclick="copySyncLink()" style="float:right;font-size:.7em;margin-right:6px">复制同步链接</button></h3>
+    <div class="admin-head"><h3>管理面板</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="copySyncLink()" style="font-size:.7em">复制同步链接</button><button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:.7em">退出</button></div></div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-atab="profile">资料</div>
+      <div class="admin-tab" data-atab="wallpaper">壁纸</div>
+      <div class="admin-tab" data-atab="music">音乐</div>
+      <div class="admin-tab" data-atab="fx">特效</div>
+      <div class="admin-tab" data-atab="content">内容</div>
+      <div class="admin-tab" data-atab="memos">说说</div>
+      <div class="admin-tab" data-atab="works">作品</div>
+      <div class="admin-tab" data-atab="photos">照片</div>
+      <div class="admin-tab" data-atab="copy">文案</div>
+      <div class="admin-tab" data-atab="contact">联系</div>
+    </div>
+    <div class="admin-body">
+    <div class="tab-page active" data-apage="profile">
     <div class="admin-group"><label>头像</label><button class="btn btn-ghost" style="display:block;width:100%" onclick="document.getElementById('avatar-upload').click()">上传头像</button></div>
     <div class="admin-group"><label>名字</label><input type="text" id="e-name" value="${escHtml(p.name)}"></div>
     <div class="admin-group"><label>标语</label><input type="text" id="e-tagline" value="${escHtml(p.tagline)}"></div>
     <div class="admin-group"><label>简介</label><textarea id="e-bio">${escHtml(p.bio)}</textarea></div>
     <div class="admin-group"><label>主题色</label><input type="color" id="e-accent" value="${data.accent}"></div>
 
+    </div>
+    <div class="tab-page" data-apage="wallpaper">
     <h3>壁纸设置</h3>
     <div class="admin-group"><label>类型</label><select id="e-wp-type"><option value="image" ${w.type==='image'?'selected':''}>图片轮播</option><option value="video" ${w.type==='video'?'selected':''}>视频背景 (MP4)</option></select></div>
     <div class="admin-group"><label>上传 MP4 视频 (最大${MAX_VIDEO_MB}MB)</label><button class="btn btn-ghost" style="display:block;width:100%" onclick="uploadVideo()">选择 MP4 文件</button></div>
@@ -1959,16 +2014,22 @@ function showAdminPanel(){
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin-bottom:4px" onclick="document.getElementById('wallpaper-upload').click()">上传本地图片</button>
     <div class="admin-group"><label>轮播间隔（秒）</label><input type="text" id="e-wp-int" value="${w.interval}"></div>
 
+    </div>
+    <div class="tab-page" data-apage="music">
     <h3>音乐播放器</h3>
     <div class="admin-group"><label>网易云歌曲ID（多个用英文逗号分隔）</label><input type="text" id="e-music-ids" value="${escHtml(data.cloudMusicIds||'')}" placeholder="例如 1901371647,1387090681"></div>
     <div class="admin-group"><label>调整歌曲顺序（↑↓ 上下移动，自动识别歌名）</label><div id="music-id-order"></div></div>
     <div class="admin-group"><label>背景音乐直链（可选，未填歌曲ID时用）</label><input type="text" id="e-bgm" value="${escHtml(data.bgm||'')}" placeholder="音频直链(https://...)" style="margin-top:4px"></div>
     <p style="font-size:.75em;color:var(--text-muted);margin-top:2px">填歌曲ID后：首页音乐卡显示封面 + 歌词打字机。也可用直链作为兜底</p>
 
+    </div>
+    <div class="tab-page" data-apage="fx">
     <h3>氛围特效</h3>
     <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">点击迸发粒子</label><input type="checkbox" id="fx-click" ${localStorage.getItem('xiaoaijiang-fx-click')==='0'?'':'checked'}></div>
     <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">自定义光标</label><input type="checkbox" id="fx-cursor" ${localStorage.getItem('xiaoaijiang-fx-cursor')==='0'?'':'checked'}></div>
 
+    </div>
+    <div class="tab-page" data-apage="content">
     <h3>关于我</h3>
     <div class="admin-group"><label>内容</label><textarea id="e-about">${escHtml(data.about?.text||'')}</textarea></div>
 
@@ -1985,6 +2046,8 @@ function showAdminPanel(){
     `).join('')}
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addModule()">+ 添加模块</button>
 
+    </div>
+    <div class="tab-page" data-apage="memos">
     <h3>说说 (Memos)</h3>
     ${(data.memos||[]).map((m,i)=>`
       <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
@@ -1998,6 +2061,8 @@ function showAdminPanel(){
     `).join('')}
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addMemo()">+ 添加说说</button>
 
+    </div>
+    <div class="tab-page" data-apage="works">
     <h3>个人作品</h3>
     ${data.portfolio.map((item,i)=>`
       <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
@@ -2013,6 +2078,8 @@ function showAdminPanel(){
     `).join('')}
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addPortfolio()">+ 添加作品</button>
 
+    </div>
+    <div class="tab-page" data-apage="photos">
     <h3>映像馆（照片画廊）</h3>
     ${(data.gallery||[]).map((item,i)=>`
       <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
@@ -2028,6 +2095,8 @@ function showAdminPanel(){
     `).join('')}
     <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addGallery()">+ 添加照片</button>
 
+    </div>
+    <div class="tab-page" data-apage="copy">
     <h3>页面文案</h3>
     <div class="admin-group"><label>轮播第1张 - 眉题</label><input type="text" id="e-s1-eyebrow" value="${escHtml(c.slide1Eyebrow||'')}"></div>
     <div class="admin-group"><label>轮播第1张 - 按钮文字</label><input type="text" id="e-s1-cta" value="${escHtml(c.slide1Cta||'')}"></div>
@@ -2046,8 +2115,8 @@ function showAdminPanel(){
     <div class="admin-group"><label>内容分区 - 眉题</label><input type="text" id="e-sec-eyebrow" value="${escHtml(c.contentEyebrow||'')}"></div>
     <div class="admin-group"><label>内容分区 - 标题</label><input type="text" id="e-sec-headline" value="${escHtml(c.contentHeadline||'')}"></div>
     <div class="admin-group"><label>内容分区 - 描述</label><textarea id="e-sec-desc">${escHtml(c.contentDesc||'')}</textarea></div>
-    <div class="admin-group"><label>作品区 - 眉题</label><input type="text" id="e-gal-eyebrow" value="${escHtml(c.galleryEyebrow||'')}"></div>
-    <div class="admin-group"><label>作品区 - 标题</label><input type="text" id="e-gal-headline" value="${escHtml(c.galleryHeadline||'')}"></div>
+    <div class="admin-group"><label>作品区 - 眉题</label><input type="text" id="e-portfolio-eyebrow" value="${escHtml(c.portfolioEyebrow||'')}"></div>
+    <div class="admin-group"><label>作品区 - 标题</label><input type="text" id="e-portfolio-headline" value="${escHtml(c.portfolioHeadline||'')}"></div>
     <div class="admin-group"><label>联系区 - 眉题</label><input type="text" id="e-con-eyebrow" value="${escHtml(c.contactEyebrow||'')}"></div>
     <div class="admin-group"><label>联系区 - 标题</label><input type="text" id="e-con-headline" value="${escHtml(c.contactHeadline||'')}"></div>
     <div class="admin-group"><label>页脚标语</label><input type="text" id="e-footer-tagline" value="${escHtml(c.footerTagline||'')}"></div>
@@ -2056,11 +2125,15 @@ function showAdminPanel(){
     <div class="admin-group"><label>映像馆 - 标题</label><input type="text" id="e-gal-sec-headline" value="${escHtml(c.galleryHeadline||'')}"></div>
     <div class="admin-group"><label>映像馆 - 描述</label><textarea id="e-gal-sec-desc">${escHtml(c.galleryDesc||'')}</textarea></div>
 
+    </div>
+    <div class="tab-page" data-apage="contact">
     <h3>联系方式</h3>
     <div class="admin-group"><label>邮箱</label><input type="text" id="e-email" value="${escHtml(data.contact?.email||'')}"></div>
     <div class="admin-group"><label>微信</label><input type="text" id="e-wechat" value="${escHtml(data.contact?.wechat||'')}"></div>
     <div class="admin-group"><label>其他</label><textarea id="e-other">${escHtml(data.contact?.other||'')}</textarea></div>
 
+    </div>
+    </div>
     <div class="admin-btn-row">
       <button class="btn" onclick="saveAdmin()">保存</button>
       <button class="btn btn-ghost" onclick="closeAdmin()">取消</button>
@@ -2081,6 +2154,19 @@ function showAdminPanel(){
   if(eMusicIds)eMusicIds.addEventListener('input',()=>{renderMusicIdOrder();clearTimeout(_mioDebounce);_mioDebounce=setTimeout(fetchMusicOrderNames,400);});
   renderMusicIdOrder();
   fetchMusicOrderNames();
+
+  // Tabs 切换
+  const tabs=panel.querySelectorAll('.admin-tab');
+  const pages=panel.querySelectorAll('.tab-page');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      pages.forEach(pg=>pg.classList.remove('active'));
+      tab.classList.add('active');
+      const pg=panel.querySelector('.tab-page[data-apage="'+tab.dataset.atab+'"]');
+      if(pg)pg.classList.add('active');
+    });
+  });
 
   document.getElementById('admin-overlay').classList.add('show');
 
@@ -2179,8 +2265,8 @@ function saveAdmin(){
   data.content.contentEyebrow=document.getElementById('e-sec-eyebrow')?.value.trim()||'';
   data.content.contentHeadline=document.getElementById('e-sec-headline')?.value.trim()||'';
   data.content.contentDesc=document.getElementById('e-sec-desc')?.value.trim()||'';
-  data.content.galleryEyebrow=document.getElementById('e-gal-eyebrow')?.value.trim()||'';
-  data.content.galleryHeadline=document.getElementById('e-gal-headline')?.value.trim()||'';
+  data.content.portfolioEyebrow=document.getElementById('e-portfolio-eyebrow')?.value.trim()||'';
+  data.content.portfolioHeadline=document.getElementById('e-portfolio-headline')?.value.trim()||'';
   data.content.contactEyebrow=document.getElementById('e-con-eyebrow')?.value.trim()||'';
   data.content.contactHeadline=document.getElementById('e-con-headline')?.value.trim()||'';
   data.content.footerTagline=document.getElementById('e-footer-tagline')?.value.trim()||'';
@@ -2373,12 +2459,14 @@ setTimeout(async function(){
 <!-- Custom Cursor -->
 <script>
 function applyCursorPref(){
-  if(localStorage.getItem('xiaoaijiang-fx-cursor')==='0'){document.body.classList.remove('custom-cursor');}
+  const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(localStorage.getItem('xiaoaijiang-fx-cursor')==='0'||reduced){document.body.classList.remove('custom-cursor');}
   else if(window.matchMedia&&matchMedia('(pointer:fine)').matches){document.body.classList.add('custom-cursor');}
 }
 (function(){
   if(!window.matchMedia||!matchMedia('(pointer:fine)').matches)return;
   if(localStorage.getItem('xiaoaijiang-fx-cursor')==='0')return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   var dot=document.getElementById('cursor-dot'),ring=document.getElementById('cursor-ring');
   if(!dot||!ring)return;
   document.body.classList.add('custom-cursor');
