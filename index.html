@@ -17,9 +17,6 @@
 <link rel="preconnect" href="https://images.unsplash.com">
 <link rel="preconnect" href="https://picsum.photos">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Matter.js 物理引擎（引力相册用），jsdelivr 主源 + cdnjs 回退 -->
-<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
-<script>if(!window.Matter){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"><\/script>');}</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Person","name":"伶俜","url":"https://home.xiaoaijiang.cloud","description":"一个热爱生活的人。喜欢摄影、旅行、阅读和一切美好的事物。","knowsAbout":["摄影","旅行","阅读","音乐","编程"]}
 </script>
@@ -107,27 +104,9 @@
 .memo-card.pinned{border-color:rgba(212,168,67,0.45);box-shadow:0 0 26px var(--gold-glow)}
 .memo-text{font-size:0.95em;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;word-break:break-word}
 .memo-date{display:block;margin-top:var(--space-4);font-family:var(--font-mono);font-size:0.72em;color:var(--text-muted);text-align:right}
-/* 引力相册（Matter.js 物理） */
-.gravity-btn{display:inline-flex;align-items:center;gap:var(--space-2);margin:0 auto var(--space-12);padding:14px 34px;background:var(--glass-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-border);border-radius:var(--radius-pill);color:var(--text-primary);font-size:1em;cursor:pointer;transition:all .25s var(--ease-out);box-shadow:var(--shadow-card)}
-.gravity-btn:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
-.gravity-gallery-overlay{position:fixed;inset:0;z-index:10050;background:rgba(5,8,14,0.94);display:none;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
-.gravity-gallery-overlay.active{display:flex}
-.gravity-gallery-header{position:absolute;top:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 var(--space-8);z-index:2}
-.gravity-gallery-title{font-family:var(--font-display);font-size:1.15em;color:var(--gold-bright);letter-spacing:.06em}
-.gravity-gallery-close{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:1.1em;cursor:pointer;transition:all .2s}
-.gravity-gallery-close:hover{background:rgba(255,255,255,0.18);border-color:var(--gold);color:var(--gold)}
-#gravityCanvas{width:100%;height:100%;cursor:grab;touch-action:none}
-#gravityCanvas:active{cursor:grabbing}
-.gravity-gallery-frame{position:absolute;pointer-events:none;opacity:0;transition:opacity .5s}
-.gravity-gallery-frame .gf-corner{position:absolute;width:26px;height:26px;border:2px solid rgba(212,168,67,0.5)}
-.gravity-gallery-frame .gf-corner.tl{top:0;left:0;border-right:none;border-bottom:none;border-top-left-radius:10px}
-.gravity-gallery-frame .gf-corner.tr{top:0;right:0;border-left:none;border-bottom:none;border-top-right-radius:10px}
-.gravity-gallery-frame .gf-corner.bl{bottom:0;left:0;border-right:none;border-top:none;border-bottom-left-radius:10px}
-.gravity-gallery-frame .gf-corner.br{bottom:0;right:0;border-left:none;border-top:none;border-bottom-right-radius:10px}
-.gravity-gallery-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.5);font-size:.78em;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:2}
 /* 地图相册 */
 .map-wrap{max-width:var(--container-max);margin:0 auto;padding:var(--space-6);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-card)}
-#china-map{width:100%;height:520px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:rgba(8,12,22,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow-card)}
+#china-map{width:100%;height:680px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:rgba(8,12,22,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow-card)}
 .map-hint{color:var(--text-secondary);font-size:.9em;margin:var(--space-2) 0 var(--space-5);opacity:.85}
 .map-city-panel{display:none;margin-top:var(--space-8)}
 .map-city-panel.show{display:block;animation:viewIn .4s var(--ease-out)}
@@ -263,16 +242,18 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .nav-actions{display:flex;align-items:center;gap:4px}
 .nav-icon-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.05em;color:var(--text-secondary);transition:all 0.2s var(--ease-out)}
 .nav-icon-btn:hover{color:var(--wf-ink);background:rgba(0,0,0,0.04)}
+.nav-icon-btn .ic-sun{display:none}
+[data-theme="light"] .nav-icon-btn .ic-moon{display:none}
+[data-theme="light"] .nav-icon-btn .ic-sun{display:block}
 .nav-hamburger{display:none}
 
-/* Pill Nav */
-.pill-nav-wrap{position:relative;display:flex;align-items:center}
-.pill-nav-bg{position:absolute;top:2px;bottom:2px;left:0;width:60px;background:var(--wf-ink);border-radius:4px;transition:left 0.45s cubic-bezier(0.33,1,0.68,1),width 0.45s cubic-bezier(0.33,1,0.68,1);z-index:0}
-.pill-nav-bg.init{animation:pillSlideIn 0.6s cubic-bezier(0.33,1,0.68,1) both}
-@keyframes pillSlideIn{from{opacity:0;transform:scaleX(0.6)}to{opacity:1;transform:scaleX(1)}}
-.pill-nav-item{position:relative;z-index:1;padding:8px 18px;border-radius:var(--radius-pill);cursor:pointer;font-size:.82em;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:color 0.3s;color:var(--text-secondary);background:transparent;border:none;font-family:var(--font-body)}
+/* Pill Nav — 下划线高亮 */
+.pill-nav-wrap{position:relative;display:flex;align-items:center;gap:2px}
+.pill-nav-item{position:relative;padding:8px 16px;cursor:pointer;font-size:.82em;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:color .3s;color:var(--text-secondary);background:transparent;border:none;font-family:var(--font-body)}
+.pill-nav-item::after{content:'';position:absolute;left:16px;right:16px;bottom:3px;height:2px;border-radius:2px;background:var(--gold);transform:scaleX(0);transform-origin:center;transition:transform .3s var(--ease-out)}
 .pill-nav-item:hover{color:var(--text-primary)}
-.pill-nav-item.on{color:var(--wf-canvas);font-weight:600}
+.pill-nav-item.on{color:var(--text-primary);font-weight:600}
+.pill-nav-item.on::after{transform:scaleX(1)}
 
 /* ============================================================
    MODULE 2 — FULL-SCREEN CAROUSEL HERO
@@ -410,9 +391,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 #back-to-top{position:fixed;bottom:150px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
 /* 悬浮音乐播放器 */
 .music-float{position:fixed;bottom:12px;right:150px;z-index:995;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.music-fab{width:52px;height:52px;border-radius:50%;background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-border);box-shadow:var(--shadow-card);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s var(--ease-out);user-select:none}
-.music-fab:hover{border-color:var(--gold);transform:scale(1.06)}
-.music-fab .m-note{font-size:20px;color:var(--gold)}
+.music-fab{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold)}
+.music-fab:hover{transform:scale(1.08)}
+.music-fab .m-note{display:flex;align-items:center;justify-content:center;color:var(--gold)}
 .music-fab .m-eq{display:none;align-items:flex-end;gap:2px;height:18px}
 .music-fab.playing .m-note{display:none}
 .music-fab.playing .m-eq{display:flex}
@@ -426,9 +407,12 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .music-progress{height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;margin-bottom:10px;position:relative}
 .music-progress .bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));border-radius:3px;width:0%}
 .music-controls{display:flex;align-items:center;gap:8px}
-.music-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85em;transition:all .2s;flex-shrink:0}
-.music-btn:hover{border-color:var(--gold);color:var(--gold)}
-.music-btn.play{width:38px;height:38px;background:var(--gold);color:#0B0E14;border-color:transparent}
+.music-btn{width:32px;height:32px;border-radius:50%;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s;flex-shrink:0;background:transparent;border:none}
+.music-btn:hover{color:var(--gold)}
+.music-btn.play{width:40px;height:40px;color:var(--gold)}
+.music-btn.play .ic-pause{display:none}
+.music-btn.play.playing .ic-play{display:none}
+.music-btn.play.playing .ic-pause{display:block}
 .music-vol{flex:1;display:flex;align-items:center;gap:6px;color:var(--text-muted);min-width:0}
 .music-vol input{flex:1;min-width:0;accent-color:var(--gold);height:4px}
 /* 桌宠 */
@@ -469,9 +453,12 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .mc-progress{height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;margin-bottom:var(--space-5);position:relative}
 .mc-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-bright));border-radius:3px}
 .mc-controls{display:flex;align-items:center;gap:var(--space-4);justify-content:center}
-.mc-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95em;transition:all .2s}
-.mc-btn:hover{border-color:var(--gold);color:var(--gold)}
-.mc-btn.mc-play{width:52px;height:52px;background:var(--gold);color:#0B0E14;border-color:transparent;font-size:1.25em}
+.mc-btn{width:38px;height:38px;border-radius:50%;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s;background:transparent;border:none}
+.mc-btn:hover{color:var(--gold)}
+.mc-btn.mc-play{width:48px;height:48px;color:var(--gold)}
+.mc-btn.mc-play .ic-pause{display:none}
+.mc-btn.mc-play.playing .ic-play{display:none}
+.mc-btn.mc-play.playing .ic-pause{display:block}
 [data-theme="light"] .mc-progress{background:rgba(0,0,0,.12)}
 /* 自定义光标（仅指针设备） */
 @media (pointer:fine){
@@ -491,7 +478,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 #wp-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85)}
 #wp-stage .wp-img.on{opacity:1}
-.wp-controls{position:fixed;bottom:84px;right:150px;z-index:998;display:flex;gap:6px;align-items:center}
+.wp-controls{position:fixed;bottom:28px;right:24px;z-index:998;display:flex;gap:6px;align-items:center}
 .wp-dot{width:9px;height:9px;border-radius:50%;background:rgba(212,168,67,0.35);cursor:pointer;transition:all 0.2s}
 .wp-dot.on,.wp-dot:hover{background:var(--gold);transform:scale(1.3)}
 .wp-video-toggle{width:26px;height:26px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s}
@@ -575,7 +562,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   #admin-entry-btn{bottom:20px;left:14px}
   .form-row{flex-direction:column}
 }
-@media(min-width:769px){.pill-nav-wrap{display:flex!important}.pill-nav-wrap .pill-nav-bg{display:block}}
+@media(min-width:769px){.pill-nav-wrap{display:flex!important}}
 </style>
 </head>
 <body>
@@ -594,11 +581,12 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 <header id="topnav">
   <div class="nav-brand" onclick="navigateTo('home')"><span class="nav-brand-star">✦</span>伶俜</div>
   <div class="nav-spacer"></div>
-  <nav class="pill-nav-wrap" id="nav-links" aria-label="主导航">
-    <div class="pill-nav-bg init" id="pill-bg"></div>
-  </nav>
+  <nav class="pill-nav-wrap" id="nav-links" aria-label="主导航"></nav>
   <div class="nav-actions">
-    <button class="nav-icon-btn" id="nav-theme-btn" onclick="toggleTheme()" aria-label="切换主题" title="明暗切换">🌙</button>
+    <button class="nav-icon-btn" id="nav-theme-btn" onclick="toggleTheme()" aria-label="切换主题" title="明暗切换">
+      <svg class="ic-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="ic-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
     <button class="nav-icon-btn nav-hamburger" id="nav-hamburger" aria-label="菜单" aria-expanded="false">
       <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="17" y2="1"/><line x1="1" y1="7" x2="17" y2="7"/><line x1="1" y1="13" x2="17" y2="13"/></svg>
     </button>
@@ -655,16 +643,16 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
     <div id="music-title" class="music-title">未在播放</div>
     <div id="music-progress" class="music-progress"><div class="bar" id="music-bar"></div></div>
     <div class="music-controls">
-      <button id="music-prev" class="music-btn" title="上一首">⏮</button>
-      <button id="music-play" class="music-btn play" title="播放/暂停">▶</button>
-      <button id="music-next" class="music-btn" title="下一首">⏭</button>
-      <div class="music-vol"><span>🔊</span><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.7"></div>
+      <button id="music-prev" class="music-btn" title="上一首" aria-label="上一首"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button id="music-play" class="music-btn play" title="播放/暂停" aria-label="播放/暂停"><svg class="ic-play" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+      <button id="music-next" class="music-btn" title="下一首" aria-label="下一首"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+      <div class="music-vol"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.7"></div>
     </div>
     <button id="music-list-btn" class="music-list-btn">播放列表</button>
     <div id="music-playlist" class="music-playlist"></div>
   </div>
   <button id="music-fab" class="music-fab" title="音乐播放器" aria-label="音乐播放器">
-    <span class="m-note">♪</span>
+    <span class="m-note"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></span>
     <span class="m-eq"><i></i><i></i><i></i></span>
   </button>
 </div>
@@ -679,16 +667,6 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 <!-- 自定义光标 -->
 <div id="cursor-dot" class="cursor-dot"></div>
 <div id="cursor-ring" class="cursor-ring"></div>
-<!-- 引力相册（Matter.js 物理相册）浮层 -->
-<div id="gravityGallery" class="gravity-gallery-overlay" aria-hidden="true">
-  <div class="gravity-gallery-header">
-    <span class="gravity-gallery-title" id="gravityGalleryTitle">引力相册</span>
-    <button class="gravity-gallery-close" id="gravityGalleryClose" aria-label="关闭">✕</button>
-  </div>
-  <canvas id="gravityCanvas"></canvas>
-  <div class="gravity-gallery-frame" id="gravityFrame"><span class="gf-corner tl"></span><span class="gf-corner tr"></span><span class="gf-corner bl"></span><span class="gf-corner br"></span></div>
-  <div class="gravity-gallery-hint">拖拽照片可抛掷 · 点击照片放大查看</div>
-</div>
 
 <!-- Hidden inputs -->
 <input type="file" id="avatar-upload" accept="image/*" style="display:none">
@@ -778,7 +756,6 @@ function bindCarouselPause(){
 function renderViewState(){
   document.querySelectorAll('#main .view').forEach(v=>v.classList.toggle('active',v.dataset.view===currentView));
   document.querySelectorAll('.pill-nav-item').forEach(l=>l.classList.toggle('on',l.dataset.nav===currentView));
-  const on=document.querySelector('.pill-nav-item.on');if(on)updatePill(on);
   if(currentView==='home'){startCarousel();bindCarouselPause();}else stopCarousel();
   initReveal();
   // 立即触发当前视口内 reveal（确定性，不依赖 IO 时序）
@@ -1007,8 +984,6 @@ function importFromHash(){
 // ============================================================
 function syncThemeMeta(){
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
-  const btn=document.getElementById('nav-theme-btn');
-  if(btn)btn.textContent=isDark?'🌙':'☀️';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',isDark?'#0B0E14':'#F5F0E8');
   document.querySelector('meta[name="color-scheme"]')?.setAttribute('content',isDark?'dark':'light');
 }
@@ -1135,26 +1110,12 @@ function renderFooterTagline(){
 
 
 function renderNav(){
-  const nav=document.getElementById('nav-links');nav.innerHTML='<div class=\"pill-nav-bg\" id=\"pill-bg\"></div>';
+  const nav=document.getElementById('nav-links');nav.innerHTML='';
   VIEW_ITEMS.forEach(item=>{
     const b=document.createElement('button');b.className='pill-nav-item';b.dataset.nav=item.id;
     b.textContent=item.label;b.onclick=()=>navigateTo(item.id);
-    b.addEventListener('mouseenter',()=>updatePill(b));
     nav.appendChild(b);
   });
-  setTimeout(updatePillPos,100);
-}
-
-function updatePill(el){
-  const bg=document.getElementById('pill-bg');if(!bg||!el)return;
-  bg.style.left=el.offsetLeft+'px';
-  bg.style.width=el.offsetWidth+'px';
-}
-
-function updatePillPos(){
-  const active=document.querySelector('.pill-nav-item.on');
-  if(active)updatePill(active);
-  else{const first=document.querySelector('.pill-nav-item');if(first){first.classList.add('on');updatePill(first);}}
 }
 
 function scrollToSection(id){
@@ -1226,9 +1187,9 @@ function renderMain(){
           </div>
           <div class="mc-progress" id="mc-progress"><div class="mc-bar" id="mc-bar"></div></div>
           <div class="mc-controls">
-            <button class="mc-btn" id="mc-prev" title="上一首" aria-label="上一首">⏮</button>
-            <button class="mc-btn mc-play" id="mc-play" title="播放/暂停" aria-label="播放/暂停">▶</button>
-            <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首">⏭</button>
+            <button class="mc-btn" id="mc-prev" title="上一首" aria-label="上一首"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+            <button class="mc-btn mc-play" id="mc-play" title="播放/暂停" aria-label="播放/暂停"><svg class="ic-play" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+            <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
           </div>
           <button id="mc-list-btn" class="mc-list-btn">播放列表</button>
         </div>
@@ -1323,7 +1284,6 @@ function renderMain(){
       </div>
       <div class="section-divider"></div>
       ${(data.gallery||[]).length?`
-      <button class="gravity-btn reveal" onclick="openGravityGallery()"><span style="font-size:1.2em">🧲</span> 开启引力相册 · 拖拽抛掷</button>
       <p class="map-hint reveal">点击地图上的发光城市，查看在那座城市拍下的照片</p>
       <div class="map-wrap">
         <div id="china-map" class="reveal"></div>
@@ -1421,164 +1381,6 @@ function carouselPrev(){goToSlide(currentSlide-1);resetCarouselTimer();}
 function resetCarouselTimer(){clearInterval(carouselTimer);carouselTimer=null;startCarousel();}
 
 // ============================================================
-// ============================================================
-// GRAVITY ALBUM（Matter.js 物理相册）
-// ============================================================
-let gravityEngine=null,gravityRender=null,gravityRunner=null,gravityMouse=null;
-let gravityBodies=[],gravityPhotos=[];
-let gravityAfterRenderCb=null,gravityMouseDownCb=null,gravityMouseUpCb=null;
-
-function openGravityGallery(){
-  const photos=(data.gallery||[]).filter(p=>p.image);
-  if(!photos.length){toast('还没有照片，先上传一些吧','info');return;}
-  if(!window.Matter){toast('物理引擎加载失败，请刷新重试','error');return;}
-  if(gravityEngine||gravityRender)closeGravityGallery();
-
-  gravityPhotos=photos;
-  const overlay=document.getElementById('gravityGallery');
-  const canvas=document.getElementById('gravityCanvas');
-  const frameEl=document.getElementById('gravityFrame');
-  document.getElementById('gravityGalleryTitle').textContent='引力相册 · '+photos.length+' 张';
-  overlay.classList.add('active');
-  canvas.style.willChange='transform';
-  frameEl.style.opacity='1';
-
-  // 等待浮层布局完成后再初始化（setTimeout 替代 rAF：后台标签不节流、更稳健）
-  setTimeout(()=>{
-    const w=canvas.clientWidth,h=canvas.clientHeight;
-    if(w<10||h<10){closeGravityGallery();return;}
-    const dpr=Math.min(window.devicePixelRatio||1,1.5);
-    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
-
-    const marginX=w*0.08,marginV=h*0.12;
-    const playLeft=marginX,playRight=w-marginX,playTop=marginV,playBottom=h-marginV;
-    const playW=playRight-playLeft,playH=playBottom-playTop;
-    if(frameEl){frameEl.style.left=marginX+'px';frameEl.style.top=marginV+'px';frameEl.style.width=playW+'px';frameEl.style.height=playH+'px';}
-
-    const {Engine,Render,Runner,World,Bodies,Mouse,MouseConstraint,Events}=Matter;
-    gravityEngine=Engine.create();
-    gravityEngine.world.gravity.y=1.3;
-    gravityEngine.world.gravity.x=0;
-    gravityRender=Render.create({canvas:canvas,engine:gravityEngine,options:{width:w,height:h,wireframes:false,background:'transparent',pixelRatio:dpr}});
-
-    const wallT=200;
-    World.add(gravityEngine.world,[
-      Bodies.rectangle(w/2,playBottom+wallT/2,playW+400,wallT,{isStatic:true,label:'wall',render:{visible:false}}),
-      Bodies.rectangle(playLeft-wallT/2,(playTop+playBottom)/2,wallT,playH+400,{isStatic:true,label:'wall',render:{visible:false}}),
-      Bodies.rectangle(playRight+wallT/2,(playTop+playBottom)/2,wallT,playH+400,{isStatic:true,label:'wall',render:{visible:false}}),
-      Bodies.rectangle(w/2,playTop-wallT/2,playW+400,wallT,{isStatic:true,label:'wall',render:{visible:false}})
-    ]);
-
-    gravityBodies=[];
-    const n0=photos.length;
-    const bodySize=Math.min(230,Math.max(140,Math.floor(Math.min(playW,playH*1.25)/Math.max(2.4,Math.sqrt(n0)*1.05))))*0.85;
-
-    const loadImage=(photo)=>new Promise(resolve=>{
-      const img=new Image();
-      img.onload=()=>resolve({img,photo});
-      img.onerror=()=>resolve({img:null,photo});
-      img.src=photo.image;
-    });
-
-    (async()=>{
-      const BATCH=6;const loaded=[];
-      for(let i=0;i<photos.length;i+=BATCH){
-        const res=await Promise.all(photos.slice(i,i+BATCH).map(loadImage));
-        loaded.push(...res);
-        if(i+BATCH<photos.length)await new Promise(r=>setTimeout(r,0));
-      }
-      const r8=8;
-      loaded.forEach((item,index)=>{
-        if(!item.img)return;
-        const img=item.img;
-        const ratio=img.width/img.height;
-        let bw,bh;
-        if(ratio>=1){bw=bodySize;bh=bodySize/ratio;}else{bh=bodySize;bw=bodySize*ratio;}
-        bw=Math.max(60,bw);bh=Math.max(60,bh);
-        const x=playLeft+((index+0.5)/n0)*playW;
-        const y=playTop+bh/2+index*(bh*0.15+10);
-        const body=Bodies.rectangle(x,y,bw,bh,{restitution:0.1,friction:0.1,frictionAir:0.008,angle:(Math.random()-0.5)*0.4,chamfer:{radius:8},render:{visible:false},label:'photo-'+index});
-        body.photoIndex=index;body.img=img;body.imgW=bw;body.imgH=bh;
-        const path=new Path2D();
-        path.moveTo(-bw/2+r8,-bh/2);path.lineTo(bw/2-r8,-bh/2);path.quadraticCurveTo(bw/2,-bh/2,bw/2,-bh/2+r8);
-        path.lineTo(bw/2,bh/2-r8);path.quadraticCurveTo(bw/2,bh/2,bw/2-r8,bh/2);
-        path.lineTo(-bw/2+r8,bh/2);path.quadraticCurveTo(-bw/2,bh/2,-bw/2,bh/2-r8);
-        path.lineTo(-bw/2,-bh/2+r8);path.quadraticCurveTo(-bw/2,-bh/2,-bw/2+r8,-bh/2);
-        path.closePath();
-        body.path=path;
-        gravityBodies.push(body);
-        World.add(gravityEngine.world,body);
-      });
-      if(!gravityBodies.length){toast('照片加载失败','error');closeGravityGallery();return;}
-
-      gravityAfterRenderCb=function(){
-        const ctx=gravityRender.context;
-        const useShadow=gravityBodies.length<=15;
-        for(let i=0;i<gravityBodies.length;i++){
-          const body=gravityBodies[i];
-          if(!body.img)continue;
-          const bx=body.position.x,by=body.position.y;
-          const halfW=body.imgW/2+10,halfH=body.imgH/2+10;
-          if(bx+halfW<0||bx-halfW>w||by+halfH<0||by-halfH>h)continue;
-          ctx.save();
-          ctx.translate(bx,by);
-          ctx.rotate(body.angle);
-          if(useShadow){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=8;ctx.shadowOffsetY=4;}
-          ctx.clip(body.path);
-          ctx.shadowColor='transparent';
-          ctx.drawImage(body.img,-body.imgW/2,-body.imgH/2,body.imgW,body.imgH);
-          ctx.restore();
-        }
-      };
-      Events.on(gravityRender,'afterRender',gravityAfterRenderCb);
-
-      gravityMouse=Mouse.create(canvas);
-      const mc=MouseConstraint.create(gravityEngine,{mouse:gravityMouse,constraint:{stiffness:0.991,angularStiffness:0,render:{visible:false}}});
-      World.add(gravityEngine.world,mc);
-      const me=gravityMouse.element;
-      if(me&&gravityMouse.mousewheel){me.removeEventListener('mousewheel',gravityMouse.mousewheel);me.removeEventListener('DOMMouseScroll',gravityMouse.mousewheel);}
-
-      let downPos=null,downBody=null;
-      gravityMouseDownCb=function(ev){downPos={x:ev.mouse.position.x,y:ev.mouse.position.y};downBody=mc.body;};
-      gravityMouseUpCb=function(ev){
-        if(!downPos)return;
-        const dx=ev.mouse.position.x-downPos.x,dy=ev.mouse.position.y-downPos.y;
-        if(Math.sqrt(dx*dx+dy*dy)<6&&downBody&&downBody.photoIndex!=null){
-          openLightbox(downBody.photoIndex);
-        }
-        downPos=null;downBody=null;
-      };
-      Events.on(mc,'mousedown',gravityMouseDownCb);
-      Events.on(mc,'mouseup',gravityMouseUpCb);
-
-      gravityRunner=Runner.create();
-      gravityRunner.maxUpdates=4;
-      Runner.run(gravityRunner,gravityEngine);
-      Render.run(gravityRender);
-      gravityBodies.forEach(b=>{Matter.Body.setPosition(b,{x:b.position.x,y:b.position.y-120});});
-    })();
-  },80);
-}
-
-function closeGravityGallery(){
-  const overlay=document.getElementById('gravityGallery');
-  overlay.classList.remove('active');
-  const frameEl=document.getElementById('gravityFrame');
-  if(frameEl)frameEl.style.opacity='0';
-  if(gravityRender&&gravityAfterRenderCb){Matter.Events.off(gravityRender,'afterRender',gravityAfterRenderCb);gravityAfterRenderCb=null;}
-  gravityMouseDownCb=null;gravityMouseUpCb=null;
-  if(gravityRunner){Matter.Runner.stop(gravityRunner);gravityRunner=null;}
-  if(gravityRender){Matter.Render.stop(gravityRender);gravityRender=null;}
-  if(gravityEngine){Matter.World.clear(gravityEngine.world,false);Matter.Engine.clear(gravityEngine);gravityEngine=null;}
-  gravityBodies.forEach(body=>{if(body.img){body.img.src='';body.img=null;}body.path=null;});
-  gravityBodies=[];gravityPhotos=[];
-  gravityMouse=null;
-  const canvas=document.getElementById('gravityCanvas');
-  if(canvas)canvas.style.willChange='auto';
-}
-
-document.getElementById('gravityGalleryClose').addEventListener('click',closeGravityGallery);
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('gravityGallery').classList.contains('active'))closeGravityGallery();});
 
 // ============================================================
 // 地图相册（ECharts 中国城市足迹）
@@ -1651,7 +1453,7 @@ function renderMap(){
       if(p.seriesType==='effectScatter'){const n=(p.data.photos||[]).length;return '<b>'+p.data.cityName+'</b><br/>'+n+' 张照片<br/><span style="color:#94a3b8;font-size:11px">点击查看照片</span>';}
       return p.name;
     }},
-    geo:{map:'china',roam:true,zoom:1.18,center:[108,35.5],scaleLimit:{min:0.8,max:14},z:1,
+    geo:{map:'china',roam:true,zoom:1.55,center:[105,36.5],scaleLimit:{min:0.8,max:14},z:1,
       itemStyle:{areaColor:'rgba(5,8,14,0.55)',borderColor:'#475569',borderWidth:0.8},
       regions:regions,label:{show:true,color:'#7d8aa0',fontSize:10},
       emphasis:{itemStyle:{areaColor:'rgba(56,189,248,0.3)'},label:{color:'#f8fafc'}}},
@@ -1738,7 +1540,7 @@ function refreshMusicUI(){
   if(!fab)return;
   const a=getAudio();const playing=!a.paused&&!a.ended&&a.src;
   fab.classList.toggle('playing',playing);
-  if(playBtn)playBtn.textContent=playing?'⏸':'▶';
+  if(playBtn)playBtn.classList.toggle('playing',playing);
   if(title)title.textContent=(_playlist[_plIdx]&&_playlist[_plIdx].name)||'未在播放';
   syncMusicCard();
   renderPlaylist();
@@ -1843,7 +1645,7 @@ function syncMusicCard(){
   const playing=!!a.src&&!a.paused&&!a.ended;
   title.textContent=(_playlist[_plIdx]&&_playlist[_plIdx].name)||'未在播放';
   if(disc)disc.classList.toggle('playing',playing);
-  if(playBtn)playBtn.textContent=playing?'⏸':'▶';
+  if(playBtn)playBtn.classList.toggle('playing',playing);
   if(a.duration&&bar)bar.style.width=(a.currentTime/a.duration*100)+'%';
   if(lyric&&!playing&&!_activeLyric)lyric.textContent=_curLyrics.length?'♪ 点击播放，歌词同步显示 ♪':'♪ 纯音乐，请欣赏 ♪';
 }
@@ -2445,7 +2247,7 @@ setTimeout(async function(){
   }
   document.addEventListener('pointerdown',function(e){
     if(localStorage.getItem('xiaoaijiang-fx-click')==='0')return;
-    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#gravityGallery,#lightbox,.music-panel,#pet-container'))return;
+    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#lightbox,.music-panel,#pet-container'))return;
     var n=8+Math.floor(Math.random()*7);
     for(var i=0;i<n;i++){
       var ang=Math.random()*Math.PI*2,sp=1+Math.random()*4;
@@ -2471,7 +2273,7 @@ function applyCursorPref(){
   if(!dot||!ring)return;
   document.body.classList.add('custom-cursor');
   var mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
-  var interactive='a,button,[role="button"],input,textarea,select,.pill-nav-item,.gallery-item,.map-photo,.memo-card,.carousel-arrow,.slide-cta,.gravity-btn,.nav-brand,.music-fab,[data-nav]';
+  var interactive='a,button,[role="button"],input,textarea,select,.pill-nav-item,.gallery-item,.map-photo,.memo-card,.carousel-arrow,.slide-cta,.nav-brand,.music-fab,[data-nav]';
   document.addEventListener('mousemove',function(e){
     mx=e.clientX;my=e.clientY;
     dot.style.transform='translate('+mx+'px,'+my+'px) translate(-50%,-50%)';

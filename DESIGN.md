@@ -104,8 +104,8 @@ components:
     textColor: "{colors.text-secondary}"
     rounded: "{rounded.pill}"
   nav-item-active:
-    indicator: "{colors.wf-ink}"   # pill-nav-bg 滑动指示器（浅色暖底）
-    textColor: "{colors.wf-canvas}"
+    indicator: "{colors.gold}"   # 底部金色下划线（::after 2px）
+    textColor: "{colors.text-primary}"
 ---
 
 # Design System: 小爱酱 | 幻想之境
@@ -121,9 +121,9 @@ components:
 **技术形态:** 单文件原生 HTML/CSS/JS（无构建），Cloudflare Pages + Worker + KV 后端，IndexedDB 本地缓存 + 云端同步。SPA 5 视图 + hash 路由（`#/home` 等），`VIEW_ITEMS` 常量驱动导航与视图渲染（`renderViewState()` / `renderMain()`）。
 
 **Key Characteristics:**
-- **双主题**：默认暗色星界底（`#0B0E14`），顶部 🌙 按钮一键切换浅色（`#F5F0E8`）。两套 token 均为完整定义，组件不写死底色。
+- **双主题**：默认暗色星界底（`#0B0E14`），顶部月亮/太阳 SVG 图标按钮一键切换浅色（`#F5F0E8`）。两套 token 均为完整定义，组件不写死底色。
 - **毛玻璃卡片是唯一卡片语言**：所有容器用 `var(--glass-bg)` + `backdrop-filter: blur(12–16px)` + `1px var(--glass-border)`。半透明让背景壁纸/星光透过来，是"玻璃图书馆"的核心材质。
-- 星芒金（`#D4A843`）覆盖 ≤5% 画面——星芒角饰、按钮、轮播指示点。导航激活态不走金色（见 Navigation 的墨色反白指示器）。
+- 星芒金（`#D4A843`）覆盖 ≤5% 画面——星芒角饰、按钮、轮播指示点、导航激活态金色下划线。
 - SVG Mask 星芒伪元素装饰卡片四角（`.star-corners` / `.star-corners-4`）。
 - 12 列 Bento Grid 承载内容分区。
 - Cinzel Display 仅用于英文标题/眉题，中文回退系统字体。
@@ -132,14 +132,14 @@ components:
 
 这个系统明确拒绝：企业商务冷淡感、技术炫技型交互、千篇一律 SaaS 模板、AI 默认紫/蓝渐变、纯文字无图像页面。
 
-> **2026-08 设计对齐说明**：本文件已按当前线上页面重写。相比旧版删除了：重力相册（Matter.js）、羊皮纸卡片、暗色卡片——线上页面卡片实际全部为毛玻璃材质，`parchment-card`/`dark-card`/`bento-parchment` 类名仍在 CSS 中但未被任何视图渲染，故不作为设计语言收录。重力相册浮层与按钮仍在 index.html 代码中（若需一并下线请另行处理）。
+> **2026-08 设计对齐说明**：本文件已按当前线上页面重写。相比旧版删除了：重力相册（Matter.js）、羊皮纸卡片、暗色卡片——线上页面卡片实际全部为毛玻璃材质，`parchment-card`/`dark-card`/`bento-parchment` 类名仍在 CSS 中但未被任何视图渲染，故不作为设计语言收录。重力相册（Matter.js）浮层、按钮与物理引擎代码已全部下线。
 
 ## 2. Colors
 
 深色星界基底 + 毛玻璃层 + 金色饰线的三层色彩体系。暗色层承载页面结构（背景、壁纸、导航），玻璃层承载内容容器（半透明 + 边框高光），金色仅在需要焦点的位置出现。
 
 ### Primary
-- **星芒金 Gold** (`#D4A843`): 唯一 accent。按钮背景、链接、星芒角饰、轮播指示点。导航激活态不占金（见 Navigation 墨色反白指示器）。禁止大面积铺底或渐变背景。Hover 上浮至亮金 (`#E8C456`)。
+- **星芒金 Gold** (`#D4A843`): 唯一 accent。按钮背景、链接、星芒角饰、轮播指示点、导航激活态下划线。禁止大面积铺底或渐变背景。Hover 上浮至亮金 (`#E8C456`)。
 - **亮金 Gold Bright** (`#E8C456`): 主按钮 hover、链接 hover、地图城市标题、音乐卡片眉题。仅在交互态与强调文本出现。
 - **暗金 Gold Pale** (`#B8943A`): 选中文字底色、滚动条滑块、页脚栏目标题、bento 卡 hover 描边。更低调的金色，用于不争抢注意力的位置。
 - **金辉 Gold Glow** (`rgba(212,168,67,0.25)`): 卡片 hover 外发光、头像光环、轮播指示点。仅用作 box-shadow / 微光，不直接着底色。
@@ -241,7 +241,7 @@ components:
 
 ## 5. SPA 视图体系（信息架构）
 
-单一 `#main` 容器 + hash 路由。`VIEW_ITEMS` 定义 5 个视图，导航项与视图 `data-view` 一一对应，`renderViewState()` 切换 `.active`/`.on` 并移动滑动指示器。
+单一 `#main` 容器 + hash 路由。`VIEW_ITEMS` 定义 5 个视图，导航项与视图 `data-view` 一一对应，`renderViewState()` 切换 `.active`/`.on` 并展开激活项金色下划线。
 
 | id | 导航标签 | 内容 |
 |---|---|---|
@@ -266,9 +266,9 @@ components:
 
 ### 导航 Navigation
 - **Desktop Nav:** 固定顶部 `64px`（移动端 `48px`）。透明底 → 滚动 >40px 后加 `.scrolled`：毛玻璃 (`blur(14px)` + 玻璃底 + 1px 底边框)。
-- **Pill Nav:** 导航项为透明 pill 按钮，底色 `transparent`、文字次文字色。**滑动指示器** `.pill-nav-bg`（`--wf-ink` 浅色暖底，4px 圆角矩形）随激活项平滑移动 (`left`/`width` 0.45s cubic-bezier)。激活项文字转 `--wf-canvas`（深色）+ 加粗，压在浅色指示器上——一浅一深的"墨色反白"激活态，而非金色高亮。
+- **Pill Nav:** 导航项为透明按钮，底色 `transparent`、文字次文字色。**激活态为底部金色下划线**（`::after` 2px 金线，`transform: scaleX` 0→1 展开）。激活项文字转 `--text-primary` + 加粗——克制、以金色细线呼应唯一 accent，不再用滑动底色块。
 - **Mobile Nav:** ≤768px 汉堡菜单展开，固定下拉层 (z-999) 毛玻璃底 + 全宽 pill 按钮垂直排列。
-- **滚动高亮**: `IntersectionObserver` 跟踪当前 section，高亮对应导航项并移动指示器。
+- **滚动高亮**: `IntersectionObserver` 跟踪当前 section，高亮对应导航项并展开下划线。
 
 ### 轮播 Hero（首页）
 - **Slide:** 全视口高度 (`100dvh`)，绝对定位 + opacity 淡入淡出 (1s ease)。背景图 `cover` + `brightness(0.45)` + `bgDrift` 12s 缓动 + 径向 vignette 遮罩（底部渐入 `--wf-canvas`）。
@@ -281,7 +281,7 @@ components:
 双入口、同一状态机（`_playlist` / `_plIdx` / `_audio`），通过 Meting API（`api.injahow.cn/meting/?server=netease&type=song&id=`）拉取网易云直链与 LRC 歌词，逐句 typewriter 高亮。
 
 - **主页音乐卡片** `.music-card`: 玻璃卡 (blur 16px / 20px 圆角)。左：**黑胶唱片** `.mc-disc`（170px 圆形，同心圆纹 + 金色盘芯；播放时 8s 匀速旋转 `discspin`；有封面时以 500×500 封面替代盘芯渐变）。右：眉题 `♪ Music Player` → 歌名 → 歌词舞台 (`.mc-stage` 高 120px，`.mc-lyric` 金亮色居中 + `.mc-playlist` 播放列表 overlay) → 进度条 → 上一首/播放/下一首 + 播放列表按钮。
-- **悬浮播放器** `#music-float` (z-995, 右下): FAB 圆形按钮 `♪` + 三条均衡器动画条；展开面板含歌名、进度、控制、音量滑杆、播放列表。**两者互斥**：打开任一播放列表时切换。
+- **悬浮播放器** `#music-float` (z-995, 右下): FAB 圆形按钮（金色音符 SVG + 三条均衡器动画条，无背景边框）；展开面板含歌名、进度、控制、音量滑杆、播放列表。**两者互斥**：打开任一播放列表时切换。
 - **播放列表**: 显示歌名/歌手，当前首高亮金。歌曲源顺序由 `cloudMusicIds` 决定；单曲无直链则静默跳过。未配歌曲 ID 时回退 `bgm` 直链单曲循环。
 - **封面**: Meting 返回的封面 URL 经 HEAD 重定向 + `param=500y500` 取 500×500。
 
@@ -298,7 +298,7 @@ components:
 ### 映像馆视图 Gallery（地图相册）
 **主内容为 ECharts 中国地图相册**（参考 Your-China-Travel 风格），照片按后台填写的 `location`（城市）点亮地图。
 
-- **地图**: `#china-map` 容器，`echarts.registerMap('china', CHINA_GEO)` 省界地图。`roam:true`、zoom 1.18、center `[108, 35.5]`、深底 + 灰蓝省界线 (`#475569`)。**已记录省份高亮**：`geo.regions` 给含照片的省 `areaColor rgba(56,189,248,0.22)` + 亮蓝描边。
+- **地图**: `#china-map` 容器（高 680px），`echarts.registerMap('china', CHINA_GEO)` 省界地图。`roam:true`、zoom 1.55、center `[105, 36.5]`、深底 + 灰蓝省界线 (`#475569`)。**已记录省份高亮**：`geo.regions` 给含照片的省 `areaColor rgba(56,189,248,0.22)` + 亮蓝描边。
 - **城市点**: `effectScatter` 蓝点 (`#38bdf8`，14px 辉光 + 涟漪) + 照片数 label；坐标查 `CITIES_GEO`（去掉市/自治州/地区后缀比对，再降级省名省会，均无 → 未标注区）。
 - **点击城市点** → 下方 `#city-photo-panel` 显示该城照片网格（`map-photo` 卡，hover 上浮 + 底部渐变 caption），点照片 `openLightbox(原始扁平下标)`。
 - **未标注照片**: 底部 `<details>` 折叠区"未标注地点的照片（N 张）"。
@@ -342,7 +342,7 @@ components:
 ## 7. Do's and Don'ts
 
 ### Do:
-- **Do** 用星芒金 (`#D4A843`) 作为唯一 accent——仅在按钮、星芒角、轮播指示点出现。面积 ≤5%。导航激活态用 `--wf-ink` 墨色反白指示器，不占金色配额。
+- **Do** 用星芒金 (`#D4A843`) 作为唯一 accent——仅在按钮、星芒角、轮播指示点、导航激活态下划线出现。面积 ≤5%。
 - **Do** 保持星界基底贯穿全页。卡片一律用毛玻璃（`glass-bg` + blur），不用不透明纯色卡。
 - **Do** 给每张卡片明确的 hover 反馈——上浮 + 金辉外发光。
 - **Do** 对 bento / 重点卡片使用星芒角装饰 (`.star-corners` / `.star-corners-4`)。
