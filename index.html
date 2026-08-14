@@ -104,6 +104,37 @@
 .memo-card.pinned{border-color:rgba(212,168,67,0.45);box-shadow:0 0 26px var(--gold-glow)}
 .memo-text{font-size:0.95em;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;word-break:break-word}
 .memo-date{display:block;margin-top:var(--space-4);font-family:var(--font-mono);font-size:0.72em;color:var(--text-muted);text-align:right}
+.memo-card{cursor:pointer}
+.memo-card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:var(--space-4);display:block;border:1px solid var(--glass-border)}
+.memo-cmt-count{display:inline-flex;align-items:center;gap:4px;margin-top:var(--space-3);font-size:.7em;color:var(--text-muted)}
+/* 说说详情弹窗 + 评论 */
+.memo-detail-overlay{position:fixed;inset:0;z-index:10060;background:rgba(5,8,14,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:var(--space-5)}
+.memo-detail-overlay.show{display:flex}
+.memo-detail{width:min(680px,100%);max-height:88vh;overflow-y:auto;background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-7);box-shadow:var(--shadow-card-hover)}
+.memo-detail-close{position:sticky;top:0;float:right;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--glass-border);color:var(--text-secondary);cursor:pointer;font-size:1.05em;line-height:1}
+.memo-detail-close:hover{color:var(--gold);border-color:var(--gold)}
+.memo-detail-img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;margin:0 0 var(--space-5);display:block;border:1px solid var(--glass-border)}
+.memo-detail-text{font-size:1.05em;color:var(--text-primary);line-height:1.85;white-space:pre-wrap;word-break:break-word}
+.memo-detail-date{display:block;margin:var(--space-4) 0 var(--space-6);font-family:var(--font-mono);font-size:.75em;color:var(--text-muted);text-align:right}
+.memo-comments{border-top:1px solid var(--glass-border);padding-top:var(--space-5)}
+.memo-comments h4{font-size:.95em;color:var(--text-primary);margin-bottom:var(--space-4)}
+.comment-item{display:flex;gap:var(--space-3);margin-bottom:var(--space-4)}
+.comment-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;object-fit:cover;background:var(--astral-elevated);border:1px solid var(--glass-border)}
+.comment-body{flex:1;min-width:0}
+.comment-head{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap}
+.comment-user{font-size:.85em;font-weight:600;color:var(--gold-bright)}
+.comment-date{font-size:.7em;color:var(--text-muted);font-family:var(--font-mono)}
+.comment-content{font-size:.88em;color:var(--text-primary);line-height:1.6;word-break:break-word;margin-top:2px}
+.comment-empty{font-size:.85em;color:var(--text-muted);text-align:center;padding:var(--space-4)}
+.comment-input-row{display:flex;gap:var(--space-2);margin-top:var(--space-4)}
+.comment-input{flex:1;padding:10px 16px;border-radius:var(--radius-pill);background:var(--astral-elevated);border:1px solid var(--surface-border);color:var(--text-primary);font-family:var(--font-body);font-size:.9em}
+.comment-input:focus{outline:none;border-color:var(--gold)}
+.comment-send{padding:0 20px;border-radius:var(--radius-pill);background:var(--gold);color:#0B0E14;border:none;cursor:pointer;font-weight:600;font-size:.9em}
+.comment-send:disabled{opacity:.5;cursor:not-allowed}
+.gh-login-btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:9px 16px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-primary);cursor:pointer;font-size:.85em;transition:all .2s}
+.gh-login-btn:hover{border-color:var(--gold);color:var(--gold)}
+.gh-login-btn .gh-user{color:var(--gold-bright);font-weight:600}
+.comment-auth-row{margin-top:var(--space-4)}
 /* 地图相册 */
 .map-wrap{max-width:var(--container-max);margin:0 auto;padding:var(--space-6);background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-card)}
 #china-map{width:100%;height:680px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--glass-border);background:rgba(8,12,22,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:var(--shadow-card)}
@@ -663,6 +694,24 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
     <span id="pet-msg" class="pet-msg"></span>
   </div>
   <img id="pet-img" class="pet-img" src="assets/pet/leimiaier1.gif" alt="蕾米埃尔" draggable="false">
+</div>
+<!-- 说说详情弹窗 -->
+<div id="memo-detail-overlay" class="memo-detail-overlay" aria-hidden="true">
+  <div class="memo-detail" role="dialog" aria-modal="true" aria-label="说说详情">
+    <button class="memo-detail-close" onclick="closeMemoDetail()" aria-label="关闭">✕</button>
+    <img class="memo-detail-img" id="memo-detail-img" alt="" style="display:none">
+    <p class="memo-detail-text" id="memo-detail-text"></p>
+    <span class="memo-detail-date" id="memo-detail-date"></span>
+    <div class="memo-comments">
+      <h4 id="memo-cmt-title">评论</h4>
+      <div id="memo-cmt-list"></div>
+      <div class="comment-auth-row" id="memo-cmt-auth"></div>
+      <div class="comment-input-row" id="memo-cmt-input-row" style="display:none">
+        <input class="comment-input" id="memo-cmt-input" placeholder="写下你的评论…" maxlength="1000">
+        <button class="comment-send" id="memo-cmt-send" onclick="submitComment()">发送</button>
+      </div>
+    </div>
+  </div>
 </div>
 <!-- 自定义光标 -->
 <div id="cursor-dot" class="cursor-dot"></div>
@@ -1263,9 +1312,11 @@ function renderMain(){
       <div class="section-divider"></div>
       <div class="memo-wall" id="memo-wall">
         ${(data.memos||[]).length?(data.memos||[]).slice().sort((a,b)=>(b.pinned-a.pinned)||(b.date||'').localeCompare(a.date||'')).map((m,i)=>`
-          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" style="transform:rotate(${(i%3-1)*2}deg)">
+          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" style="transform:rotate(${(i%3-1)*2}deg)" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
+            ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:''}
             <p class="memo-text">${escHtml(m.text)}</p>
             <span class="memo-date">${escHtml(m.date||'')}</span>
+            <span class="memo-cmt-count">💬 评论</span>
           </div>`).join(''):`
           <p class="empty-text" style="text-align:center;color:var(--text-muted)">还没有说说，去管理面板添加吧。</p>`}
       </div>
@@ -1854,6 +1905,7 @@ function showAdminPanel(){
     ${(data.memos||[]).map((m,i)=>`
       <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
         <textarea data-memo-idx="${i}" data-memo-field="text" style="width:100%" aria-label="说说内容">${escHtml(m.text)}</textarea>
+        <input type="text" value="${escHtml(m.image||'')}" data-memo-idx="${i}" data-memo-field="image" placeholder="图片 URL（可选）" style="width:100%;margin-top:4px" aria-label="图片链接">
         <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
           <input type="text" value="${escHtml(m.date||'')}" data-memo-idx="${i}" data-memo-field="date" placeholder="日期" style="width:120px" aria-label="日期">
           <label style="display:flex;gap:4px;font-size:.75em;align-items:center"><input type="checkbox" data-memo-idx="${i}" data-memo-field="pinned" ${m.pinned?'checked':''}> 置顶</label>
@@ -2085,8 +2137,109 @@ function saveAdmin(){
 }
 function addModule(){data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});saveData();showAdminPanel();}
 function removeModule(i){data.modules.splice(i,1);saveData();showAdminPanel();}
-function addMemo(){if(!Array.isArray(data.memos))data.memos=[];data.memos.push({id:'memo_'+Date.now(),text:'新便利贴…',date:new Date().toISOString().slice(0,10),pinned:false});saveData();showAdminPanel();}
+function addMemo(){if(!Array.isArray(data.memos))data.memos=[];data.memos.push({id:'memo_'+Date.now(),text:'新便利贴…',date:new Date().toISOString().slice(0,10),pinned:false,image:''});saveData();showAdminPanel();}
 function removeMemo(i){data.memos.splice(i,1);saveData();showAdminPanel();}
+
+// ============================================================
+// 说说详情 + 评论（GitHub OAuth 登录）
+// ============================================================
+let _curMemoId=null;
+function getGhToken(){return sessionStorage.getItem('xiaoaijiang-gh')||'';}
+function ghLogin(){window.location.href=API_URL+'/oauth/login';}
+async function ghLogout(){
+  const t=getGhToken();
+  if(t)await fetch(API_URL+'/oauth/logout',{method:'POST',headers:{Authorization:'Bearer '+t}}).catch(()=>{});
+  sessionStorage.removeItem('xiaoaijiang-gh');sessionStorage.removeItem('xiaoaijiang-gh-user');
+  renderCommentAuth();
+}
+async function openMemoDetail(id){
+  _curMemoId=id;
+  const m=(data.memos||[]).find(x=>x.id===id);if(!m)return;
+  document.getElementById('memo-detail-text').textContent=m.text||'';
+  document.getElementById('memo-detail-date').textContent=m.date||'';
+  const img=document.getElementById('memo-detail-img');
+  if(m.image){img.src=m.image;img.style.display='block';}else{img.removeAttribute('src');img.style.display='none';}
+  document.getElementById('memo-detail-overlay').classList.add('show');
+  document.getElementById('memo-detail-overlay').setAttribute('aria-hidden','false');
+  renderCommentAuth();
+  loadComments(id);
+}
+function closeMemoDetail(){
+  document.getElementById('memo-detail-overlay').classList.remove('show');
+  document.getElementById('memo-detail-overlay').setAttribute('aria-hidden','true');
+  _curMemoId=null;
+}
+async function loadComments(id){
+  const list=document.getElementById('memo-cmt-list'),title=document.getElementById('memo-cmt-title');
+  list.innerHTML='<div class="comment-empty">加载中…</div>';
+  try{
+    const r=await fetch(API_URL+'/comments/'+encodeURIComponent(id));
+    if(!r.ok)throw new Error('err');
+    const comments=await r.json();
+    title.textContent='评论 ('+(comments.length||0)+')';
+    renderComments(comments);
+  }catch(e){list.innerHTML='<div class="comment-empty">评论加载失败</div>';}
+}
+function renderComments(comments){
+  const list=document.getElementById('memo-cmt-list');
+  if(!comments||!comments.length){list.innerHTML='<div class="comment-empty">还没有评论，来抢沙发～</div>';return;}
+  list.innerHTML=comments.map(c=>`
+    <div class="comment-item">
+      <img class="comment-avatar" src="${escHtml(c.avatar||'')}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="comment-body">
+        <div class="comment-head"><span class="comment-user">${escHtml(c.user||'匿名')}</span><span class="comment-date">${escHtml((c.date||'').slice(0,10))}</span></div>
+        <p class="comment-content">${escHtml(c.content)}</p>
+      </div>
+    </div>`).join('');
+}
+function renderCommentAuth(){
+  const auth=document.getElementById('memo-cmt-auth'),inputRow=document.getElementById('memo-cmt-input-row');
+  if(!auth)return;
+  const token=getGhToken();
+  if(token){
+    let uname='';
+    try{uname=JSON.parse(sessionStorage.getItem('xiaoaijiang-gh-user')||'{}').login||'';}catch(e){}
+    auth.innerHTML='<span class="gh-login-btn" style="cursor:default">已登录：<span class="gh-user">'+escHtml(uname||'GitHub')+'</span></span> <button class="gh-login-btn" onclick="ghLogout()">退出</button>';
+    if(inputRow)inputRow.style.display='flex';
+  }else{
+    auth.innerHTML='<button class="gh-login-btn" onclick="ghLogin()">用 GitHub 登录评论</button>';
+    if(inputRow)inputRow.style.display='none';
+  }
+}
+async function submitComment(){
+  if(!_curMemoId)return;
+  const token=getGhToken();
+  if(!token){ghLogin();return;}
+  const input=document.getElementById('memo-cmt-input');
+  const content=(input.value||'').trim();
+  if(!content)return;
+  const send=document.getElementById('memo-cmt-send');
+  send.disabled=true;
+  try{
+    const r=await fetch(API_URL+'/comments/'+encodeURIComponent(_curMemoId),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({content})});
+    if(r.status===401){sessionStorage.removeItem('xiaoaijiang-gh');renderCommentAuth();toast('登录已过期，请重新登录','info');return;}
+    if(!r.ok)throw new Error('err');
+    input.value='';
+    await loadComments(_curMemoId);
+    toast('评论已发布','success');
+  }catch(e){toast('评论失败，请重试','error');}
+  finally{send.disabled=false;}
+}
+document.getElementById('memo-detail-overlay')?.addEventListener('click',function(e){if(e.target===this)closeMemoDetail();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_curMemoId)closeMemoDetail();});
+// OAuth 回调：从 URL hash 回读 GitHub session token
+(function(){
+  const h=location.hash||'',m=h.match(/[#&]gh=([A-Za-z0-9]+)/);
+  if(m){
+    const token=m[1];
+    sessionStorage.setItem('xiaoaijiang-gh',token);
+    history.replaceState(null,'',location.pathname+location.search);
+    fetch(API_URL+'/oauth/me',{headers:{Authorization:'Bearer '+token}}).then(r=>r.ok?r.json():null).then(d=>{
+      if(d&&d.user)sessionStorage.setItem('xiaoaijiang-gh-user',JSON.stringify(d.user));
+      if(_curMemoId)renderCommentAuth();
+    }).catch(()=>{});
+  }
+})();
 function addPortfolio(){data.portfolio.push({image:'',title:'新作品',url:''});saveData();showAdminPanel();}
 function removePortfolio(i){data.portfolio.splice(i,1);saveData();showAdminPanel();}
 function deleteTestimonialPanel(i){}
