@@ -9,3 +9,8 @@ dist/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 视频转码工作目录（视频本体在 R2，不入库）
+videos-in/
+videos-out/
+video-urls.txt

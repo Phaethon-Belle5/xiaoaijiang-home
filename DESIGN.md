@@ -274,7 +274,7 @@ components:
 - **Slide:** 全视口高度 (`100dvh`)，绝对定位 + opacity 淡入淡出 (1s ease)。背景图 `cover` + `brightness(0.45)` + `bgDrift` 12s 缓动 + 径向 vignette 遮罩（底部渐入 `--wf-canvas`）。
 - **Content:** `.slide-content` 玻璃面板（`rgba(10,16,30,0.35)` + `blur(14px)` + 1px 白边框 + 20px 圆角），居中 max-width 720px。顺序：头像 (100px 圆 + 金边 + 金辉光环) → 眉题 (Cinzel 大写 + **魔法紫**) → 大标题 → 简介 → CTA。`heroReveal` 依次入场（0.1s 头像 → 0.2s 眉题 → 0.35s 标题 → 0.5s 简介 → 0.65s CTA）。
 - **CTA:** 毛玻璃 pill 按钮（`glass-bg` + `blur(10px)` + 玻璃边框）+ 箭头，hover 时边框与文字转金。入场后 1.5s 开始 `pulse` 呼吸光晕。
-- **Controls:** 底部圆点指示器 + 左右箭头 (毛玻璃圆形按钮) + 键盘左右键 + 触屏滑动。**自动播放 6s**（`CAROUSEL_INTERVAL=6000`），hover 或交互时不暂停。
+- **Controls:** 底部圆点指示器 + 左右箭头 (毛玻璃圆形按钮) + 键盘左右键 + 触屏滑动。**自动播放 6s**（`CAROUSEL_INTERVAL=6000`）；`mouseenter`/`mouseleave` 与 `visibilitychange` 时暂停/恢复，避免打断阅读。
 - **浅色覆盖:** `[data-theme="light"]` 下玻璃面板转白底，箭头转亮。
 
 ### 音乐系统（主页卡片 + 悬浮播放器）
