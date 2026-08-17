@@ -12,8 +12,6 @@
 <meta name="theme-color" content="#0B0E14">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://xiaoaijiang-api.2918762608.workers.dev">
-<link rel="preconnect" href="https://images.unsplash.com">
-<link rel="preconnect" href="https://picsum.photos">
 <style>
 @font-face{font-family:'Cinzel';font-style:normal;font-weight:400 800;font-display:swap;src:url(assets/fonts/cinzel-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:'Cinzel';font-style:normal;font-weight:400 800;font-display:swap;src:url(assets/fonts/cinzel-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -423,7 +421,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 #back-to-top{position:fixed;bottom:150px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
 /* 悬浮音乐播放器 */
 .music-float{position:fixed;bottom:12px;right:150px;z-index:995;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.music-fab{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold)}
+.music-fab{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold);touch-action:none}
 .music-fab:hover{transform:scale(1.08)}
 .music-fab .m-note{display:flex;align-items:center;justify-content:center;color:var(--gold)}
 .music-fab .m-eq{display:none;align-items:flex-end;gap:2px;height:18px}
@@ -848,8 +846,9 @@ const DEFAULT_DATA={
   accent:"#D4A843",
   about:{text:"昵称：伶俜\n职业：学生\n所在地：武仙-北冕座长城，双鱼-鲸鱼座超星系团复合体，拉尼亚凯亚超星系团，室女座超星系团，本星系群，银河系次级团，银河系猎户臂，古尔德带，本地泡，本星际云，太阳系，内太阳系，地月系-地球\n                                            个人成就\n\n🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人"},
   testimonials:[],
+  petMessages:['你好呀，我是蕾米埃尔~','欢迎来到伶俜的幻想之境','今天的风很温柔呢','去映像馆看看照片吧','点我一下，换套动作','月色真美，一起赏月吧','这个世界，像梦一样','要不要听首歌？设置音乐后我陪你听'],
   memos:[{id:'memo_1',text:'今天在武仙-北冕座长城拍到了超新星。✨',date:'2026-08-01',pinned:true},{id:'memo_2',text:'写了一段新的幻想编年史，主角是只爱喝奶茶的龙。',date:'2026-08-02',pinned:false},{id:'memo_3',text:'想把星空装进相册里。🌌',date:'2026-07-28',pinned:false}],
-  portfolio:[{image:"https://picsum.photos/seed/code-screen/400/160",title:"项目仓库",url:"https://github.com/Phaethon-Belle5/xiaoaijiang-home"},{image:"",title:"邪笑",url:"https://www.douyin.com/user/MS4wLjABAAAAa-5tKSb9mtI7TzjcMpM-kg_vhqZXZ8Y-McvZb7BO2Ph-vM0cRnN4mfeBitoAWE4g?from_tab_name=main&modal_id=7612571971741633798&vid=7612571971741633798"}],
+  portfolio:[{image:"",title:"项目仓库",url:"https://github.com/Phaethon-Belle5/xiaoaijiang-home"},{image:"",title:"邪笑",url:"https://www.douyin.com/user/MS4wLjABAAAAa-5tKSb9mtI7TzjcMpM-kg_vhqZXZ8Y-McvZb7BO2Ph-vM0cRnN4mfeBitoAWE4g?from_tab_name=main&modal_id=7612571971741633798&vid=7612571971741633798"}],
   gallery:[{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg",caption:"IMG_20250404_094608_103",date:"2025-04-04"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250822_192558_096.jpg",caption:"IMG_20250822_192558_096",date:"2025-08-22"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_061313_457.jpg",caption:"IMG_20250824_061313_457",date:"2025-08-24"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_062354_469.jpg",caption:"IMG_20250824_062354_469",date:"2025-08-24"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_182440_530.jpg",caption:"IMG_20250824_182440_530",date:"2025-08-24"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_184033_562.jpg",caption:"IMG_20250824_184033_562",date:"2025-08-24"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260211_143756_606.jpg",caption:"IMG_20260211_143756_606",date:"2026-02-11"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260211_191046_699.jpg",caption:"IMG_20260211_191046_699",date:"2026-02-11"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_153850_769.jpg",caption:"IMG_20260214_153850_769",date:"2026-02-14"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_170925_776.jpg",caption:"IMG_20260214_170925_776",date:"2026-02-14"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_183702_793.jpg",caption:"IMG_20260214_183702_793",date:"2026-02-14"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260403_185853_829.jpg",caption:"IMG_20260403_185853_829",date:"2026-04-03"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_135558_869.jpg",caption:"IMG_20260404_135558_869",date:"2026-04-04"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_163235_911.jpg",caption:"IMG_20260404_163235_911",date:"2026-04-04"},{image:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_220147_959.jpg",caption:"IMG_20260404_220147_959",date:"2026-04-04"}],
   modules:[{id:"mod_1781362237420",title:"个人成就",icon:"🏆",text:"🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2019年COVID幸存者\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人\n🏆蜜雪冰城大雪人\n🏆家里蹲大学优秀毕业生\n🏆国家绝密资料使用者\n🏆百亿项目合作者"},{id:"mod_1781448443500",title:"爱好",icon:"",text:"华山、恒山、衡山、泰山\n南宫山、岳麓山、武功山\n希望未来能看遍名川大山。"}],
   contact:{email:"2918762608@qq.com",wechat:"ZYH2918762608",other:""},
@@ -919,6 +918,7 @@ function mergeData(d,s){
   if(s.contact)d.contact={...d.contact,...s.contact};
   if(s.accent)d.accent=s.accent;
   if(s.testimonials?.length)d.testimonials=s.testimonials;
+  if(Array.isArray(s.petMessages)&&s.petMessages.length)d.petMessages=s.petMessages;
   if(Array.isArray(s.memos))d.memos=s.memos;
   if(s.portfolio?.length)d.portfolio=s.portfolio;
   if(s.gallery?.length)d.gallery=s.gallery;
@@ -981,7 +981,7 @@ function saveData(showToast=true){
 
   // Sync changed keys only (smaller payload, faster sync)
   const hdrs=authHeaders();
-  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds'];
+  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds','petMessages'];
   let synced=0,authFailed=false;
   const videos=(data.wallpaper?.videos||[]).filter(v=>v.src&&v.src.startsWith('data:'));
   Promise.all(keys.map(k=>{
@@ -1186,7 +1186,7 @@ function scrollToSection(id){
 
 function renderMain(){
   const main=document.getElementById('main'),p=data.profile,c=data.content||{};
-  const portfolioImgSeed=['code-screen','photography-sunset','travel-mountain','music-vinyl','book-pages','camera-lens','design-desk','coffee-workspace'];
+  function portfolioFallback(i){const seeds=['✦','✧','★','☆','❖','✵','⚜','✶'];const ch=seeds[i%seeds.length];return 'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160"><rect fill="#11162A" width="400" height="160"/><text x="200" y="102" text-anchor="middle" fill="#D4A843" font-size="54" font-family="serif">'+ch+'</text></svg>');}
 
   main.innerHTML=`
     <!-- ============================================================
@@ -1295,12 +1295,12 @@ function renderMain(){
       <div class="section-divider"></div>
 	      <div class="portfolio-grid">
         ${(data.portfolio||[]).map((item,i)=>{
-          const imgSrc=item.image||'https://picsum.photos/seed/'+portfolioImgSeed[i%portfolioImgSeed.length]+'/400/160';
+          const imgSrc=item.image||portfolioFallback(i);
           const hasUrl=item.url&&item.url.trim();
           return`
           <div class="portfolio-item reveal reveal-d${Math.min(i+2,5)}" ${hasUrl?'onclick="window.open(\''+item.url.replace(/'/g,"\\'")+'\',\'_blank\')"':''} role="${hasUrl?'link':'article'}" tabindex="0">
             <div style="position:relative;overflow:hidden">
-              <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src='https://picsum.photos/seed/fallback${i}/400/160'">
+              <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src=portfolioFallback(${i})">
               ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
             </div>
             <div class="portfolio-info"><div class="portfolio-title">${escHtml(item.title)}</div>${hasUrl&&item.linkName?'<div class="portfolio-link">'+escHtml(item.linkName)+'</div>':''}</div>
@@ -1749,10 +1749,42 @@ function initMusicPlayer(){
     updateLyric();
   });
   fab.addEventListener('click',e=>{
+    if(window.__fabDragged){window.__fabDragged=false;return;}
     e.stopPropagation();
     panel.classList.toggle('open');
     panel.setAttribute('aria-hidden',String(!panel.classList.contains('open')));
   });
+  // FAB 可拖拽（拖拽与点击区分，参考桌宠实现）
+  const floatEl=document.getElementById('music-float');
+  let fDrag=false,fMoved=false,fSX=0,fSY=0,fOX=0,fOY=0;
+  function endFabDrag(){
+    if(!fDrag)return;
+    fDrag=false;
+    if(fMoved){
+      window.__fabDragged=true;
+      const r=floatEl.getBoundingClientRect();
+      floatEl.style.left=Math.max(0,Math.min(r.left,window.innerWidth-r.width))+'px';
+      floatEl.style.top=Math.max(0,Math.min(r.top,window.innerHeight-r.height))+'px';
+    }
+  }
+  fab.addEventListener('pointerdown',e=>{
+    fDrag=true;fMoved=false;
+    fSX=e.clientX;fSY=e.clientY;
+    const r=floatEl.getBoundingClientRect();
+    fOX=r.left;fOY=r.top;
+    floatEl.style.left=fOX+'px';floatEl.style.top=fOY+'px';
+    floatEl.style.right='auto';floatEl.style.bottom='auto';
+    try{fab.setPointerCapture(e.pointerId);}catch(err){}
+  });
+  fab.addEventListener('pointermove',e=>{
+    if(!fDrag)return;
+    const dx=e.clientX-fSX,dy=e.clientY-fSY;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)fMoved=true;
+    floatEl.style.left=(fOX+dx)+'px';
+    floatEl.style.top=(fOY+dy)+'px';
+  });
+  fab.addEventListener('pointerup',endFabDrag);
+  fab.addEventListener('pointercancel',endFabDrag);
   playBtn.addEventListener('click',e=>{e.stopPropagation();if(a.src){(a.paused?a.play():a.pause()).catch(()=>{});}else toast('后台还没设置音乐','info');});
   document.getElementById('music-prev').addEventListener('click',e=>{e.stopPropagation();prevSong();});
   document.getElementById('music-next').addEventListener('click',e=>{e.stopPropagation();nextSong();});
@@ -1824,6 +1856,7 @@ function showAdminPanel(){
       <div class="admin-tab" data-atab="wallpaper">壁纸</div>
       <div class="admin-tab" data-atab="music">音乐</div>
       <div class="admin-tab" data-atab="fx">特效</div>
+      <div class="admin-tab" data-atab="pet">桌宠</div>
       <div class="admin-tab" data-atab="content">内容</div>
       <div class="admin-tab" data-atab="memos">说说</div>
       <div class="admin-tab" data-atab="works">作品</div>
@@ -1891,6 +1924,12 @@ function showAdminPanel(){
     <h3>氛围特效</h3>
     <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">点击迸发粒子</label><input type="checkbox" id="fx-click" ${localStorage.getItem('xiaoaijiang-fx-click')==='0'?'':'checked'}></div>
     <div class="admin-group" style="display:flex;align-items:center;gap:10px;justify-content:flex-start"><label style="margin:0">自定义光标</label><input type="checkbox" id="fx-cursor" ${localStorage.getItem('xiaoaijiang-fx-cursor')==='0'?'':'checked'}></div>
+
+    </div>
+    <div class="tab-page" data-apage="pet">
+    <h3>桌宠（蕾米埃尔）</h3>
+    <div class="admin-group"><label>气泡消息（每行一条，点击桌宠时随机显示）</label><textarea id="e-pet-msgs" rows="8">${escHtml((data.petMessages||[]).join('\n'))}</textarea></div>
+    <p style="font-size:.72em;color:var(--text-muted);margin:0 0 8px">保存后下次点击桌宠生效；空行会被忽略。</p>
 
     </div>
     <div class="tab-page" data-apage="content">
@@ -2113,6 +2152,7 @@ function saveAdmin(){
   data.cloudMusicIds=(document.getElementById('e-music-ids')?.value||'').trim();
   document.querySelectorAll('[data-v-dur]').forEach(el=>{const i=parseInt(el.dataset.vDur);if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   data.about.text=document.getElementById('e-about').value.trim();
+  data.petMessages=(document.getElementById('e-pet-msgs')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
   data.contact=data.contact||{};
   // Save content (page text)
   data.content=data.content||{};
@@ -2301,7 +2341,7 @@ setTimeout(async function(){
 <script>
 (function(){
   var canvas = document.getElementById('particle-canvas');
-  if (!canvas) { console.log('no canvas'); return; }
+  if (!canvas) { return; }
   var ctx = canvas.getContext('2d');
   var W = canvas.width = window.innerWidth;
   var H = canvas.height = window.innerHeight;
@@ -2499,11 +2539,13 @@ function applyCursorPref(){
   var bubble=document.getElementById('pet-bubble');
   var msgEl=document.getElementById('pet-msg');
   var gifs=['leimiaier1.gif','leimiaier2.gif','leimiaier3.gif','leimiaier4.gif','leimiaier5.gif','leimiaier6.gif'];
-  var msgs=['你好呀，我是蕾米埃尔~','欢迎来到伶俜的幻想之境','今天的风很温柔呢','去映像馆看看照片吧','点我一下，换套动作','月色真美，一起赏月吧','这个世界，像梦一样','要不要听首歌？设置音乐后我陪你听'];
+  var DEFAULT_MSGS=['你好呀，我是蕾米埃尔~','欢迎来到伶俜的幻想之境','今天的风很温柔呢','去映像馆看看照片吧','点我一下，换套动作','月色真美，一起赏月吧','这个世界，像梦一样','要不要听首歌？设置音乐后我陪你听'];
+  function getPetMsgs(){return (typeof data!=='undefined'&&Array.isArray(data.petMessages)&&data.petMessages.length)?data.petMessages:DEFAULT_MSGS;}
   var idx=0,bt=null,reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   function showBubble(){
     if(reduced)return;
-    msgEl.textContent=msgs[Math.floor(Math.random()*msgs.length)];
+    var list=getPetMsgs();
+    msgEl.textContent=list[Math.floor(Math.random()*list.length)];
     bubble.classList.add('show');
     clearTimeout(bt);bt=setTimeout(function(){bubble.classList.remove('show');},4200);
   }
