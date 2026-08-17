@@ -99,6 +99,10 @@ async function main() {
 
   let n = 0;
   for (const [sha, b] of blobs) {
+    const ex = await fetch(`https://api.github.com/repos/${repo}/git/blobs/${sha}`, {
+      headers: { Authorization: 'Bearer ' + token, 'User-Agent': 'dsh-git-push', 'X-GitHub-Api-Version': '2022-11-28' },
+    });
+    if (ex.ok) { n++; continue; } // 已存在，跳过
     try {
       await api(`/repos/${repo}/git/blobs`, 'POST', { content: b.content, encoding: 'base64' });
     } catch (e) {
@@ -111,6 +115,10 @@ async function main() {
 
   n = 0;
   for (const [sha, entries] of trees) {
+    const ex = await fetch(`https://api.github.com/repos/${repo}/git/trees/${sha}`, {
+      headers: { Authorization: 'Bearer ' + token, 'User-Agent': 'dsh-git-push', 'X-GitHub-Api-Version': '2022-11-28' },
+    });
+    if (ex.ok) { n++; continue; } // 已存在，跳过
     const tree = entries.map((e) => ({ path: e.path, mode: e.mode, type: e.type === 'commit' ? 'commit' : (e.type === 'tree' ? 'tree' : 'blob'), sha: e.sha }));
     const res = await api(`/repos/${repo}/git/trees`, 'POST', { tree });
     if (res.sha !== sha) {
@@ -121,25 +129,33 @@ async function main() {
   }
   console.log('trees done');
 
-  // commits from oldest to newest
-  commits.reverse();
+  // commits 已按父→子顺序（walk 深度优先，父先 push）；逐个创建，parent 映射为远端 sha
+  const shaMap = new Map(); // local sha -> remote sha
   let headRemoteSha = null;
   for (const c of commits) {
     const exists = await fetch(`https://api.github.com/repos/${repo}/git/commits/${c.sha}`, {
       headers: { Authorization: 'Bearer ' + token, 'User-Agent': 'dsh-git-push', 'X-GitHub-Api-Version': '2022-11-28' },
     });
-    if (exists.ok) { console.log(`commit exists, skip: ${c.sha.slice(0, 7)}`); if (c.sha === head) headRemoteSha = c.sha; continue; }
-    const res = await api(`/repos/${repo}/git/commits`, 'POST', {
-      message: c.message,
-      tree: c.tree,
-      parents: c.parents,
-      author: c.author,
-      committer: c.committer,
-    });
-    // GitHub 会规范化 message 尾部换行，导致 sha 与本地不同；内容一致即可，记录远端 sha
-    if (res.sha !== c.sha) console.log(`commit created: ${c.sha.slice(0, 7)} -> remote ${res.sha.slice(0, 7)} (sha differs due to API message normalization)`);
-    else console.log(`commit created: ${c.sha.slice(0, 7)}`);
-    if (c.sha === head) headRemoteSha = res.sha;
+    let remoteSha;
+    if (exists.ok) {
+      remoteSha = c.sha;
+      console.log(`commit exists, skip: ${c.sha.slice(0, 7)}`);
+    } else {
+      const parents = c.parents.map((p) => shaMap.get(p) || p);
+      const res = await api(`/repos/${repo}/git/commits`, 'POST', {
+        message: c.message,
+        tree: c.tree,
+        parents,
+        author: c.author,
+        committer: c.committer,
+      });
+      remoteSha = res.sha;
+      // GitHub 会规范化 message 尾部换行，导致 sha 与本地不同；内容一致即可，记录远端 sha
+      if (res.sha !== c.sha) console.log(`commit created: ${c.sha.slice(0, 7)} -> remote ${res.sha.slice(0, 7)} (sha differs due to API message normalization)`);
+      else console.log(`commit created: ${c.sha.slice(0, 7)}`);
+    }
+    shaMap.set(c.sha, remoteSha);
+    if (c.sha === head) headRemoteSha = remoteSha;
   }
 
   const cur = await api(`/repos/${repo}/git/ref/heads/master`);
