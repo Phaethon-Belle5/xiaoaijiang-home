@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 Get-ChildItem $InDir -Filter *.mp4 | ForEach-Object {
   $key = "MP4/$($_.Name)"
   Write-Host "==> uploading $key"
-  & npx wrangler r2 object put "$Bucket/$key" --file $_.FullName --content-type video/mp4
+  & npx wrangler r2 object put "$Bucket/$key" --file $_.FullName --content-type video/mp4 --remote
   if ($LASTEXITCODE -ne 0) { Write-Host "    !! FAILED: $($_.Name)" }
 }
 Write-Host "== done =="
