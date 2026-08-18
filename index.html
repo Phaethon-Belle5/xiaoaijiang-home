@@ -311,10 +311,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 /* Carousel controls */
 .carousel-dots{position:absolute;bottom:var(--space-10);left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:var(--space-3);align-items:center}
 .visit-badge{font-size:.72em;color:var(--text-muted);letter-spacing:.05em;margin-top:var(--space-4);opacity:.85}
-/* 页脚 ICP 备案 */
-.icp-bar{display:flex;align-items:center;justify-content:center;padding:var(--space-4) var(--container-padding) var(--space-6);font-size:.78em;color:var(--text-muted)}
-.icp-bar a{color:inherit;text-decoration:none}
-.icp-bar a:hover{color:var(--gold)}
+/* 页脚 ICP 备案（放在 footer-bottom 版权行） */
+.footer-bottom a{color:inherit;text-decoration:none}
+.footer-bottom a:hover{color:var(--gold)}
 .carousel-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.3s var(--ease-out)}
 .carousel-dot.active,.carousel-dot:hover{background:var(--gold);transform:scale(1.3);box-shadow:0 0 12px var(--gold-glow)}
 .carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--text-primary);font-size:1.2em;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.25s var(--ease-out);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
@@ -649,10 +648,9 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
     </div>
   </div>
   <div class="footer-bottom">
-    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud</span>
+    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud · <a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener" style="color:inherit">萌ICP备20260854号</a></span>
     <span style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250816.optimize</span>
   </div>
-  <div class="icp-bar"><a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener">萌ICP备20260854号</a></div>
 </footer>
 
 <!-- Back to top -->
@@ -1609,6 +1607,10 @@ function playSong(song){
       _curLyrics=parseLrc(txt);
       if(lyEl&&!_curLyrics.length)lyEl.textContent='♪ 纯音乐，请欣赏 ♪';
     }).catch(()=>{if(lyEl)lyEl.textContent='♪ 纯音乐，请欣赏 ♪';});
+  }else if(song.lrc){
+    // 内嵌 LRC 文本（自有代理返回），直接解析
+    _curLyrics=parseLrc(song.lrc);
+    if(lyEl&&!_curLyrics.length)lyEl.textContent='♪ 纯音乐，请欣赏 ♪';
   }else if(lyEl){
     lyEl.textContent='♪ 纯音乐，请欣赏 ♪';
   }
