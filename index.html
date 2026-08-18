@@ -761,6 +761,8 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   var fallback=setTimeout(function(){
     if(!done&&video.currentTime<0.5)hide();
   },8000);
+  // Hard limit: 无论视频状态，12 秒后强制结束 splash（避免长时间遮挡页面）
+  var hardLimit=setTimeout(function(){hide();},12000);
   video.addEventListener('timeupdate',function(){
     if(video.currentTime>0.5){clearTimeout(fallback);}
   });
