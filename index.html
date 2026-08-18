@@ -639,12 +639,12 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
     <div class="footer-col">
       <h4 class="footer-heading">链接</h4>
       <a class="footer-link" href="https://home.xiaoaijiang.cloud">home.xiaoaijiang.cloud</a>
-      <span class="footer-link" style="cursor:default;color:var(--text-muted)">RSS 订阅 (即将推出)</span>
+      <a class="footer-link" href="/api/rss.xml" target="_blank" rel="noopener">RSS 订阅</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud</span>
-    <span style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250606.starfall</span>
+    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud · <span id="visit-count" style="color:var(--gold-pale)"></span></span>
+    <span style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250816.optimize</span>
   </div>
 </footer>
 
@@ -1863,6 +1863,7 @@ function showAdminPanel(){
       <div class="admin-tab" data-atab="photos">照片</div>
       <div class="admin-tab" data-atab="copy">文案</div>
       <div class="admin-tab" data-atab="contact">联系</div>
+      <div class="admin-tab" data-atab="comments">评论</div>
     </div>
     <div class="admin-body">
     <div class="tab-page active" data-apage="profile">
@@ -1952,8 +1953,10 @@ function showAdminPanel(){
     </div>
     <div class="tab-page" data-apage="memos">
     <h3>说说 (Memos)</h3>
+    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:6px 0;color:var(--crimson)" onclick="deleteSelectedMemos()">删除所选</button>
     ${(data.memos||[]).map((m,i)=>`
       <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
+        <label style="display:flex;gap:4px;font-size:.72em;align-items:center;margin-bottom:4px;cursor:pointer"><input type="checkbox" data-batch-memo="${i}"> 勾选以批量删除</label>
         <textarea data-memo-idx="${i}" data-memo-field="text" style="width:100%" aria-label="说说内容">${escHtml(m.text)}</textarea>
         <input type="text" value="${escHtml(m.image||'')}" data-memo-idx="${i}" data-memo-field="image" placeholder="图片 URL（可选）" style="width:100%;margin-top:4px" aria-label="图片链接">
         <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
@@ -2037,6 +2040,12 @@ function showAdminPanel(){
     <div class="admin-group"><label>其他</label><textarea id="e-other">${escHtml(data.contact?.other||'')}</textarea></div>
 
     </div>
+    <div class="tab-page" data-apage="comments">
+    <h3>评论管理</h3>
+    <p style="font-size:.72em;color:var(--text-muted);margin-top:0">各说说的访客评论（GitHub 登录发表），可删除。</p>
+    <div id="admin-comment-list"><p style="font-size:.78em;color:var(--text-muted)">切换到本页时加载…</p></div>
+
+    </div>
     </div>
     <div class="admin-btn-row">
       <button class="btn" onclick="saveAdmin()">保存</button>
@@ -2069,6 +2078,7 @@ function showAdminPanel(){
       tab.classList.add('active');
       const pg=panel.querySelector('.tab-page[data-apage="'+tab.dataset.atab+'"]');
       if(pg)pg.classList.add('active');
+      if(tab.dataset.atab==='comments')loadAdminComments();
     });
   });
 
@@ -2189,6 +2199,14 @@ function saveAdmin(){
 function addModule(){data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});saveData();showAdminPanel();}
 function removeModule(i){data.modules.splice(i,1);saveData();showAdminPanel();}
 function addMemo(){if(!Array.isArray(data.memos))data.memos=[];data.memos.push({id:'memo_'+Date.now(),text:'新便利贴…',date:new Date().toISOString().slice(0,10),pinned:false,image:''});saveData();showAdminPanel();}
+function deleteSelectedMemos(){
+  const boxes=document.querySelectorAll('#admin-panel [data-batch-memo]:checked');
+  if(!boxes.length){toast('请先勾选要删除的说说','info');return;}
+  const idxs=Array.from(boxes).map(b=>parseInt(b.dataset.batchMemo)).sort((a,b)=>b-a);
+  if(!confirm('确定删除选中的 '+idxs.length+' 条说说？'))return;
+  idxs.forEach(i=>data.memos.splice(i,1));
+  saveData();showAdminPanel();toast('已删除','success');
+}
 function removeMemo(i){data.memos.splice(i,1);saveData();showAdminPanel();}
 
 // ============================================================
@@ -2309,6 +2327,51 @@ document.getElementById('portfolio-image').onchange=function(e){const f=e.target
 document.getElementById('gallery-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendG>=0&&data.gallery&&data.gallery[_pendG]){data.gallery[_pendG].image=ev.target.result;saveData();showAdminPanel();toast('照片已上传','success');}_pendG=-1;};r.readAsDataURL(f);e.target.value='';};
 document.getElementById('carousel-bg-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendCb>0){data.content=data.content||{};const bgKey='slide'+_pendCb+'Bg';data.content[bgKey]=ev.target.result;saveData();showAdminPanel();toast('轮播背景'+_pendCb+'已上传','success');}_pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
 function exportConfig(){const exp=JSON.parse(JSON.stringify(data));if(exp.profile.avatar?.startsWith('data:'))exp.profile.avatar='[base64 removed]';(exp.wallpaper.images||[]).forEach((u,i)=>{if(u.startsWith('data:'))exp.wallpaper.images[i]='[base64 removed]';});(exp.portfolio||[]).forEach(it=>{if(it.image?.startsWith('data:'))it.image='[base64 removed]';});const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='xiaoaijiang-config-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('配置已导出','success');}
+
+// 评论管理
+function loadAdminComments(){
+  const box=document.getElementById('admin-comment-list');
+  if(!box)return;
+  const memos=(data.memos||[]).filter(m=>m&&m.id);
+  if(!memos.length){box.innerHTML='<p style="font-size:.78em;color:var(--text-muted)">还没有说说</p>';return;}
+  box.innerHTML='<p style="font-size:.78em;color:var(--text-muted)">加载中…</p>';
+  Promise.all(memos.map(m=>fetch(API_URL+'/comments/'+encodeURIComponent(m.id)).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(lists=>{
+    let html='';
+    let total=0;
+    memos.forEach((m,i)=>{
+      const cs=lists[i]||[];total+=cs.length;
+      html+='<div style="margin-bottom:10px;border:1px solid var(--surface-border);border-radius:8px;padding:8px 10px">'+
+        '<div style="font-size:.72em;color:var(--gold);margin-bottom:4px">'+escHtml(String(m.text||'').slice(0,24))+' · '+cs.length+' 条</div>';
+      if(!cs.length)html+='<div style="font-size:.72em;color:var(--text-muted);padding:3px 0">暂无评论</div>';
+      cs.forEach(c=>{
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--surface-border)">'+
+          '<img src="'+escHtml(c.avatar||'')+'" style="width:22px;height:22px;border-radius:50%;flex-shrink:0" alt="" onerror="this.style.display=\'none\'">'+
+          '<span style="font-size:.75em;color:var(--text-primary);white-space:nowrap">'+escHtml(c.user||'')+'</span>'+
+          '<span style="flex:1;min-width:0;font-size:.72em;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(c.content||'')+'</span>'+
+          '<span style="font-size:.65em;color:var(--text-muted);white-space:nowrap">'+(c.date||'').slice(0,10)+'</span>'+
+          '<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:.65em;color:var(--crimson)" onclick="deleteComment(\''+encodeURIComponent(m.id)+'\',\''+encodeURIComponent(c.id)+'\')">删除</button>'+
+        '</div>';
+      });
+      html+='</div>';
+    });
+    box.innerHTML=html||'<p style="font-size:.78em;color:var(--text-muted)">暂无评论</p>';
+  }).catch(()=>{box.innerHTML='<p style="font-size:.78em;color:var(--text-muted)">加载失败，请重试</p>';});
+}
+function deleteComment(memoId,commentId){
+  if(!confirm('确定删除这条评论？'))return;
+  fetch(API_URL+'/comments/'+encodeURIComponent(memoId)+'/'+encodeURIComponent(commentId),{method:'DELETE',headers:authHeaders()})
+    .then(r=>{if(r.status===401){handleAuthFail();return;}if(r.ok){toast('评论已删除','success');loadAdminComments();}else toast('删除失败','error');})
+    .catch(()=>toast('网络错误','error'));
+}
+
+// 访客计数
+function loadVisitCount(){
+  const el=document.getElementById('visit-count');
+  fetch(API_URL+'/visit',{method:'POST'}).catch(()=>{});
+  fetch(API_URL+'/visit').then(r=>r.json()).then(d=>{
+    if(el&&d&&typeof d.total==='number')el.textContent='第 '+d.total+' 位访客';
+  }).catch(()=>{});
+}
 
 // ============================================================
 // UTILS
@@ -2518,6 +2581,7 @@ function applyCursorPref(){
       var tsX=0,cs=document.getElementById('carousel-section');
       if(cs){cs.addEventListener('touchstart',function(e){tsX=e.touches[0].clientX;},{passive:true});cs.addEventListener('touchend',function(e){var d=tsX-e.changedTouches[0].clientX;if(currentView==='home'&&Math.abs(d)>60)d>0?carouselNext():carouselPrev();});}
       var fy=document.getElementById('footer-year');if(fy)fy.textContent=new Date().getFullYear();
+      try{loadVisitCount();}catch(e){}
     
 	      // File upload handlers
 	      var pi=document.getElementById('portfolio-image');if(pi)pi.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendPf>=0&&data.portfolio&&data.portfolio[window._pendPf]){data.portfolio[window._pendPf].image=ev.target.result;saveData();showAdminPanel();toast('图片已上传','success');}window._pendPf=-1;};r.readAsDataURL(f);e.target.value='';};

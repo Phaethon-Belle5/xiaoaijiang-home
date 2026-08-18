@@ -1,0 +1,7 @@
+name = "xiaoaijiang-api"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "STORE"
+id = "14330ec39ac64891be778253e78e1cf7"
