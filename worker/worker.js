@@ -266,6 +266,44 @@ export default {
       return new Response(xml, { headers: { ...headers, 'Content-Type': 'application/rss+xml; charset=utf-8' } });
     }
 
+    // ── GET /meting?server=netease&type=song&id=xxx ── 网易云歌曲代理（官方接口直连，不依赖第三方配额） ──
+    if (p === '/meting' && method === 'GET') {
+      const id = url.searchParams.get('id') || '';
+      if (!/^\d{1,20}$/.test(id)) return json([]);
+      const UA = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36',
+        'Referer': 'https://music.163.com',
+      };
+      try {
+        // 1) 歌曲信息
+        const infoRes = await fetch('https://music.163.com/api/song/detail/?ids=[' + id + ']', { headers: UA });
+        const info = await infoRes.json();
+        const song = (info && info.songs && info.songs[0]) || null;
+        if (!song) return json([]);
+        // 2) 音频直链（外链接口 302 → 真实 mp3，转 https 避免混合内容；无权限时返回 404 页则置空）
+        let audioUrl = '';
+        try {
+          const aRes = await fetch('https://music.163.com/song/media/outer/url?id=' + id + '.mp3', { headers: UA, redirect: 'manual' });
+          const loc = aRes.headers.get('Location') || '';
+          if (loc && loc.includes('.mp3') && !loc.includes('/404')) {
+            audioUrl = loc.replace(/^http:\/\//i, 'https://');
+          }
+        } catch (e) { /* 无直链时静默 */ }
+        // 3) 歌词
+        let lrc = '';
+        try {
+          const lRes = await fetch('https://music.163.com/api/song/lyric?id=' + id + '&lv=1&kv=1&tv=-1', { headers: UA });
+          const lj = await lRes.json();
+          if (lj && lj.lrc && lj.lrc.lyric) lrc = lj.lrc.lyric;
+        } catch (e) { /* 无歌词时静默 */ }
+        const artist = (song.artists || []).map(a => a.name).join(' / ');
+        const pic = (song.album && song.album.picUrl) || '';
+        return json([{ name: song.name || '', artist: artist || '', url: audioUrl, pic: pic, lrc: lrc }]);
+      } catch (e) {
+        return json([]);
+      }
+    }
+
     return json({ error: 'not_found' }, 404);
   }
 };
