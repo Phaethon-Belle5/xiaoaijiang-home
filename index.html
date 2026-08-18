@@ -329,7 +329,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .bento-parchment:hover{transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
 .bento-dark{background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-border);padding:var(--space-8);display:flex;flex-direction:column;transition:all 0.35s var(--ease-out);border-radius:var(--radius-md);box-shadow:var(--shadow-card)}
 .bento-dark:hover{border-color:var(--gold-pale);box-shadow:var(--shadow-card-hover)}
-.bento-dark .card-label{font-family:var(--font-display);font-size:1.08em;font-weight:600;letter-spacing:.04em;color:var(--gold-bright)}
+.bento-dark .card-label{display:block;text-align:center;font-family:var(--font-display);font-size:1.08em;font-weight:600;letter-spacing:.04em;color:var(--wf-ink);background:linear-gradient(110deg,var(--grad-a) 30%,var(--grad-b) 48%,var(--grad-b) 52%,var(--grad-a) 70%);background-size:200% 100%;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
 .bento-dark .card-heading{color:var(--wf-ink);font-family:var(--font-display)}
 .bento-dark .card-text{color:var(--wf-body);white-space:pre-wrap}
 
@@ -421,7 +421,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 #back-to-top{position:fixed;bottom:150px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
 /* 悬浮音乐播放器 */
 .music-float{position:fixed;bottom:12px;right:150px;z-index:995;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.music-float.panel-open .music-fab{position:absolute;top:-12px;right:0;z-index:2}
+.music-float.panel-open .music-fab{position:absolute;top:-12px;left:0;z-index:2}
 .music-fab{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold);touch-action:none}
 .music-fab:hover{transform:scale(1.08)}
 .music-fab .m-note{display:flex;align-items:center;justify-content:center;color:var(--gold)}
@@ -644,7 +644,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
     </div>
   </div>
   <div class="footer-bottom">
-    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud · <span id="visit-count" style="color:var(--gold-pale)"></span></span>
+    <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud · <span id="visit-count" style="color:var(--gold-pale)"></span> · <a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener" style="color:inherit">萌ICP备20260854号</a></span>
     <span style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250816.optimize</span>
   </div>
 </footer>
@@ -1089,7 +1089,8 @@ function playVideoQueue(stage,oldVid){
     videoTimeout=setTimeout(()=>{videoIdx++;playVideoQueue(stage,v);},Math.max(dur,3000));
     renderWpControls();
   };
-  v.oncanplay=swap;v.onended=()=>{videoIdx++;playVideoQueue(stage,v);};
+  v.oncanplay=swap;
+  // 不随视频自然结束立即切换：统一按 duration（默认 30s）节奏轮播，视频播完静止显示最后一帧
   setTimeout(()=>{if(v.style.opacity==='0')swap();},2500);
 }
 function startWpTimer(){
