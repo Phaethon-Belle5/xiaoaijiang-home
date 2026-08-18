@@ -5,3 +5,7 @@ compatibility_date = "2025-01-01"
 [[kv_namespaces]]
 binding = "STORE"
 id = "14330ec39ac64891be778253e78e1cf7"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "home1xiaoaijiangcloud"

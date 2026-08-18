@@ -380,6 +380,21 @@ export default {
       }
     }
 
+    // ── POST /upload-audio?name=xxx ── 管理员上传音频到 R2（自托管音乐） ──
+    if (p === '/upload-audio' && method === 'POST') {
+      if (!(await sessionValid())) return json({ error: 'unauthorized' }, 401);
+      if (!env.BUCKET) return json({ error: 'bucket_not_configured' }, 500);
+      const rawName = (url.searchParams.get('name') || 'audio').trim();
+      const safeName = rawName.replace(/[^\w.\-\u4e00-\u9fa5]/g, '').slice(0, 50) || 'audio';
+      const key = 'Music/' + Date.now() + '-' + encodeURIComponent(safeName) + '.mp3';
+      try {
+        await env.BUCKET.put(key, request.body, { httpMetadata: { contentType: 'audio/mpeg' } });
+        return json({ ok: true, url: 'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/' + key });
+      } catch (e) {
+        return json({ error: String(e.message || e) }, 500);
+      }
+    }
+
     return json({ error: 'not_found' }, 404);
   }
 };

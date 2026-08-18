@@ -45,6 +45,7 @@ if (NETEASE_COOKIE) {
 }
 const bindings = [
   { type: 'kv_namespace', name: 'STORE', namespace_id: KV_ID },
+  { type: 'r2_bucket', name: 'BUCKET', bucket_name: 'home1xiaoaijiangcloud' },
 ];
 if (SITE_PASSWORD) {
   bindings.push({ type: 'plain_text', name: 'SITE_PASSWORD', text: SITE_PASSWORD });
