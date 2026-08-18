@@ -270,9 +270,12 @@ export default {
     if (p === '/meting' && method === 'GET') {
       const id = url.searchParams.get('id') || '';
       if (!/^\d{1,20}$/.test(id)) return json([]);
+      // 会员 Cookie（env 注入，绝不下发前端）：有 Cookie 时走会员通道拿 VIP 直链
+      const NETEASE_COOKIE = env.NETEASE_COOKIE || '';
       const UA = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36',
         'Referer': 'https://music.163.com',
+        ...(NETEASE_COOKIE ? { 'Cookie': NETEASE_COOKIE } : {}),
       };
       try {
         // 1) 歌曲信息
@@ -280,15 +283,25 @@ export default {
         const info = await infoRes.json();
         const song = (info && info.songs && info.songs[0]) || null;
         if (!song) return json([]);
-        // 2) 音频直链（外链接口 302 → 真实 mp3，转 https 避免混合内容；无权限时返回 404 页则置空）
+        // 2) 音频直链：优先会员通道（enhance/player/url），失败回退外链接口
         let audioUrl = '';
-        try {
-          const aRes = await fetch('https://music.163.com/song/media/outer/url?id=' + id + '.mp3', { headers: UA, redirect: 'manual' });
-          const loc = aRes.headers.get('Location') || '';
-          if (loc && loc.includes('.mp3') && !loc.includes('/404')) {
-            audioUrl = loc.replace(/^http:\/\//i, 'https://');
-          }
-        } catch (e) { /* 无直链时静默 */ }
+        if (NETEASE_COOKIE) {
+          try {
+            const uRes = await fetch('https://music.163.com/api/song/enhance/player/url?ids=[' + id + ']&br=320000', { headers: UA });
+            const uj = await uRes.json();
+            const d = (uj && uj.data && uj.data[0]) || null;
+            if (d && d.url) audioUrl = d.url.replace(/^http:\/\//i, 'https://');
+          } catch (e) { /* 会员通道失败则回退 */ }
+        }
+        if (!audioUrl) {
+          try {
+            const aRes = await fetch('https://music.163.com/song/media/outer/url?id=' + id + '.mp3', { headers: UA, redirect: 'manual' });
+            const loc = aRes.headers.get('Location') || '';
+            if (loc && loc.includes('.mp3') && !loc.includes('/404')) {
+              audioUrl = loc.replace(/^http:\/\//i, 'https://');
+            }
+          } catch (e) { /* 无直链时静默 */ }
+        }
         // 3) 歌词
         let lrc = '';
         try {

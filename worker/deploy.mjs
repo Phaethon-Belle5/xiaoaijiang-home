@@ -35,6 +35,14 @@ if (!GITHUB_CLIENT_SECRET) {
 if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
   console.error('⚠️  未找到 GITHUB_CLIENT_ID/SECRET（环境变量或 .github_client_id / .github_client_secret 文件）。评论的 GitHub 登录将不可用。');
 }
+// ── 网易云会员 Cookie（可选）：从本地 .netease_cookie 文件读取，只存服务端 ──
+let NETEASE_COOKIE = process.env.NETEASE_COOKIE || '';
+if (!NETEASE_COOKIE) {
+  try { NETEASE_COOKIE = readFileSync(join(import.meta.dirname || '.', '.netease_cookie'), 'utf-8').trim(); } catch (e) { /* optional */ }
+}
+if (NETEASE_COOKIE) {
+  console.log('✅ 已配置网易云会员 Cookie（VIP 歌曲可直链播放）');
+}
 const bindings = [
   { type: 'kv_namespace', name: 'STORE', namespace_id: KV_ID },
 ];
@@ -46,6 +54,9 @@ if (GITHUB_CLIENT_ID) {
 }
 if (GITHUB_CLIENT_SECRET) {
   bindings.push({ type: 'plain_text', name: 'GITHUB_CLIENT_SECRET', text: GITHUB_CLIENT_SECRET });
+}
+if (NETEASE_COOKIE) {
+  bindings.push({ type: 'plain_text', name: 'NETEASE_COOKIE', text: NETEASE_COOKIE });
 }
 
 // Upload with metadata in header
