@@ -267,6 +267,53 @@ export default {
     }
 
     // ── GET /meting?server=netease&type=song&id=xxx ── 网易云歌曲代理（官方接口直连，不依赖第三方配额） ──
+    // weapi 加密（对照 mikus-loli/Meting-API 验证实现）：双层 AES-CBC + RSA 裸模幂
+    const W_MODULUS = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7';
+    const W_PUBKEY = '010001';
+    const W_IV = new TextEncoder().encode('0102030405060708');
+    const W_PRESET_KEY = '0CoJUm6Qyw8W8jud';
+    const W_BASE62 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const weapiSecretKey = () => {
+      const b = new Uint8Array(16);
+      crypto.getRandomValues(b);
+      let s = '';
+      for (const n of b) s += W_BASE62[n % 62];
+      return s;
+    };
+    const weapiAes = async (text, key) => {
+      const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'AES-CBC' }, false, ['encrypt']);
+      const data = new TextEncoder().encode(text);
+      const pad = 16 - (data.length % 16);
+      const padded = new Uint8Array(data.length + pad);
+      padded.set(data);
+      padded.fill(pad, data.length);
+      const enc = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: W_IV }, k, padded);
+      let bin = '';
+      const bytes = new Uint8Array(enc);
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    };
+    const weapiRsa = (keyBytes) => {
+      const m = BigInt('0x' + W_MODULUS);
+      const e = BigInt('0x' + W_PUBKEY);
+      let x = 0n;
+      for (const b of keyBytes) x = (x << 8n) | BigInt(b);
+      let result = 1n, base = x % m, exp = e;
+      while (exp > 0n) {
+        if (exp & 1n) result = (result * base) % m;
+        base = (base * base) % m;
+        exp >>= 1n;
+      }
+      return result.toString(16).padStart(256, '0');
+    };
+    const weapiEncrypt = async (obj) => {
+      const text = JSON.stringify(obj);
+      const secretKey = weapiSecretKey();
+      const p1 = await weapiAes(text, W_PRESET_KEY);
+      const p2 = await weapiAes(p1, secretKey);
+      const keyBytes = [...secretKey].reverse().map(ch => ch.charCodeAt(0));
+      return { params: p2, encSecKey: weapiRsa(keyBytes) };
+    };
     if (p === '/meting' && method === 'GET') {
       const id = url.searchParams.get('id') || '';
       if (!/^\d{1,20}$/.test(id)) return json([]);
@@ -279,19 +326,35 @@ export default {
       };
       try {
         // 1) 歌曲信息
-        const infoRes = await fetch('https://music.163.com/api/song/detail/?ids=[' + id + ']', { headers: UA });
+        const infoRes = await fetch('https://music.163.com/api/song/detail/?ids=%5B' + id + '%5D', { headers: UA });
         const info = await infoRes.json();
         const song = (info && info.songs && info.songs[0]) || null;
         if (!song) return json([]);
-        // 2) 音频直链：优先会员通道（enhance/player/url），失败回退外链接口
+        // 2) 音频直链：优先会员通道（weapi），回退 enhance GET，再回退外链接口
         let audioUrl = '';
-        if (NETEASE_COOKIE) {
+        try {
+          const w = await weapiEncrypt({ ids: '[' + id + ']', br: 320000, csrf_token: '' });
+          const uRes = await fetch('https://music.163.com/weapi/song/enhance/player/url', {
+            method: 'POST',
+            headers: {
+              'User-Agent': UA['User-Agent'],
+              'Referer': UA['Referer'],
+              'Content-Type': 'application/x-www-form-urlencoded',
+              ...(NETEASE_COOKIE ? { 'Cookie': NETEASE_COOKIE } : {}),
+            },
+            body: 'params=' + encodeURIComponent(w.params) + '&encSecKey=' + w.encSecKey,
+          });
+          const uj = await uRes.json();
+          const d = (uj && uj.data && uj.data[0]) || null;
+          if (d && d.url) audioUrl = d.url.replace(/^http:\/\//i, 'https://');
+        } catch (e) { /* 会员通道失败则回退 */ }
+        if (!audioUrl && NETEASE_COOKIE) {
           try {
-            const uRes = await fetch('https://music.163.com/api/song/enhance/player/url?ids=[' + id + ']&br=320000', { headers: UA });
+            const uRes = await fetch('https://music.163.com/api/song/enhance/player/url?ids=%5B' + id + '%5D&br=320000', { headers: UA });
             const uj = await uRes.json();
             const d = (uj && uj.data && uj.data[0]) || null;
             if (d && d.url) audioUrl = d.url.replace(/^http:\/\//i, 'https://');
-          } catch (e) { /* 会员通道失败则回退 */ }
+          } catch (e) { /* 回退 */ }
         }
         if (!audioUrl) {
           try {
