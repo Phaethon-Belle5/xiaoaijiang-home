@@ -1576,7 +1576,7 @@ function disposeMap(){if(mapChart){mapChart.dispose();mapChart=null;}}
 // ============================================================
 // 悬浮音乐播放器（直链 + MetingJS 网易云歌单）
 // ============================================================
-let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false,_curLyrics=[],_lyricTimer=null,_activeLyric='';
+let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false,_curLyrics=[],_lyricTimer=null,_activeLyric='',_musicMode='';
 function getAudio(){if(!_audio)_audio=document.getElementById('bgm-audio')||new Audio();return _audio;}
 function parseLrc(txt){
   if(!txt||txt.length>20000)return[];
@@ -1657,6 +1657,7 @@ function loadMetingSongs(ids){
     fetch(API_URL+'/meting?server=netease&type=song&id='+id)
       .then(r=>r.ok?r.json():null).catch(()=>null)
   )).then(results=>{
+    if(_musicMode!=='net')return; // 已被直链模式替代，丢弃过期结果
     const songs=[];
     (results||[]).forEach(res=>{
       const s=(Array.isArray(res)?res[0]:res)||{};
@@ -1697,6 +1698,7 @@ function syncMusicSource(){
   const direct=(data.directUrls||[]).map(s=>String(s).trim()).filter(Boolean);
   if(direct.length){
     fab.style.display='flex';
+    _musicMode='direct';
     const a=getAudio();
     if(a.dataset.mode==='direct'&&_playlist.length===direct.length)return; // 已加载同一列表，不重复打断
     _playlist=direct.map((u,i)=>({name:'歌曲 '+(i+1)+' · '+(decodeURIComponent(u.split('/').pop()||'').replace(/^\d+-/,'')),src:u,cover:'',lrc:''}));
@@ -1706,7 +1708,7 @@ function syncMusicSource(){
     return;
   }
   const ids=String(data.cloudMusicIds||'').trim();
-  if(ids){fab.style.display='flex';loadMetingSongs(ids);return;}
+  if(ids){fab.style.display='flex';_musicMode='net';loadMetingSongs(ids);return;}
   const bgm=String(data.bgm||'').trim();
   if(!bgm){fab.style.display='none';syncMusicCard();return;}
   fab.style.display='flex';
