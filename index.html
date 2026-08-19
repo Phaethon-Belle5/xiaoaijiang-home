@@ -928,7 +928,12 @@ function mergeData(d,s){
   if(s.accent)d.accent=s.accent;
   if(s.testimonials?.length)d.testimonials=s.testimonials;
   if(Array.isArray(s.petMessages)&&s.petMessages.length)d.petMessages=s.petMessages;
-  if(Array.isArray(s.memos))d.memos=s.memos;
+  // memos 合并而非覆盖：保留本地新增的（id 云端没有的），避免云端旧数据吞掉刚添加的说说
+  if(Array.isArray(s.memos)){
+    const cloudIds=new Set(s.memos.map(m=>m&&m.id).filter(Boolean));
+    const localOnly=(d.memos||[]).filter(m=>m&&m.id&&!cloudIds.has(m.id));
+    d.memos=localOnly.length?[...s.memos,...localOnly]:s.memos;
+  }
   if(s.portfolio?.length)d.portfolio=s.portfolio;
   if(s.gallery?.length)d.gallery=s.gallery;
   if(s.modules?.length)d.modules=s.modules;
@@ -1001,9 +1006,9 @@ function saveData(showToast=true){
     return fetch(API_URL+'/data/'+k,{method:'POST',headers:hdrs,body:body}).then(r=>{if(r.status===401){authFailed=true;return;}if(r.ok)synced++;});
   }).concat(videos.map((v,i)=>fetch(API_URL+'/data/wp-v-'+i,{method:'POST',headers:hdrs,body:JSON.stringify(v)}).then(r=>{if(r.status===401){authFailed=true;return;}if(r.ok)synced++;})))).then(()=>{
     if(authFailed){handleAuthFail();return;}
-    if(showToast)toast(synced>0?'已保存并同步到云端':'已保存到本设备','success');
+    if(showToast)toast(synced>=keys.length?'已保存并同步到云端':(synced>0?'已保存（部分同步到云端）':'⚠️ 已保存到本设备，但云端同步失败——请重新登录后再次保存，否则换设备会丢失'),synced>0?'success':'error');
   }).catch(()=>{
-    if(showToast)toast('已保存到本设备','info');
+    if(showToast)toast('⚠️ 已保存到本设备，但云端同步失败（网络错误）','error');
   });
 }
 
