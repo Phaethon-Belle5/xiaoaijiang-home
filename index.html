@@ -961,7 +961,7 @@ async function syncFromCloud(localResult){
       }
       if(vids.length)remote.wallpaper.videos=vids;
     }
-    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)){
+    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.directUrls)!==JSON.stringify(data.directUrls)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
       const preserveImages={};
       if(data.profile?.avatar?.startsWith('data:'))preserveImages.avatar=data.profile.avatar;
       if(data.content){
