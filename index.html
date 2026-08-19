@@ -1691,11 +1691,30 @@ function loadMetingPlaylist(pid){
       else toast('歌单加载失败，可在后台设置音频直链','info');
     });
 }
+// 播放器兜底：独立拉取云端直链列表（不依赖主同步链路）
+async function ensureDirectUrls(){
+  try{
+    const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch(API_URL+'/data',{signal:ctrl.signal});clearTimeout(t);
+    if(!r.ok)return false;
+    const j=await r.json();
+    if(Array.isArray(j.directUrls)&&j.directUrls.length&&JSON.stringify(j.directUrls)!==JSON.stringify(data.directUrls)){
+      data.directUrls=j.directUrls;
+      try{dbSet(LS_KEY,data);}catch(e){}
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 function syncMusicSource(){
   const fab=document.getElementById('music-fab');
   if(!fab)return;
   // 优先自托管直链列表（R2，永久稳定）
   const direct=(data.directUrls||[]).map(s=>String(s).trim()).filter(Boolean);
+  if(!direct.length){
+    // 无直链时兜底拉取云端（主同步可能超时），成功后重建
+    ensureDirectUrls().then(ok=>{if(ok)syncMusicSource();});
+  }
   if(direct.length){
     fab.style.display='flex';
     _musicMode='direct';
