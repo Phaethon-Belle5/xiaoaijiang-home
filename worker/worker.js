@@ -395,6 +395,43 @@ export default {
       }
     }
 
+    // ── GET /music?key=Music/xxx.mp3 ── 音频代理（Worker 内网读 R2，浏览器走 CF 边缘 CDN，支持 Range 分段） ──
+    if (p === '/music' && method === 'GET') {
+      if (!env.BUCKET) return json({ error: 'bucket_not_configured' }, 500);
+      const key = url.searchParams.get('key') || '';
+      if (!key.startsWith('Music/') || key.length > 300) return json({ error: 'invalid_key' }, 400);
+      try {
+        const obj = await env.BUCKET.get(key);
+        if (!obj) return json({ error: 'not_found' }, 404);
+        const base = {
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*',
+          'Accept-Ranges': 'bytes',
+        };
+        const range = request.headers.get('Range');
+        if (range) {
+          const m = range.match(/bytes=(\d+)-(\d*)/);
+          if (m) {
+            const start = parseInt(m[1], 10);
+            const end = m[2] ? Math.min(parseInt(m[2], 10), obj.size - 1) : obj.size - 1;
+            if (start >= 0 && start < obj.size && start <= end) {
+              const part = await env.BUCKET.get(key, { range: { offset: start, length: end - start + 1 } });
+              if (part) {
+                return new Response(part.body, {
+                  status: 206,
+                  headers: { ...base, 'Content-Range': 'bytes ' + start + '-' + end + '/' + obj.size, 'Content-Length': String(end - start + 1) },
+                });
+              }
+            }
+          }
+        }
+        return new Response(obj.body, { status: 200, headers: { ...base, 'Content-Length': String(obj.size) } });
+      } catch (e) {
+        return json({ error: String(e.message || e) }, 500);
+      }
+    }
+
     return json({ error: 'not_found' }, 404);
   }
 };
