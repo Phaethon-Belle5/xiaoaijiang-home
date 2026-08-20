@@ -1733,7 +1733,21 @@ function syncMusicSource(){
     _musicMode='direct';
     const a=getAudio();
     if(a.dataset.mode==='direct'&&_playlist.length===direct.length)return; // 已加载同一列表，不重复打断
-    _playlist=direct.map((u,i)=>({name:'歌曲 '+(i+1)+' · '+(decodeURIComponent(u.split('/').pop()||'').replace(/^\d+-/,'')),src:toMusicProxy(u),cover:'',lrc:''}));
+    const R2P='https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/';
+    _playlist=direct.map(u=>{
+      // 文件名（解码 + 去扩展名）作为歌名；同名 .lrc/.jpg 作为歌词/封面（不存在则静默）
+      const raw=u.split('/').pop()||'';
+      let fname=raw;
+      try{fname=decodeURIComponent(raw);}catch(e){}
+      const base=fname.replace(/\.[^.]+$/,'');
+      const enc=encodeURIComponent(base);
+      return {
+        name: base,
+        src: toMusicProxy(u),
+        cover: R2P+'Music/'+enc+'.jpg',
+        lrc: R2P+'Music/'+enc+'.lrc',
+      };
+    });
     _plIdx=0;
     a.dataset.mode='direct';
     playSong(_playlist[0]);
