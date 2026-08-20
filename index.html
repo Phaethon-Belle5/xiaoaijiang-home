@@ -1866,7 +1866,7 @@ function initMusicPlayer(){
   });
   fab.addEventListener('pointerup',endFabDrag);
   fab.addEventListener('pointercancel',endFabDrag);
-  playBtn.addEventListener('click',e=>{e.stopPropagation();if(a.src){(a.paused?a.play():a.pause()).catch(()=>{});}else toast('后台还没设置音乐','info');});
+  playBtn.addEventListener('click',e=>{e.stopPropagation();if(!a.src){toast('后台还没设置音乐','info');return;}const p=a.paused?a.play():a.pause();if(p&&p.catch)p.catch(()=>{});});
   document.getElementById('music-prev').addEventListener('click',e=>{e.stopPropagation();prevSong();});
   document.getElementById('music-next').addEventListener('click',e=>{e.stopPropagation();nextSong();});
   prog.addEventListener('click',e=>{if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;});
