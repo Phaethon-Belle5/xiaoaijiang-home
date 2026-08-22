@@ -162,11 +162,11 @@ async function main() {
   console.log('remote master currently:', cur.object.sha);
   const target = headRemoteSha || head;
   if (cur.object.sha !== target) {
-    // GitHub git-data API 一致性延迟：刚创建的对象可能暂时不可见，重试
+    // 远端可能被其他客户端（如 Codex）推进：本版本是其超集，force 更新
     let ok = false;
     for (let attempt = 1; attempt <= 6 && !ok; attempt++) {
       try {
-        await api(`/repos/${repo}/git/refs/heads/master`, 'PATCH', { sha: target, force: false });
+        await api(`/repos/${repo}/git/refs/heads/master`, 'PATCH', { sha: target, force: true });
         ok = true;
       } catch (e) {
         console.log(`ref update attempt ${attempt} failed (${e.message.slice(0, 80)}), retrying...`);
