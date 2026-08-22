@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark"><!-- v250816.optimize -->
+<html lang="zh-CN" data-theme="dark"><!-- v250822.player -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,8 +94,8 @@
 .glass-input{background:var(--glass-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:var(--radius-md);color:var(--text-primary)}
 .glass-input:focus{border-color:var(--gold);outline:none}
 /* 说说（毛玻璃便利贴） */
-.memo-wall{display:flex;flex-wrap:wrap;gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding);justify-content:center}
-.memo-card{position:relative;width:240px;min-height:150px;padding:var(--space-6);border-radius:var(--radius-lg);
+.memo-wall{display:flex;flex-wrap:wrap;gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding);justify-content:center;align-items:flex-start}
+.memo-card{position:relative;width:240px;padding:var(--space-6);border-radius:var(--radius-lg);
   background:var(--glass-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border:1px solid var(--glass-border);box-shadow:var(--shadow-card);
   transition:transform 0.3s var(--ease-out),box-shadow 0.3s var(--ease-out)}
@@ -424,9 +424,10 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 /* ---- Back to Top ---- */
 #back-to-top{position:fixed;bottom:150px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
 /* 悬浮音乐播放器 */
-.music-float{position:fixed;bottom:12px;right:150px;z-index:995;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.music-float.panel-open .music-fab{position:absolute;top:-12px;left:0;z-index:2}
-.music-fab{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold);touch-action:none}
+.music-float{position:fixed;right:150px;bottom:12px;z-index:995;width:52px;height:52px}
+.music-float.panel-open{width:min(312px,calc(100vw - 32px));height:auto}
+.music-fab{position:absolute;right:0;bottom:0;z-index:2;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold);background:var(--astral-elevated);border:1px solid var(--surface-border);box-shadow:var(--shadow-card)}
+.music-float.panel-open .music-fab{right:14px;bottom:14px}
 .music-fab:hover{transform:scale(1.08)}
 .music-fab .m-note{display:flex;align-items:center;justify-content:center;color:var(--gold)}
 .music-fab .m-eq{display:none;align-items:flex-end;gap:2px;height:18px}
@@ -436,7 +437,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .music-fab .m-eq i:nth-child(2){animation-delay:.15s}
 .music-fab .m-eq i:nth-child(3){animation-delay:.3s}
 @keyframes eqbounce{0%,100%{height:5px}50%{height:18px}}
-.music-panel{display:none;width:280px;background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:16px;box-shadow:var(--shadow-card);padding:14px 16px}
+.music-panel{display:none;box-sizing:border-box;width:100%;background:var(--glass-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--glass-border);border-radius:16px;box-shadow:var(--shadow-card);padding:14px 16px 80px}
 .music-panel.open{display:block;animation:viewIn .3s var(--ease-out)}
 .music-title{font-size:.85em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}
 .music-progress{height:5px;background:rgba(255,255,255,.12);border-radius:3px;cursor:pointer;margin-bottom:10px;position:relative}
@@ -475,9 +476,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .mc-title{font-family:var(--font-display);font-size:1.05em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:var(--space-2)}
 .mc-stage{position:relative;height:120px;margin-bottom:var(--space-3)}
 .mc-lyric{font-size:.9em;color:var(--gold-bright);height:100%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.6;letter-spacing:.02em;padding:0 var(--space-2)}
-.mc-list-btn,.music-list-btn{margin-top:var(--space-2);padding:5px 16px;border-radius:9999px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:.74em;cursor:pointer;transition:all .2s}
-.mc-list-btn:hover,.music-list-btn:hover{border-color:var(--gold);color:var(--gold)}
-.music-playlist{max-height:190px;overflow-y:auto;margin-top:var(--space-2);border-top:1px solid var(--glass-border);padding-top:var(--space-2)}
+.mc-list-btn{margin-top:var(--space-2);padding:5px 16px;border-radius:9999px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:.74em;cursor:pointer;transition:all .2s}
+.mc-list-btn:hover{border-color:var(--gold);color:var(--gold)}
+.music-playlist{display:block;max-height:min(190px,calc(100vh - 285px));overflow-y:auto;margin-top:var(--space-3);border-top:1px solid var(--glass-border);padding-top:var(--space-2)}
 .mc-playlist{position:absolute;inset:0;overflow-y:auto;text-align:left;display:none;border:1px solid var(--glass-border);border-radius:10px;background:rgba(10,16,30,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:var(--space-2)}
 [data-theme="light"] .mc-playlist{background:rgba(255,255,255,0.6)}
 .mc-playlist::-webkit-scrollbar,.music-playlist::-webkit-scrollbar{width:4px}
@@ -509,15 +510,16 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 #back-to-top:hover{background:var(--gold);color:var(--void);border-color:var(--gold)}
 
 /* ---- Wallpaper Controls ---- */
-#wp-stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--void)}
+#wp-stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--void) url("https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg") center/cover no-repeat}
 #wp-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-#wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85)}
+#wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85);transform:translateZ(0)}
 #wp-stage .wp-img.on{opacity:1}
 .wp-controls{position:fixed;bottom:28px;right:24px;z-index:998;display:flex;gap:6px;align-items:center}
 .wp-dot{width:9px;height:9px;border-radius:50%;background:rgba(212,168,67,0.35);cursor:pointer;transition:all 0.2s}
 .wp-dot.on,.wp-dot:hover{background:var(--gold);transform:scale(1.3)}
-.wp-video-toggle{width:26px;height:26px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s}
-.wp-video-toggle:hover{color:var(--gold);border-color:var(--gold)}
+.wp-video-toggle,.wp-cycle-btn{width:34px;height:34px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s;box-shadow:var(--shadow-card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.wp-video-toggle:hover,.wp-cycle-btn:hover{color:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
+.wp-cycle-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;color:var(--text-muted);border-color:var(--surface-border)}
 
 /* ---- Admin Panel (Dark) ---- */
 #admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;display:none;align-items:center;justify-content:center}
@@ -590,10 +592,12 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   .contact-card{flex-direction:column;align-items:center;gap:var(--space-4)}
   .carousel-arrow{width:36px;height:36px;font-size:0.9em}
   .carousel-arrow.prev{left:var(--space-3)}.carousel-arrow.next{right:var(--space-3)}
-  .wp-controls{bottom:20px;right:60px}
+  .wp-controls{bottom:88px;right:16px}
   .admin-tabs{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
   .admin-tab{padding:6px 10px;font-size:.72em}
   #back-to-top{bottom:140px;right:16px}
+  .music-float{right:16px;bottom:20px}
+  .music-float.panel-open{width:min(312px,calc(100vw - 32px))}
   #admin-entry-btn{bottom:20px;left:14px}
   .form-row{flex-direction:column}
 }
@@ -649,7 +653,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   </div>
   <div class="footer-bottom">
     <span>&copy; <span id="footer-year">2026</span> xiaoaijiang.cloud · <a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener" style="color:inherit">萌ICP备20260854号</a></span>
-    <span style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250816.optimize</span>
+    <span id="app-version" style="font-family:var(--font-mono);font-size:0.85em;opacity:0.4">v250822.player</span>
   </div>
 </footer>
 
@@ -683,10 +687,9 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
       <button id="music-next" class="music-btn" title="下一首" aria-label="下一首"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
       <div class="music-vol"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.7"></div>
     </div>
-    <button id="music-list-btn" class="music-list-btn">播放列表</button>
-    <div id="music-playlist" class="music-playlist"></div>
+    <div id="music-playlist" class="music-playlist" aria-label="播放列表"></div>
   </div>
-  <button id="music-fab" class="music-fab" title="音乐播放器" aria-label="音乐播放器">
+  <button id="music-fab" class="music-fab" title="音乐播放器" aria-label="音乐播放器" aria-controls="music-panel" aria-expanded="false">
     <span class="m-note"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></span>
     <span class="m-eq"><i></i><i></i><i></i></span>
   </button>
@@ -729,7 +732,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 <input type="file" id="gallery-image" accept="image/*" style="display:none">
 <input type="file" id="carousel-bg-image" accept="image/*" style="display:none">
 <input type="file" id="audio-upload" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg" style="display:none">
-<audio id="bgm-audio" loop preload="none" style="display:none"></audio>
+<audio id="bgm-audio" preload="none" style="display:none"></audio>
 
 <script>
 // ============================================================
@@ -845,8 +848,9 @@ window.addEventListener('hashchange',()=>{
 });
 
 const DEFAULT_WALLPAPERS=[
-  "assets/wallpaper-default.jpg"
+  "https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg"
 ];
+const LEGACY_DEFAULT_WALLPAPER="assets/wallpaper-default.jpg";
 
 const DEFAULT_DATA={
   profile:{avatar:"assets/avatar-default.jpg",name:"伶俜",tagline:"记录生活 · 分享热爱",bio:"一个热爱生活的人。喜欢摄影、旅行、阅读和一切美好的事物。\n这个网站是我的一片自留地，欢迎你来玩。"},
@@ -987,7 +991,7 @@ function saveData(showToast=true){
   const strip=(obj,keys)=>{keys.forEach(k=>{if(obj[k]&&obj[k].startsWith('data:'))obj[k]='';});};
   if(cloud.profile)strip(cloud.profile,['avatar']);
   if(cloud.content){['slide1Bg','slide2Bg','slide3Bg'].forEach(k=>{if(cloud.content[k]&&cloud.content[k].startsWith('data:'))cloud.content[k]='';});}
-  if(cloud.wallpaper){if(cloud.wallpaper.images)cloud.wallpaper.images=cloud.wallpaper.images.map(u=>u.startsWith('data:')?'':u);if(cloud.wallpaper.videos){cloud.wallpaper.videos=cloud.wallpaper.videos.map(v=>({duration:v.duration}));}}
+  if(cloud.wallpaper){if(cloud.wallpaper.images)cloud.wallpaper.images=cloud.wallpaper.images.map(u=>u.startsWith('data:')?'':u);if(cloud.wallpaper.videos){cloud.wallpaper.videos=cloud.wallpaper.videos.map(v=>({src:(v.src&&/^https?:/.test(v.src))?v.src:'',duration:v.duration}));}}
   if(cloud.portfolio)cloud.portfolio.forEach(p=>{if(p.image&&p.image.startsWith('data:'))p.image='';});
   if(cloud.gallery)cloud.gallery.forEach(g=>{if(g.image&&g.image.startsWith('data:'))g.image='';});
 
@@ -1067,34 +1071,61 @@ function toggleTheme(){
 // ============================================================
 // WALLPAPER
 // ============================================================
-let videoQueue=[],videoIdx=0,videoTimeout=null;
+let videoQueue=[],videoIdx=0,videoTimeout=null,wpRuntimeMode='image';
+function getWallpaperImages(){
+  const imgs=(data.wallpaper?.images||[]).filter(Boolean).filter(u=>u!==LEGACY_DEFAULT_WALLPAPER);
+  return imgs.length?imgs:DEFAULT_WALLPAPERS;
+}
+function ensureWallpaperFallback(stage){
+  wpRuntimeMode='image';
+  const fallback=getWallpaperImages()[0]||DEFAULT_WALLPAPERS[0];
+  if(!stage||!fallback)return;
+  let d=stage.querySelector('.wp-img.fallback');
+  if(!d){d=document.createElement('div');d.className='wp-img fallback on';d.setAttribute('aria-hidden','true');stage.appendChild(d);}
+  d.style.backgroundImage=`url(${fallback})`;
+}
+function renderImageWallpapers(stage,imgs){
+  if(!stage)return;
+  stage.innerHTML='';
+  wpRuntimeMode='image';
+  const list=(imgs&&imgs.length?imgs:[DEFAULT_WALLPAPERS[0]]).filter(Boolean);
+  list.forEach((url,i)=>{
+    const d=document.createElement('div');d.className='wp-img'+(i===0?' on':'');
+    if(i===0)d.style.backgroundImage=`url(${url})`;else d.dataset.bg=url;
+    d.setAttribute('aria-hidden','true');stage.appendChild(d);
+  });
+  wpIndex=0;startWpTimer();renderWpControls();
+  window.requestIdleCallback?window.requestIdleCallback(loadRemainingWp):setTimeout(loadRemainingWp,2000);
+  function loadRemainingWp(){document.querySelectorAll('#wp-stage .wp-img[data-bg]').forEach(d=>{d.style.backgroundImage=`url(${d.dataset.bg})`;d.removeAttribute('data-bg');});}
+}
 function initWallpapers(){
-  const stage=document.getElementById('wp-stage');stage.innerHTML='';const w=data.wallpaper;
+  const stage=document.getElementById('wp-stage');if(!stage)return;stage.innerHTML='';const w=data.wallpaper||{};
   if(wpTimer)clearInterval(wpTimer);if(videoTimeout)clearTimeout(videoTimeout);
   if(w.type==='video'&&(w.videos||[]).length){
-    videoQueue=w.videos;videoIdx=0;playVideoQueue(stage);renderWpControls();
+    ensureWallpaperFallback(stage);
+    videoQueue=w.videos.filter(v=>v&&v.src);videoIdx=0;wpRuntimeMode=videoQueue.length?'video':'image';
+    videoQueue.length?playVideoQueue(stage):renderImageWallpapers(stage,getWallpaperImages());renderWpControls();
   }else{
-    const imgs=w.images||[];if(!imgs.length)return;
-    imgs.forEach((url,i)=>{
-      const d=document.createElement('div');d.className='wp-img'+(i===0?' on':'');
-      if(i===0)d.style.backgroundImage=`url(${url})`;else d.dataset.bg=url;
-      d.setAttribute('aria-hidden','true');stage.appendChild(d);
-    });
-    wpIndex=0;startWpTimer();renderWpControls();
-    requestIdleCallback?requestIdleCallback(loadRemainingWp):setTimeout(loadRemainingWp,2000);
-    function loadRemainingWp(){document.querySelectorAll('#wp-stage .wp-img[data-bg]').forEach(d=>{d.style.backgroundImage=`url(${d.dataset.bg})`;d.removeAttribute('data-bg');});}
+    const imgs=getWallpaperImages();if(!imgs.length){ensureWallpaperFallback(stage);return;}
+    renderImageWallpapers(stage,imgs);
   }
 }
 function playVideoQueue(stage,oldVid){
+  if(!stage)return;
   if(videoIdx>=videoQueue.length)videoIdx=0;
-  const item=videoQueue[videoIdx];if(!item||!item.src)return;
+  const item=videoQueue[videoIdx];if(!item||!item.src){renderImageWallpapers(stage,getWallpaperImages());return;}
   const v=document.createElement('video');v.src=item.src;v.autoplay=true;v.muted=true;v.playsInline=true;
+  v.preload='auto';
+  v.poster=getWallpaperImages()[0]||DEFAULT_WALLPAPERS[0]||'';
   v.setAttribute('aria-hidden','true');
   v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s';
-  const cleanup=()=>{v.remove();videoIdx++;if(videoIdx<videoQueue.length)playVideoQueue(stage,null);else{data.wallpaper.type='image';saveData();initWallpapers();}};
+  let settled=false;
+  const cleanup=()=>{if(settled)return;settled=true;try{v.remove()}catch(e){};videoIdx++;if(videoIdx<videoQueue.length)playVideoQueue(stage,oldVid);else renderImageWallpapers(stage,getWallpaperImages());};
   v.onerror=cleanup;
   stage.appendChild(v);
   const swap=()=>{
+    if(settled)return;
+    settled=true;
     if(videoTimeout)clearTimeout(videoTimeout);
     v.style.opacity='1';
     if(oldVid){oldVid.style.opacity='0';setTimeout(()=>{try{oldVid.remove()}catch(e){}},700);}
@@ -1103,35 +1134,54 @@ function playVideoQueue(stage,oldVid){
     videoTimeout=setTimeout(()=>{videoIdx++;playVideoQueue(stage,v);},Math.max(dur,3000));
     renderWpControls();
   };
-  v.oncanplay=swap;
+  v.oncanplay=swap;v.onloadeddata=swap;
   // 不随视频自然结束立即切换：统一按 duration（默认 30s）节奏轮播，视频播完静止显示最后一帧
-  setTimeout(()=>{if(v.style.opacity==='0')swap();},2500);
+  setTimeout(()=>{if(v.style.opacity==='0'){v.readyState>=2?swap():cleanup();}},3500);
 }
 function startWpTimer(){
   if(wpTimer)clearInterval(wpTimer);
-  if(data.wallpaper.type==='video'||(data.wallpaper.images||[]).length<=1)return;
+  if(wpRuntimeMode==='video'||getWallpaperImages().length<=1)return;
   wpTimer=setInterval(()=>{const s=document.querySelectorAll('#wp-stage .wp-img');if(!s.length)return;s[wpIndex].classList.remove('on');wpIndex=(wpIndex+1)%s.length;s[wpIndex].classList.add('on');},data.wallpaper.interval*1000);
 }
 function renderWpControls(){
   const c=document.getElementById('wp-controls');if(!c){const d=document.createElement('div');d.className='wp-controls';d.id='wp-controls';document.body.appendChild(d);}
   const cc=document.getElementById('wp-controls');cc.innerHTML='';
-  if(data.wallpaper.type==='video'&&(data.wallpaper.videos||[]).length){
-    data.wallpaper.videos.forEach((_,i)=>{
+  if(wpRuntimeMode==='video'&&videoQueue.length){
+    videoQueue.forEach((_,i)=>{
       const d=document.createElement('span');d.className='wp-dot'+(i===videoIdx?' on':'');
-      d.onclick=()=>{videoIdx=i;playVideoQueue(document.getElementById('wp-stage'));};
+      d.onclick=()=>{videoIdx=i;playVideoQueue(document.getElementById('wp-stage'),getActiveWallpaperVideo());};
       d.setAttribute('aria-label','视频 '+(i+1));d.setAttribute('role','button');d.setAttribute('tabindex','0');
-      d.onkeydown=e=>{if(e.key==='Enter'){videoIdx=i;playVideoQueue(document.getElementById('wp-stage'));}};
+      d.onkeydown=e=>{if(e.key==='Enter'){videoIdx=i;playVideoQueue(document.getElementById('wp-stage'),getActiveWallpaperVideo());}};
       cc.appendChild(d);
     });
     const b=document.createElement('button');b.className='wp-video-toggle';b.textContent='⏯';b.title='暂停/播放';
     b.setAttribute('aria-label','切换视频播放');
     b.onclick=()=>{const v=document.querySelector('#wp-stage video');if(!v)return;v.paused?(v.play().catch(()=>{}),toast('已播放','info')):(v.pause(),toast('已暂停','info'));};
-    cc.appendChild(b);return;
+    cc.appendChild(b);appendWpCycleButton(cc);return;
   }
-  if((data.wallpaper.images||[]).length<=1)return;
-  data.wallpaper.images.forEach((_,i)=>{const d=document.createElement('span');d.className='wp-dot'+(i===wpIndex?' on':'');d.onclick=()=>switchWallpaper(i);d.setAttribute('aria-label','壁纸 '+(i+1));d.setAttribute('role','button');d.setAttribute('tabindex','0');d.onkeydown=e=>{if(e.key==='Enter')switchWallpaper(i);};cc.appendChild(d);});
+  const imgs=getWallpaperImages();
+  imgs.forEach((_,i)=>{const d=document.createElement('span');d.className='wp-dot'+(i===wpIndex?' on':'');d.onclick=()=>switchWallpaper(i);d.setAttribute('aria-label','壁纸 '+(i+1));d.setAttribute('role','button');d.setAttribute('tabindex','0');d.onkeydown=e=>{if(e.key==='Enter')switchWallpaper(i);};cc.appendChild(d);});
+  appendWpCycleButton(cc);
 }
 function switchWallpaper(i){const s=document.querySelectorAll('#wp-stage .wp-img');if(!s.length)return;s[wpIndex].classList.remove('on');wpIndex=i;s[wpIndex].classList.add('on');renderWpControls();}
+function getActiveWallpaperVideo(){const stage=document.getElementById('wp-stage');if(!stage)return null;return Array.from(stage.querySelectorAll('video')).find(v=>v.style.opacity==='1')||stage.querySelector('video');}
+function appendWpCycleButton(cc){
+  const b=document.createElement('button');b.className='wp-cycle-btn';b.textContent='↻';b.title='切换壁纸';b.setAttribute('aria-label','切换壁纸');
+  const imgCount=getWallpaperImages().length,canCycle=(wpRuntimeMode==='video'&&videoQueue.length>1)||(wpRuntimeMode!=='video'&&imgCount>1);
+  b.disabled=!canCycle;
+  b.onclick=cycleWallpaper;
+  cc.appendChild(b);
+}
+function cycleWallpaper(){
+  const stage=document.getElementById('wp-stage');if(!stage)return;
+  if(wpRuntimeMode==='video'&&videoQueue.length>1){
+    if(videoTimeout)clearTimeout(videoTimeout);
+    videoIdx=(videoIdx+1)%videoQueue.length;
+    playVideoQueue(stage,getActiveWallpaperVideo());
+    return;
+  }
+  const imgs=getWallpaperImages();if(imgs.length>1)switchWallpaper((wpIndex+1)%imgs.length);
+}
 
 // ============================================================
 // TOPNAV SCROLL STATE（替代原 scroll-spy，导航高亮改为随 view 状态）
@@ -1342,7 +1392,7 @@ function renderMain(){
         ${(data.memos||[]).length?(data.memos||[]).slice().sort((a,b)=>(b.pinned-a.pinned)||(b.date||'').localeCompare(a.date||'')).map((m,i)=>`
           <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" style="transform:rotate(${(i%3-1)*2}deg)" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
             ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:''}
-            <p class="memo-text">${escHtml(m.text)}</p>
+            <p class="memo-text">${escHtml(memoPreview(m.text))}</p>
             <span class="memo-date">${escHtml(m.date||'')}</span>
             <span class="memo-cmt-count">💬 评论</span>
           </div>`).join(''):`
@@ -1581,7 +1631,7 @@ function disposeMap(){if(mapChart){mapChart.dispose();mapChart=null;}}
 // ============================================================
 // 悬浮音乐播放器（直链 + MetingJS 网易云歌单）
 // ============================================================
-let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false,_curLyrics=[],_lyricTimer=null,_activeLyric='',_musicMode='';
+let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false,_curLyrics=[],_lyricTimer=null,_activeLyric='',_musicMode='',_musicAdvancing=false;
 function getAudio(){if(!_audio)_audio=document.getElementById('bgm-audio')||new Audio();return _audio;}
 function parseLrc(txt){
   if(!txt||txt.length>20000)return[];
@@ -1600,6 +1650,7 @@ function playSong(song){
   if(!song.src){toast('「'+(song.name||'这首歌')+'」为网易云会员歌曲，暂无法在线播放','info');return;}
   a.src=song.src;a.dataset.name=song.name;
   a.loop=_playlist.length<=1; // 多曲自动切歌，单曲循环
+  if(_playlist.length>1)a.removeAttribute('loop');
   _curLyrics=[]; _activeLyric='';
   if(_lyricTimer){clearInterval(_lyricTimer);_lyricTimer=null;}
   if(song.cover){
@@ -1625,8 +1676,15 @@ function playSong(song){
   a.play().catch(()=>{});
   refreshMusicUI();
 }
-function nextSong(){if(!_playlist.length)return;_plIdx=(_plIdx+1)%_playlist.length;playSong(_playlist[_plIdx]);}
+function nextSong(auto=false){if(!_playlist.length)return;if(!auto)_musicAdvancing=false;_plIdx=(_plIdx+1)%_playlist.length;playSong(_playlist[_plIdx]);}
 function prevSong(){if(!_playlist.length)return;_plIdx=(_plIdx-1+_playlist.length)%_playlist.length;playSong(_playlist[_plIdx]);}
+function advanceSong(){
+  if(_playlist.length<=1){refreshMusicUI();return;}
+  if(_musicAdvancing)return;
+  _musicAdvancing=true;
+  nextSong(true);
+  setTimeout(()=>{_musicAdvancing=false;},1200);
+}
 function refreshMusicUI(){
   const fab=document.getElementById('music-fab'),playBtn=document.getElementById('music-play'),title=document.getElementById('music-title');
   if(!fab)return;
@@ -1813,7 +1871,8 @@ function renderPlaylist(){
     });
   });
   document.getElementById('mc-list-btn').textContent='播放列表 ('+_playlist.length+')';
-  document.getElementById('music-list-btn').textContent='播放列表 ('+_playlist.length+')';
+  const floatingPlaylist=document.getElementById('music-playlist');
+  if(floatingPlaylist)floatingPlaylist.setAttribute('aria-label','播放列表，共 '+_playlist.length+' 首');
 }
 async function loadDirectUrlsFromCloud(){
   try{
@@ -1836,56 +1895,34 @@ function initMusicPlayer(){
   if(volInp)volInp.value=a.volume;
   a.addEventListener('play',refreshMusicUI);
   a.addEventListener('pause',refreshMusicUI);
-  a.addEventListener('ended',()=>{_playlist.length>1?nextSong():refreshMusicUI();});
+  a.addEventListener('ended',advanceSong);
+  a.addEventListener('error',()=>{_playlist.length>1?setTimeout(advanceSong,300):refreshMusicUI();});
   a.addEventListener('timeupdate',()=>{
     if(a.duration&&bar)bar.style.width=(a.currentTime/a.duration*100)+'%';
+    if(_playlist.length>1&&a.duration&&isFinite(a.duration)&&a.currentTime>=Math.max(0,a.duration-0.35))advanceSong();
     syncMusicCard();
     updateLyric();
   });
-  fab.addEventListener('click',e=>{
-    if(window.__fabDragged){window.__fabDragged=false;return;}
-    e.stopPropagation();
-    panel.classList.toggle('open');
-    panel.setAttribute('aria-hidden',String(!panel.classList.contains('open')));
-    floatEl.classList.toggle('panel-open',panel.classList.contains('open'));
-  });
-  // FAB 可拖拽（拖拽与点击区分，参考桌宠实现）
   const floatEl=document.getElementById('music-float');
-  let fDrag=false,fMoved=false,fSX=0,fSY=0,fOX=0,fOY=0;
-  function endFabDrag(){
-    if(!fDrag)return;
-    fDrag=false;
-    if(fMoved){
-      window.__fabDragged=true;
-      const r=floatEl.getBoundingClientRect();
-      floatEl.style.left=Math.max(0,Math.min(r.left,window.innerWidth-r.width))+'px';
-      floatEl.style.top=Math.max(0,Math.min(r.top,window.innerHeight-r.height))+'px';
-    }
+  function setMusicPanelOpen(open){
+    panel.classList.toggle('open',open);
+    panel.setAttribute('aria-hidden',String(!open));
+    fab.setAttribute('aria-expanded',String(open));
+    floatEl.classList.toggle('panel-open',open);
   }
-  fab.addEventListener('pointerdown',e=>{
-    fDrag=true;fMoved=false;
-    fSX=e.clientX;fSY=e.clientY;
-    const r=floatEl.getBoundingClientRect();
-    fOX=r.left;fOY=r.top;
-    floatEl.style.left=fOX+'px';floatEl.style.top=fOY+'px';
-    floatEl.style.right='auto';floatEl.style.bottom='auto';
-    try{fab.setPointerCapture(e.pointerId);}catch(err){}
+  fab.addEventListener('click',e=>{
+    e.stopPropagation();
+    setMusicPanelOpen(!panel.classList.contains('open'));
   });
-  fab.addEventListener('pointermove',e=>{
-    if(!fDrag)return;
-    const dx=e.clientX-fSX,dy=e.clientY-fSY;
-    if(Math.abs(dx)>3||Math.abs(dy)>3)fMoved=true;
-    floatEl.style.left=(fOX+dx)+'px';
-    floatEl.style.top=(fOY+dy)+'px';
+  document.addEventListener('pointerdown',e=>{
+    if(panel.classList.contains('open')&&!floatEl.contains(e.target))setMusicPanelOpen(false);
   });
-  fab.addEventListener('pointerup',endFabDrag);
-  fab.addEventListener('pointercancel',endFabDrag);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setMusicPanelOpen(false);});
   playBtn.addEventListener('click',e=>{e.stopPropagation();if(!a.src){toast('后台还没设置音乐','info');return;}const p=a.paused?a.play():a.pause();if(p&&p.catch)p.catch(()=>{});});
   document.getElementById('music-prev').addEventListener('click',e=>{e.stopPropagation();prevSong();});
   document.getElementById('music-next').addEventListener('click',e=>{e.stopPropagation();nextSong();});
   prog.addEventListener('click',e=>{if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;});
   volInp.addEventListener('input',()=>{a.volume=parseFloat(volInp.value);localStorage.setItem('xiaoaijiang-vol',volInp.value);});
-  document.getElementById('music-list-btn').addEventListener('click',e=>{e.stopPropagation();const p=document.getElementById('music-playlist');p.style.display=p.style.display==='block'?'none':'block';});
   renderPlaylist();
   // 无条件拉取云端直链（最可靠路径，不依赖主同步链路），然后确定音乐源
   loadDirectUrlsFromCloud().then(cloud=>{
@@ -1971,7 +2008,7 @@ function showAdminPanel(){
     </div>
     <div class="admin-body">
     <div class="tab-page active" data-apage="profile">
-    <div class="admin-group"><label>头像</label><button class="btn btn-ghost" style="display:block;width:100%" onclick="document.getElementById('avatar-upload').click()">上传头像</button></div>
+    <div class="admin-group"><label>头像</label><button class="btn btn-ghost" style="display:block;width:100%;margin-bottom:6px" onclick="document.getElementById('avatar-upload').click()">上传头像</button><input type="url" id="e-avatar-url" value="${escHtml(profileAvatarUrlForInput(p.avatar))}" placeholder="头像图片网址：https://... 或 assets/avatar-default.jpg"></div>
     <div class="admin-group"><label>名字</label><input type="text" id="e-name" value="${escHtml(p.name)}"></div>
     <div class="admin-group"><label>标语</label><input type="text" id="e-tagline" value="${escHtml(p.tagline)}"></div>
     <div class="admin-group"><label>简介</label><textarea id="e-bio">${escHtml(p.bio)}</textarea></div>
@@ -2262,9 +2299,12 @@ function fetchMusicOrderNames(){
 
 // Save / Module / Portfolio / Reset
 function saveAdmin(){
+  const avatarUrl=(document.getElementById('e-avatar-url')?.value||'').trim();
+  if(avatarUrl&&!isProfileImageUrl(avatarUrl)){toast('头像网址需要以 http(s)://、assets/ 或 data:image/ 开头','error');return;}
   data.profile.name=document.getElementById('e-name').value.trim()||data.profile.name;
   data.profile.tagline=document.getElementById('e-tagline').value.trim()||data.profile.tagline;
   data.profile.bio=document.getElementById('e-bio').value.trim()||data.profile.bio;
+  if(avatarUrl)data.profile.avatar=avatarUrl;else if(data.profile.avatar&&!data.profile.avatar.startsWith('data:'))data.profile.avatar=DEFAULT_DATA.profile.avatar;
   data.accent=document.getElementById('e-accent').value;
   data.wallpaper.type=document.getElementById('e-wp-type').value;
   data.wallpaper.interval=parseInt(document.getElementById('e-wp-int').value)||8;
@@ -2507,6 +2547,9 @@ function loadVisitCount(){
 // UTILS
 // ============================================================
 function toast(msg,type='info'){const c=document.getElementById('toast-container'),el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},2500);}
+function memoPreview(text,limit=50){const chars=Array.from(String(text||'').replace(/\s+/g,' ').trim());return chars.length>limit?chars.slice(0,limit).join('')+'...':chars.join('');}
+function profileAvatarUrlForInput(url){const v=String(url||'').trim();return v.startsWith('data:')?'':v;}
+function isProfileImageUrl(url){return /^(https?:\/\/|assets\/|data:image\/)/i.test(String(url||'').trim());}
 function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
 // ============================================================
@@ -2609,9 +2652,11 @@ setTimeout(async function(){
         }
       }
     }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
-});
+})();
 </script>
 
 <!-- Click Burst Particles -->
@@ -2644,7 +2689,7 @@ setTimeout(async function(){
   }
   document.addEventListener('pointerdown',function(e){
     if(localStorage.getItem('xiaoaijiang-fx-click')==='0')return;
-    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#lightbox,.music-panel,#pet-container'))return;
+    if(e.target.closest&&e.target.closest('#admin-overlay,#login-overlay,#lightbox,#music-float,#pet-container'))return;
     var n=8+Math.floor(Math.random()*7);
     for(var i=0;i<n;i++){
       var ang=Math.random()*Math.PI*2,sp=1+Math.random()*4;
