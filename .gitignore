@@ -10,6 +10,12 @@ dist/
 .DS_Store
 Thumbs.db
 
+# 机密：站点密码（部署时由 deploy.mjs 读取，不入库）
+worker/.site_password
+
+# Agent 本地缓存
+.impeccable/
+
 # 视频转码工作目录（视频本体在 R2，不入库）
 videos-in/
 videos-out/

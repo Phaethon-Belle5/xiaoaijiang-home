@@ -424,7 +424,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 /* ---- Back to Top ---- */
 #back-to-top{position:fixed;bottom:150px;right:24px;width:38px;height:38px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);z-index:998;opacity:0;transform:translateY(10px);pointer-events:none;transition:all 0.3s;box-shadow:var(--shadow-card)}
 /* 悬浮音乐播放器 */
-.music-float{position:fixed;right:150px;bottom:12px;z-index:995;width:52px;height:52px}
+.music-float{position:fixed;right:24px;bottom:76px;z-index:995;width:52px;height:52px}
 .music-float.panel-open{width:min(312px,calc(100vw - 32px));height:auto}
 .music-fab{position:absolute;right:0;bottom:0;z-index:2;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s var(--ease-out);user-select:none;color:var(--gold);background:var(--astral-elevated);border:1px solid var(--surface-border);box-shadow:var(--shadow-card)}
 .music-float.panel-open .music-fab{right:14px;bottom:14px}
@@ -510,14 +510,14 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 #back-to-top:hover{background:var(--gold);color:var(--void);border-color:var(--gold)}
 
 /* ---- Wallpaper Controls ---- */
-#wp-stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--void) url("https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg") center/cover no-repeat}
+#wp-stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:#0B0E14}
 #wp-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85);transform:translateZ(0)}
 #wp-stage .wp-img.on{opacity:1}
 .wp-controls{position:fixed;bottom:28px;right:24px;z-index:998;display:flex;gap:6px;align-items:center}
 .wp-dot{width:9px;height:9px;border-radius:50%;background:rgba(212,168,67,0.35);cursor:pointer;transition:all 0.2s}
 .wp-dot.on,.wp-dot:hover{background:var(--gold);transform:scale(1.3)}
-.wp-video-toggle,.wp-cycle-btn{width:34px;height:34px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s;box-shadow:var(--shadow-card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.wp-video-toggle,.wp-cycle-btn{width:40px;height:40px;border-radius:50%;background:var(--astral-elevated);border:1px solid var(--surface-border);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all 0.2s;box-shadow:var(--shadow-card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .wp-video-toggle:hover,.wp-cycle-btn:hover{color:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
 .wp-cycle-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;color:var(--text-muted);border-color:var(--surface-border)}
 
@@ -596,7 +596,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
   .admin-tabs{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
   .admin-tab{padding:6px 10px;font-size:.72em}
   #back-to-top{bottom:140px;right:16px}
-  .music-float{right:16px;bottom:20px}
+  .music-float{right:16px;bottom:136px}
   .music-float.panel-open{width:min(312px,calc(100vw - 32px))}
   #admin-entry-btn{bottom:20px;left:14px}
   .form-row{flex-direction:column}
@@ -609,7 +609,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 
 <!-- Splash Screen -->
 <div id="splash-overlay">
-  <video id="splash-video" src="./assets/薇尔莉特.mp4" muted playsinline preload="auto"></video>
+  <video id="splash-video" src="https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/%E8%96%87%E5%B0%94%E8%8E%89%E7%89%B9.webm" muted playsinline preload="auto"></video>
   <button class="splash-skip" id="splash-skip" aria-label="跳过动画">跳过 →</button>
 </div>
 
@@ -772,6 +772,7 @@ body.custom-cursor .cursor-dot,body.custom-cursor .cursor-ring{display:block}
 // DATA
 // ============================================================
 const API_URL='https://home.xiaoaijiang.cloud/api';
+const DEFAULT_MUSIC_COVER='assets/wallpaper-default.jpg';
 const LS_KEY='xiaoaijiang-site-v5';
 const MAX_VIDEO_MB=100;
 var currentSlide=0,totalSlides=0,carouselTimer=null;
@@ -847,14 +848,18 @@ window.addEventListener('hashchange',()=>{
   navigateTo(readViewFromHash(),{updateHash:false});
 });
 
+const R2_PUBLIC='https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/';
+// 开屏动画兜底（/video-catalog 不可用时用直链）
+const SPLASH_VIDEO_URL=R2_PUBLIC+'MP4/%E8%96%87%E5%B0%94%E8%8E%89%E7%89%B9.webm';
 const DEFAULT_WALLPAPERS=[
-  "https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg"
+  R2_PUBLIC+'%E6%98%A0%E5%83%8F%E9%A6%86/webp/20230619%E8%A5%BF%E5%B2%B3%E5%8D%8E%E5%B1%B1%E5%8C%97%E5%B3%B0%E9%A1%B6.webp'
 ];
 const LEGACY_DEFAULT_WALLPAPER="assets/wallpaper-default.jpg";
 
 const DEFAULT_DATA={
   profile:{avatar:"assets/avatar-default.jpg",name:"伶俜",tagline:"记录生活 · 分享热爱",bio:"一个热爱生活的人。喜欢摄影、旅行、阅读和一切美好的事物。\n这个网站是我的一片自留地，欢迎你来玩。"},
-  wallpaper:{type:"video",images:[...DEFAULT_WALLPAPERS],videos:[{src:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/000.mp4",duration:30},{src:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/kuroha3.mp4",duration:30},{src:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/%E8%A6%81%E8%A2%AB%E5%80%9F%E9%92%B1%E7%9A%84%E6%B3%A2%E5%A5%87%E9%85%B1.mp4",duration:30},{src:"https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/%E7%BB%9D%E5%8C%BA%E9%9B%B6.mp4",duration:30},{src:'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/%E8%8A%99%E5%AE%81%E5%A8%9C-4K%E6%B5%81%E6%BA%AF%E6%9C%9D%E6%9A%AE.mp4',duration:30},{src:'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/QQ%E5%9B%BE%E7%89%8720221204131922_4.mp4',duration:30},{src:'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/MP4/compressO-%E4%B8%96%E7%95%8C%E5%BE%88%E6%B8%A9%E6%9F%94%E2%80%94%E3%80%8A%E9%BE%99%E6%97%8F%E3%80%8B%E4%B8%8A%E6%9D%89%E7%BB%98%E6%A2%A8%E8%A1%A3.mp4',duration:30}],interval:30},
+  // 视频壁纸队列改为运行时从 /video-catalog 动态拉取 R2 MP4/*.webm（见 loadVideoCatalog）
+  wallpaper:{type:"video",images:[...DEFAULT_WALLPAPERS],videos:[],interval:30},
   accent:"#D4A843",
   about:{text:"昵称：伶俜\n职业：学生\n所在地：武仙-北冕座长城，双鱼-鲸鱼座超星系团复合体，拉尼亚凯亚超星系团，室女座超星系团，本星系群，银河系次级团，银河系猎户臂，古尔德带，本地泡，本星际云，太阳系，内太阳系，地月系-地球\n                                            个人成就\n\n🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人"},
   testimonials:[],
@@ -970,7 +975,7 @@ async function syncFromCloud(localResult){
       }
       if(vids.length)remote.wallpaper.videos=vids;
     }
-    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.directUrls)!==JSON.stringify(data.directUrls)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
+    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.gallery)!==JSON.stringify(data.gallery)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.directUrls)!==JSON.stringify(data.directUrls)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
       const preserveImages={};
       if(data.profile?.avatar?.startsWith('data:'))preserveImages.avatar=data.profile.avatar;
       if(data.content){
@@ -1098,11 +1103,28 @@ function renderImageWallpapers(stage,imgs){
   window.requestIdleCallback?window.requestIdleCallback(loadRemainingWp):setTimeout(loadRemainingWp,2000);
   function loadRemainingWp(){document.querySelectorAll('#wp-stage .wp-img[data-bg]').forEach(d=>{d.style.backgroundImage=`url(${d.dataset.bg})`;d.removeAttribute('data-bg');});}
 }
+// 从 /video-catalog 动态拉取 R2 MP4/ 下的 webm：每次打开都会读到新上传的文件
+async function loadVideoCatalog(){
+  try{
+    const r=await fetch(API_URL+'/video-catalog',{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)return null;
+    const c=await r.json();
+    return (c&&Array.isArray(c.wallpapers))?c:null;
+  }catch(e){return null;}
+}
+// 用 R2 目录作为视频壁纸的唯一来源；已存在的同链接保留后台设置的 duration
+function applyVideoCatalog(catalog){
+  if(!catalog||!catalog.wallpapers.length)return false;
+  const prevDur=new Map((data.wallpaper?.videos||[]).filter(v=>v&&v.src).map(v=>[v.src,v.duration]));
+  data.wallpaper=data.wallpaper||{};
+  data.wallpaper.videos=catalog.wallpapers.map(v=>({src:v.src,duration:prevDur.get(v.src)||v.duration||30}));
+  data.wallpaper.type='video';
+  return true;
+}
 function initWallpapers(){
   const stage=document.getElementById('wp-stage');if(!stage)return;stage.innerHTML='';const w=data.wallpaper||{};
   if(wpTimer)clearInterval(wpTimer);if(videoTimeout)clearTimeout(videoTimeout);
   if(w.type==='video'&&(w.videos||[]).length){
-    ensureWallpaperFallback(stage);
     videoQueue=w.videos.filter(v=>v&&v.src);videoIdx=0;wpRuntimeMode=videoQueue.length?'video':'image';
     videoQueue.length?playVideoQueue(stage):renderImageWallpapers(stage,getWallpaperImages());renderWpControls();
   }else{
@@ -1116,7 +1138,6 @@ function playVideoQueue(stage,oldVid){
   const item=videoQueue[videoIdx];if(!item||!item.src){renderImageWallpapers(stage,getWallpaperImages());return;}
   const v=document.createElement('video');v.src=item.src;v.autoplay=true;v.muted=true;v.playsInline=true;
   v.preload='auto';
-  v.poster=getWallpaperImages()[0]||DEFAULT_WALLPAPERS[0]||'';
   v.setAttribute('aria-hidden','true');
   v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s';
   let settled=false;
@@ -1170,6 +1191,7 @@ function appendWpCycleButton(cc){
   const imgCount=getWallpaperImages().length,canCycle=(wpRuntimeMode==='video'&&videoQueue.length>1)||(wpRuntimeMode!=='video'&&imgCount>1);
   b.disabled=!canCycle;
   b.onclick=cycleWallpaper;
+  b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();cycleWallpaper();}};
   cc.appendChild(b);
 }
 function cycleWallpaper(){
@@ -1551,7 +1573,7 @@ function buildMapData(){
       const key=c[0]+','+c[1];
       if(!byKey.has(key))byKey.set(key,{name:c[2]||loc,cityName:loc,coords:[c[0],c[1]],photos:[]});
       byKey.get(key).photos.push(Object.assign({index:i},item));
-    }else if(item.location&&String(item.location).trim()){
+    }else{
       unlocated.push(Object.assign({index:i},item));
     }
   });
@@ -1777,11 +1799,29 @@ function toMusicProxy(u){
   }
   return u;
 }
-function syncMusicSource(){
+async function loadMusicCatalog(){
+  try{
+    const r=await fetch(API_URL+'/music-catalog',{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)return null;
+    const list=await r.json();
+    return Array.isArray(list)&&list.length?list:null;
+  }catch(e){return null;}
+}
+function syncMusicSource(catalog){
   const fab=document.getElementById('music-fab');
   if(!fab)return;
   // 优先自托管直链列表（R2，永久稳定）
   const direct=(data.directUrls||[]).map(s=>String(s).trim()).filter(Boolean);
+  if(catalog&&catalog.length){
+    fab.style.display='flex';
+    _musicMode='direct';
+    const a=getAudio();
+    _playlist=catalog.map(s=>({name:s.name,src:toMusicProxy(s.src),cover:s.cover||DEFAULT_MUSIC_COVER,lrc:''})).filter(s=>s.src);
+    _plIdx=Math.min(_plIdx,Math.max(0,_playlist.length-1));
+    a.dataset.mode='direct';
+    if(_playlist.length)playSong(_playlist[_plIdx]);
+    return;
+  }
   if(!direct.length){
     // 无直链时兜底拉取云端（主同步可能超时），成功后重建
     ensureDirectUrls().then(ok=>{if(ok)syncMusicSource();});
@@ -1925,14 +1965,17 @@ function initMusicPlayer(){
   volInp.addEventListener('input',()=>{a.volume=parseFloat(volInp.value);localStorage.setItem('xiaoaijiang-vol',volInp.value);});
   renderPlaylist();
   // 无条件拉取云端直链（最可靠路径，不依赖主同步链路），然后确定音乐源
-  loadDirectUrlsFromCloud().then(cloud=>{
-    if(cloud){
-      if(JSON.stringify(cloud)!==JSON.stringify(data.directUrls)){
-        data.directUrls=cloud;
-        try{dbSet(LS_KEY,data);}catch(e){}
+  loadMusicCatalog().then(catalog=>{
+    if(catalog){syncMusicSource(catalog);return;}
+    loadDirectUrlsFromCloud().then(cloud=>{
+      if(cloud){
+        if(JSON.stringify(cloud)!==JSON.stringify(data.directUrls)){
+          data.directUrls=cloud;
+          try{dbSet(LS_KEY,data);}catch(e){}
+        }
       }
-    }
-    syncMusicSource();
+      syncMusicSource();
+    }).catch(()=>syncMusicSource());
   }).catch(()=>syncMusicSource());
 }
 
@@ -2564,6 +2607,7 @@ setTimeout(async function(){
   }catch(e){}
 	  try{data=await loadData()}catch(e){console.error('Load failed:',e);document.getElementById('main').innerHTML='<section style="min-height:60vh;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:1.1em">加载失败，请刷新重试</section>';return}
   importFromHash();
+  try{applyVideoCatalog(await loadVideoCatalog());}catch(e){console.warn('video catalog:',e);}
   applyAll();
   navigateTo(readViewFromHash(),{updateHash:false});
   try{initMusicPlayer();}catch(e){console.warn('music init:',e);}

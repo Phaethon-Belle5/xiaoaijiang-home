@@ -29,6 +29,83 @@ export default {
       'Content-Type': 'application/json',
     };
     const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
+    const R2_PUBLIC_PREFIX = 'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/';
+    const GALLERY_PREFIX = '映像馆/webp/';
+    const IMAGE_EXTENSIONS = /\.webp$/i;
+    const VIDEO_PREFIX = 'MP4/';
+    const VIDEO_EXTENSIONS = /\.webm$/i;
+    const SPLASH_VIDEO_NAME = '薇尔莉特';
+    // 键里已含 %XX 的片段（上传时字面 % 被转义过）不再二次编码
+    const publicUrl = key => R2_PUBLIC_PREFIX + key.split('/')
+      .map(part => (/%[0-9a-f]{2}/i.test(part) ? part : encodeURIComponent(part))).join('/');
+    const decodeKey = name => { try { return decodeURIComponent(name); } catch (e) { return name; } };
+
+    // R2 列举：返回指定前缀下匹配扩展名的对象（自动翻页）
+    async function listR2(prefix, extRe) {
+      const out = [];
+      let listed = await env.BUCKET.list({ prefix });
+      while (true) {
+        for (const object of listed.objects || []) {
+          const key = object.key || '';
+          if (!key || key === prefix || !extRe.test(key)) continue;
+          out.push({
+            key,
+            url: publicUrl(key),
+            name: decodeKey(key.slice(prefix.length)).replace(/\.[^.]+$/, ''),
+            uploaded: object.uploaded || null,
+          });
+        }
+        if (!listed.truncated) break;
+        listed = await env.BUCKET.list({ prefix, cursor: listed.cursor });
+      }
+      return out;
+    }
+
+    // 文件名形如 20250504太湖鼋头渚 → date=2025-05-04，caption=太湖鼋头渚
+    function parseNamedDate(name) {
+      const m = String(name).match(/^(\d{4})(\d{2})(\d{2})[-_ ]?(.*)$/);
+      if (!m) return { date: '', caption: name };
+      const y = +m[1], mo = +m[2], d = +m[3];
+      if (mo < 1 || mo > 12 || d < 1 || d > 31) return { date: '', caption: name };
+      return { date: `${m[1]}-${m[2]}-${m[3]}`, caption: (m[4] || '').trim() || name };
+    }
+
+    // 映像馆以 R2 的 webp 为准动态生成；KV 里的同名条目只用来覆盖 caption/location 等人工标注
+    async function getGalleryWithR2() {
+      const raw = await env.STORE.get('site:gallery');
+      let stored = [];
+      try { stored = raw ? JSON.parse(raw) : []; } catch (e) { stored = []; }
+      if (!Array.isArray(stored)) stored = [];
+      if (!env.BUCKET) return stored;
+
+      const basename = url => decodeKey(String(url || '').split('/').pop() || '').replace(/\.[^.]+$/, '');
+      const overlay = new Map();
+      // 非「映像馆/」下的自定义图片（外链等）保留原样
+      const custom = [];
+      for (const item of stored) {
+        if (!item || !item.image) continue;
+        if (String(item.image).startsWith(R2_PUBLIC_PREFIX + encodeURIComponent('映像馆') + '/')
+          || String(item.image).startsWith(R2_PUBLIC_PREFIX + '映像馆/')) {
+          overlay.set(basename(item.image), item);
+        } else {
+          custom.push(item);
+        }
+      }
+
+      const objects = await listR2(GALLERY_PREFIX, IMAGE_EXTENSIONS);
+      objects.sort((a, b) => b.name.localeCompare(a.name, 'zh'));
+      const photos = objects.map(o => {
+        const parsed = parseNamedDate(o.name);
+        const meta = overlay.get(o.name) || {};
+        return {
+          image: o.url,
+          caption: meta.caption || parsed.caption,
+          date: meta.date || parsed.date || (o.uploaded ? new Date(o.uploaded).toISOString().slice(0, 10) : ''),
+          location: meta.location || '',
+        };
+      });
+      return custom.concat(photos);
+    }
 
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers });
 
@@ -144,7 +221,7 @@ export default {
       for (const k of keys) {
         try {
           const raw = await env.STORE.get('site:' + k);
-          if (raw) result[k] = JSON.parse(raw);
+          if (raw) result[k] = k === 'gallery' ? await getGalleryWithR2() : JSON.parse(raw);
         } catch (e) { /* skip corrupt key */ }
       }
       return json(result);
@@ -153,6 +230,7 @@ export default {
     // ── GET /data/<key> ── 公开读取 ──
     if (p.startsWith('/data/') && method === 'GET') {
       const key = p.slice(6);
+      if (key === 'gallery') return json(await getGalleryWithR2());
       const raw = await env.STORE.get('site:' + key);
       return json(raw ? JSON.parse(raw) : null);
     }
@@ -378,6 +456,41 @@ export default {
       } catch (e) {
         return json([]);
       }
+    }
+
+    // ── GET /video-catalog ── 返回 R2 MP4/ 下的 webm：开屏动画 + 壁纸队列 ──
+    if (p === '/video-catalog' && method === 'GET') {
+      if (!env.BUCKET) return json({ splash: '', wallpapers: [] });
+      const objects = await listR2(VIDEO_PREFIX, VIDEO_EXTENSIONS);
+      objects.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+      const splash = objects.find(o => o.name === SPLASH_VIDEO_NAME);
+      const wallpapers = objects.filter(o => o !== splash).map(o => ({ src: o.url, name: o.name, duration: 30 }));
+      return json({ splash: splash ? splash.url : '', wallpapers }, 200);
+    }
+
+    // ── GET /music-catalog ── 返回 R2 中实际存在的音乐及同名封面 ──
+    if (p === '/music-catalog' && method === 'GET') {
+      if (!env.BUCKET) return json([]);
+      const files = new Map();
+      let listed = await env.BUCKET.list({ prefix: 'Music/' });
+      while (true) {
+        for (const object of listed.objects || []) {
+          const key = object.key || '';
+          const name = key.slice('Music/'.length);
+          if (!name) continue;
+          const decoded = (() => { try { return decodeURIComponent(name); } catch (e) { return name; } })();
+          const match = decoded.match(/^(.*)\.(mp3|jpe?g)$/i);
+          if (!match) continue;
+          const base = match[1];
+          const entry = files.get(base) || { name: base, src: '', cover: '' };
+          if (/\.mp3$/i.test(decoded)) entry.src = publicUrl(key);
+          else entry.cover = publicUrl(key);
+          files.set(base, entry);
+        }
+        if (!listed.truncated) break;
+        listed = await env.BUCKET.list({ prefix: 'Music/', cursor: listed.cursor });
+      }
+      return json([...files.values()].filter(item => item.src));
     }
 
     // ── POST /upload-audio?name=xxx ── 管理员上传音频到 R2（自托管音乐） ──
