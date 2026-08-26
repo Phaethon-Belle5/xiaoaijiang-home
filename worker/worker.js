@@ -52,6 +52,7 @@ export default {
             key,
             url: publicUrl(key),
             name: decodeKey(key.slice(prefix.length)).replace(/\.[^.]+$/, ''),
+            size: typeof object.size === 'number' ? object.size : null,
             uploaded: object.uploaded || null,
           });
         }
@@ -464,7 +465,11 @@ export default {
       const objects = await listR2(VIDEO_PREFIX, VIDEO_EXTENSIONS);
       objects.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
       const splash = objects.find(o => o.name === SPLASH_VIDEO_NAME);
-      const wallpapers = objects.filter(o => o !== splash).map(o => ({ src: o.url, name: o.name, duration: 30 }));
+      // 体积小的排前面：首屏壁纸能尽快缓冲出画面，大文件排后面慢慢加载
+      const wallpapers = objects
+        .filter(o => o !== splash)
+        .sort((a, b) => (a.size ?? Infinity) - (b.size ?? Infinity))
+        .map(o => ({ src: o.url, name: o.name, size: o.size, duration: 30 }));
       return json({ splash: splash ? splash.url : '', wallpapers }, 200);
     }
 

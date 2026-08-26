@@ -1132,6 +1132,7 @@ function initWallpapers(){
     renderImageWallpapers(stage,imgs);
   }
 }
+const WP_STALL_MS=15000; // 连续 15s 一个字节都没到才判失败，不再用固定就绪期限
 function playVideoQueue(stage,oldVid){
   if(!stage)return;
   if(videoIdx>=videoQueue.length)videoIdx=0;
@@ -1140,13 +1141,30 @@ function playVideoQueue(stage,oldVid){
   v.preload='auto';
   v.setAttribute('aria-hidden','true');
   v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s';
-  let settled=false;
-  const cleanup=()=>{if(settled)return;settled=true;try{v.remove()}catch(e){};videoIdx++;if(videoIdx<videoQueue.length)playVideoQueue(stage,oldVid);else renderImageWallpapers(stage,getWallpaperImages());};
+  let settled=false,stallTimer=null,lastBytes=-1,lastActive=performance.now();
+  const ping=()=>{lastActive=performance.now();};
+  const stopWatch=()=>{if(stallTimer){clearInterval(stallTimer);stallTimer=null;}};
+  const cleanup=()=>{
+    if(settled)return;settled=true;stopWatch();try{v.remove()}catch(e){}
+    videoIdx++;
+    if(videoIdx<videoQueue.length){playVideoQueue(stage,oldVid);return;}
+    // 整队都没加载出来。已有画面在播就保留它、稍后重试，别把正常显示的视频换成照片
+    if(oldVid&&oldVid.isConnected){
+      videoIdx=0;
+      if(videoTimeout)clearTimeout(videoTimeout);
+      videoTimeout=setTimeout(()=>{videoIdx=0;playVideoQueue(stage,oldVid);},30000);
+      return;
+    }
+    renderImageWallpapers(stage,getWallpaperImages());
+  };
   v.onerror=cleanup;
+  // progress 只要有数据到就触发，比 buffered 更早、更可靠地表示"还在下载"
+  v.onprogress=ping;v.onloadstart=ping;v.onloadedmetadata=ping;
   stage.appendChild(v);
   const swap=()=>{
     if(settled)return;
     settled=true;
+    stopWatch();
     if(videoTimeout)clearTimeout(videoTimeout);
     v.style.opacity='1';
     if(oldVid){oldVid.style.opacity='0';setTimeout(()=>{try{oldVid.remove()}catch(e){}},700);}
@@ -1156,8 +1174,15 @@ function playVideoQueue(stage,oldVid){
     renderWpControls();
   };
   v.oncanplay=swap;v.onloadeddata=swap;
-  // 不随视频自然结束立即切换：统一按 duration（默认 30s）节奏轮播，视频播完静止显示最后一帧
-  setTimeout(()=>{if(v.style.opacity==='0'){v.readyState>=2?swap():cleanup();}},3500);
+  // 大文件（几十 MB）在慢网络下要缓冲很久：只要还有数据在到，就一直等；
+  // 真的卡死（15s 无新字节）才跳下一个。期间画面停在纯色底或上一个视频上。
+  stallTimer=setInterval(()=>{
+    if(settled){stopWatch();return;}
+    if(v.readyState>=2){swap();return;}
+    let bytes=0;try{const b=v.buffered;if(b&&b.length)bytes=b.end(b.length-1);}catch(e){}
+    if(bytes>lastBytes){lastBytes=bytes;ping();}
+    if(performance.now()-lastActive>=WP_STALL_MS)cleanup();
+  },1000);
 }
 function startWpTimer(){
   if(wpTimer)clearInterval(wpTimer);
