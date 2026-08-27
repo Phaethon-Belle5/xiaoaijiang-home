@@ -1681,9 +1681,21 @@ function disposeMap(){if(mapChart){mapChart.dispose();mapChart=null;}}
 let _audio=null,_playlist=[],_plIdx=0,_musicInitDone=false,_curLyrics=[],_lyricTimer=null,_activeLyric='',_musicMode='',_musicAdvancing=false;
 function getAudio(){if(!_audio)_audio=document.getElementById('bgm-audio')||new Audio();return _audio;}
 function parseLrc(txt){
-  if(!txt||txt.length>20000)return[];
+  if(!txt||txt.length>100000)return[];
   const out=[];
   txt.split('\n').forEach(line=>{
+    line=line.trim();if(!line)return;
+    // 网易云增强歌词（JSON）：{"t":毫秒,"c":[{"tx":"..."}]}，t<0 的为元信息行跳过
+    if(line[0]==='{'){
+      try{
+        const j=JSON.parse(line);
+        if(typeof j.t==='number'&&j.t>=0&&Array.isArray(j.c)){
+          const text=j.c.map(x=>x&&x.tx||'').join('').trim();
+          if(text)out.push({time:j.t/1000,text});
+        }
+      }catch(e){}
+      return;
+    }
     const m=[...line.matchAll(/\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g)];
     if(m.length){
       const text=line.replace(/\[\d{2,}:\d{2}(?:\.\d{2,3})?\]/g,'').trim();
@@ -1841,7 +1853,19 @@ function syncMusicSource(catalog){
     fab.style.display='flex';
     _musicMode='direct';
     const a=getAudio();
-    _playlist=catalog.map(s=>({name:s.name,src:toMusicProxy(s.src),cover:s.cover||DEFAULT_MUSIC_COVER,lrc:''})).filter(s=>s.src);
+    const R2P='https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/';
+    _playlist=catalog.map(s=>{
+      // 封面直接读 mp3 内嵌（/music-cover），歌词取同名 .lrc（不存在则静默）
+      const raw=(s.src||'').split('/').pop()||'';
+      let fname=raw;try{fname=decodeURIComponent(raw);}catch(e){}
+      const enc=encodeURIComponent(fname.replace(/\.[^.]+$/,''));
+      return {
+        name:s.name,
+        src:toMusicProxy(s.src),
+        cover:s.key?API_URL+'/music-cover?key='+encodeURIComponent(s.key):DEFAULT_MUSIC_COVER,
+        lrc:enc?R2P+'Music/'+enc+'.lrc':'',
+      };
+    }).filter(s=>s.src);
     _plIdx=Math.min(_plIdx,Math.max(0,_playlist.length-1));
     a.dataset.mode='direct';
     if(_playlist.length)playSong(_playlist[_plIdx]);

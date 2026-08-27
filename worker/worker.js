@@ -71,6 +71,114 @@ export default {
       return { date: `${m[1]}-${m[2]}-${m[3]}`, caption: (m[4] || '').trim() || name };
     }
 
+    // ── 从 mp3 内嵌 ID3 封面（APIC/PIC）提取图片，供 /music-cover 使用 ──
+    const synchsafe = (a, b, c, d) => ((a & 0x7f) << 21) | ((b & 0x7f) << 14) | ((c & 0x7f) << 7) | (d & 0x7f);
+    function extractMp3Cover(buf) {
+      if (buf.length < 10 || buf[0] !== 0x49 || buf[1] !== 0x44 || buf[2] !== 0x33) return null; // "ID3"
+      const ver = buf[3];
+      const tagSize = synchsafe(buf[6], buf[7], buf[8], buf[9]);
+      const end = Math.min(buf.length, 10 + tagSize);
+      let off = 10;
+      while (off + 6 <= end) {
+        let id, size, hdrLen;
+        if (ver === 2) {
+          id = String.fromCharCode(buf[off], buf[off + 1], buf[off + 2]);
+          size = (buf[off + 3] << 16) | (buf[off + 4] << 8) | buf[off + 5];
+          hdrLen = 6;
+        } else {
+          if (off + 10 > end) break;
+          id = String.fromCharCode(buf[off], buf[off + 1], buf[off + 2], buf[off + 3]);
+          if (id === '\x00\x00\x00\x00') break; // 填充
+          size = ver === 4
+            ? synchsafe(buf[off + 4], buf[off + 5], buf[off + 6], buf[off + 7])
+            : ((buf[off + 4] << 24) | (buf[off + 5] << 16) | (buf[off + 6] << 8) | buf[off + 7]) >>> 0;
+          hdrLen = 10;
+        }
+        if (size <= 0 || off + hdrLen + size > end) break;
+        const data = buf.subarray(off + hdrLen, off + hdrLen + size);
+        if (id === 'APIC') { const c = parseApic(data); if (c) return c; }
+        else if (id === 'PIC' && ver === 2) { const c = parsePic22(data); if (c) return c; }
+        off += hdrLen + size;
+      }
+      return null;
+    }
+    function coverMime(img, mime) {
+      const m = (mime || '').toLowerCase();
+      if (/jpe?g|^image\/(x-)?p?jpe?g/i.test(m)) return 'image/jpeg';
+      if (/png/i.test(m)) return 'image/png';
+      if (/webp/i.test(m)) return 'image/webp';
+      if (/gif/i.test(m)) return 'image/gif';
+      if (img.length >= 3 && img[0] === 0xff && img[1] === 0xd8) return 'image/jpeg';
+      if (img.length >= 8 && img[0] === 0x89 && img[1] === 0x50 && img[2] === 0x4e && img[3] === 0x47) return 'image/png';
+      if (img.length >= 12 && img[0] === 0x52 && img[1] === 0x49 && img[2] === 0x46 && img[3] === 0x46) return 'image/webp';
+      return 'image/jpeg';
+    }
+    // ID3v2.3/2.4 APIC 帧
+    function parseApic(d) {
+      if (d.length < 4) return null;
+      const enc = d[0];
+      let i = 1;
+      while (i < d.length && d[i] !== 0) i++;
+      if (i >= d.length) return null;
+      let mime = '';
+      try { mime = new TextDecoder('latin1').decode(d.subarray(1, i)); } catch (e) { mime = ''; }
+      i += 2; // 跳过 MIME 结尾 与 图片类型
+      if (i + 1 >= d.length) return null;
+      const term = (enc === 1 || enc === 2) ? 2 : 1;
+      while (i < d.length) {
+        if (term === 2) { if (d[i] === 0 && d[i + 1] === 0) { i += 2; break; } i += 1; }
+        else { if (d[i] === 0) { i += 1; break; } i += 1; }
+      }
+      if (i >= d.length - 1) return null;
+      const img = d.subarray(i);
+      if (img.length < 8) return null;
+      return { mime: coverMime(img, mime), data: img };
+    }
+    // ID3v2.2 PIC 帧
+    function parsePic22(d) {
+      if (d.length < 6) return null;
+      const enc = d[0];
+      const fmt = String.fromCharCode(d[1], d[2], d[3]);
+      let i = 5;
+      const term = (enc === 1) ? 2 : 1;
+      while (i < d.length) {
+        if (term === 2) { if (d[i] === 0 && d[i + 1] === 0) { i += 2; break; } i += 1; }
+        else { if (d[i] === 0) { i += 1; break; } i += 1; }
+      }
+      if (i >= d.length) return null;
+      const img = d.subarray(i);
+      if (img.length < 8) return null;
+      const mime = fmt === 'PNG' ? 'image/png' : (fmt === 'JPG' || fmt === 'JPEG') ? 'image/jpeg' : '';
+      return { mime: coverMime(img, mime), data: img };
+    }
+    // 只读 mp3 的 ID3 标签部分（最多 8MB），不把整首歌拉进内存
+    const MAX_TAG = 8 * 1024 * 1024;
+    async function extractCoverFromStream(stream) {
+      const reader = stream.getReader();
+      let buf = new Uint8Array(0);
+      let want = 10;
+      try {
+        while (buf.length < want) {
+          const r = await reader.read();
+          if (r.done) break;
+          const t = new Uint8Array(buf.length + r.value.length);
+          t.set(buf);
+          t.set(r.value, buf.length); // 从 buf 末尾追加，不能从 0 覆盖
+          buf = t;
+          if (buf.length >= 10 && want === 10) {
+            if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
+              want = Math.min(10 + synchsafe(buf[6], buf[7], buf[8], buf[9]), MAX_TAG);
+            } else {
+              want = Math.max(want, Math.min(MAX_TAG, buf.length)); // 非 ID3，读完手上这段即止
+            }
+          }
+        }
+        return extractMp3Cover(buf);
+      } finally {
+        try { await reader.cancel(); } catch (e) {}
+      }
+    }
+
     // 映像馆以 R2 的 webp 为准动态生成；KV 里的同名条目只用来覆盖 caption/location 等人工标注
     async function getGalleryWithR2() {
       const raw = await env.STORE.get('site:gallery');
@@ -473,29 +581,46 @@ export default {
       return json({ splash: splash ? splash.url : '', wallpapers }, 200);
     }
 
-    // ── GET /music-catalog ── 返回 R2 中实际存在的音乐及同名封面 ──
+    // ── GET /music-catalog ── 返回 R2 中实际存在的音乐；封面由 /music-cover 直接读 mp3 内嵌 ──
     if (p === '/music-catalog' && method === 'GET') {
       if (!env.BUCKET) return json([]);
-      const files = new Map();
+      const out = [];
       let listed = await env.BUCKET.list({ prefix: 'Music/' });
       while (true) {
         for (const object of listed.objects || []) {
           const key = object.key || '';
           const name = key.slice('Music/'.length);
-          if (!name) continue;
-          const decoded = (() => { try { return decodeURIComponent(name); } catch (e) { return name; } })();
-          const match = decoded.match(/^(.*)\.(mp3|jpe?g)$/i);
-          if (!match) continue;
-          const base = match[1];
-          const entry = files.get(base) || { name: base, src: '', cover: '' };
-          if (/\.mp3$/i.test(decoded)) entry.src = publicUrl(key);
-          else entry.cover = publicUrl(key);
-          files.set(base, entry);
+          if (!name || !/\.mp3$/i.test(name)) continue;
+          const decoded = decodeKey(name);
+          out.push({ name: decoded.replace(/\.mp3$/i, ''), src: publicUrl(key), key });
         }
         if (!listed.truncated) break;
         listed = await env.BUCKET.list({ prefix: 'Music/', cursor: listed.cursor });
       }
-      return json([...files.values()].filter(item => item.src));
+      out.sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+      return json(out);
+    }
+
+    // ── GET /music-cover?key=Music/xxx.mp3 ── 直接返回 mp3 内嵌封面（ID3 APIC）──
+    if (p === '/music-cover' && method === 'GET') {
+      if (!env.BUCKET) return json({ error: 'bucket_not_configured' }, 500);
+      const key = url.searchParams.get('key') || '';
+      if (!key.startsWith('Music/') || !/\.mp3$/i.test(key) || key.length > 300) return json({ error: 'invalid_key' }, 400);
+      try {
+        const obj = await env.BUCKET.get(key);
+        if (!obj) return json({ error: 'not_found' }, 404);
+        const cover = await extractCoverFromStream(obj.body);
+        if (!cover) return json({ error: 'no_embedded_cover' }, 404);
+        return new Response(cover.data, {
+          headers: {
+            'Content-Type': cover.mime,
+            'Cache-Control': 'public, max-age=86400',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (e) {
+        return json({ error: String(e.message || e) }, 500);
+      }
     }
 
     // ── POST /upload-audio?name=xxx ── 管理员上传音频到 R2（自托管音乐） ──
