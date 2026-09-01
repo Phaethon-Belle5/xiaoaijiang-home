@@ -2,6 +2,14 @@
 const R2_PUBLIC = 'https://cdn.231060101.xyz/';
 const PHOTO_PREFIX = 'gallery-photos/';
 const SESSION_TTL = 24 * 60 * 60; // 24h
+// 已知爬虫/机器人 UA（不计入 pv/uv，砍掉个人站虚高的大头）
+const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|feedfetcher|semrush|ahrefs|mj12|dotbot|petalbot|bytespider|applebot|yandex|sogou|baiduspider|python-requests|curl|wget|headless|phantomjs|lighthouse|gtmetrix|pingdom|uptimerobot|monitor/i;
+// SHA-256 十六进制（用于 IP+UA 当天去重，不存明文 IP，隐私友好）
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const dayStr = (ts) => new Date(ts).toISOString().slice(0, 10); // UTC YYYY-MM-DD
 const ALLOWED_ORIGINS = [
   'https://map.231060101.xyz',
   'https://map-gallery-ewt.pages.dev',
@@ -75,19 +83,37 @@ export default {
         let b = {}; try { b = await request.json(); } catch (e) {}
         const site = statSite(url.searchParams.get('site') || b.site);
         const k = statKeys(site);
+        // 爬虫/机器人：不计 pv/uv，直接回当前值
+        const ua = request.headers.get('User-Agent') || '';
+        if (!ua || BOT_UA_RE.test(ua)) return json(await readStats(site));
+
         const vid = typeof b.vid === 'string' ? b.vid.slice(0, 64).replace(/[^\w-]/g, '') : '';
-        // PV +1（UPSERT，行不存在则建）
+        const now = Date.now();
+        // PV +1（用户要求每次都 +1）
         await env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,1) ON CONFLICT(key) DO UPDATE SET val=val+1').bind(k.pv).run();
-        // UV：vid 首见才 +1（vid 按 site 作用域存，避免跨站碰撞）
+
+        // UV 双闸门：仅当「vid 终身首见」且「本站当天该 IP+UA 首见」才 +1
+        // → 清缓存换 vid 但同一天同 IP+UA 不重复计，口径对齐 CF uniques
+        const ip = request.headers.get('CF-Connecting-IP') || '';
+        const ipuaHash = await sha256hex(site + '|' + ip + '|' + ua);
+        const dayKey = site + ':' + dayStr(now) + ':' + ipuaHash;
+        const seenDaily = await env.DB.prepare('SELECT day_key FROM visit_daily WHERE day_key=?').bind(dayKey).first();
+        await env.DB.prepare('INSERT OR IGNORE INTO visit_daily(day_key,seen_at) VALUES(?,?)').bind(dayKey, now).run();
+
         if (vid) {
           const svid = site + ':' + vid;
-          const seen = await env.DB.prepare('SELECT vid FROM visitors WHERE vid=?').bind(svid).first();
-          if (!seen) {
-            await env.DB.batch([
-              env.DB.prepare('INSERT OR IGNORE INTO visitors(vid,first_at) VALUES(?,?)').bind(svid, Date.now()),
-              env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,1) ON CONFLICT(key) DO UPDATE SET val=val+1').bind(k.uv),
-            ]);
+          const seenVid = await env.DB.prepare('SELECT vid FROM visitors WHERE vid=?').bind(svid).first();
+          if (!seenVid) {
+            // vid 终身首见：记录 vid；只有当天该 IP+UA 也没出现过才 UV+1
+            const ops = [env.DB.prepare('INSERT OR IGNORE INTO visitors(vid,first_at) VALUES(?,?)').bind(svid, now)];
+            if (!seenDaily) ops.push(env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,1) ON CONFLICT(key) DO UPDATE SET val=val+1').bind(k.uv));
+            await env.DB.batch(ops);
           }
+        }
+
+        // 小概率清理 30 天前的当天去重记录，避免表无限增长
+        if (Math.random() < 0.02) {
+          await env.DB.prepare('DELETE FROM visit_daily WHERE seen_at < ?').bind(now - 30 * 86400000).run();
         }
         return json(await readStats(site));
       }

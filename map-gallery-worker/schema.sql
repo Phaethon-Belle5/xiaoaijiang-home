@@ -63,3 +63,10 @@ CREATE TABLE IF NOT EXISTS visitors (
   vid       TEXT PRIMARY KEY,
   first_at  INTEGER NOT NULL
 );
+
+-- UV 兜底去重：按「站点+当天+IP+UA 的 SHA-256」去重，抗清缓存/换 vid（口径对齐 CF uniques）
+CREATE TABLE IF NOT EXISTS visit_daily (
+  day_key   TEXT PRIMARY KEY,   -- 'gallery|main' + ':' + 'YYYY-MM-DD' + ':' + sha256(ip+ua)
+  seen_at   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_visit_daily_seen ON visit_daily(seen_at);
