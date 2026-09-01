@@ -1,0 +1,16 @@
+name = "map-gallery-api"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[routes]]
+pattern = "mapi.231060101.xyz"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "map-gallery-db"
+database_id = "8e2355cf-b432-4145-916f-dc7620ac6ae0"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "home1xiaoaijiangcloud"

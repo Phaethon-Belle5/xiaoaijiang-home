@@ -10,8 +10,15 @@ dist/
 .DS_Store
 Thumbs.db
 
-# 机密：站点密码（部署时由 deploy.mjs 读取，不入库）
+# 机密：一切密钥/凭据都不入库（部署时本地读取）
 worker/.site_password
+worker/.github_client_id
+worker/.github_client_secret
+worker/.netease_cookie
+map-gallery-worker/.site_password
+*.site_password
+*.netease_cookie
+*.github_client_secret
 
 # Agent 本地缓存
 .impeccable/

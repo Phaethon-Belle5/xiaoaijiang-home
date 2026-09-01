@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>伶俜 · 新站建设中</title>
+<meta name="description" content="伶俜的新站正在建设中，敬请期待。">
+<meta name="theme-color" content="#0B0E14">
+<link rel="icon" href="https://cdn.231060101.xyz/%E8%AF%B4%E8%AF%B4%E5%9B%BE%E7%89%87/%E9%98%BF%E5%91%A6.webp">
+<style>
+:root{--gold:#D4A843;--gold-bright:#E8C456;--ink:#E8E2D9;--muted:#8A8070;--bg:#0B0E14}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:'PingFang SC','Microsoft YaHei',-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#stars{position:fixed;inset:0;z-index:0}
+.wrap{position:relative;z-index:1;text-align:center;padding:32px;max-width:560px}
+.star{font-size:2.4rem;color:var(--gold);display:inline-block;animation:spin 8s linear infinite;filter:drop-shadow(0 0 16px rgba(212,168,67,.5))}
+@keyframes spin{to{transform:rotate(360deg)}}
+h1{font-family:'Cinzel',serif;font-size:clamp(1.8rem,6vw,2.8rem);font-weight:700;letter-spacing:.06em;margin:22px 0 10px;background:linear-gradient(120deg,var(--gold),var(--gold-bright),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted);font-size:1.02rem;line-height:1.9;margin-bottom:30px}
+.dots{display:inline-flex;gap:8px;margin-bottom:34px}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--gold);opacity:.35;animation:pulse 1.4s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 30px;border-radius:9999px;background:var(--gold);color:#1a1a1a;font-weight:600;text-decoration:none;font-size:.95rem;transition:transform .25s,box-shadow .25s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,168,67,.35)}
+.beian{position:fixed;bottom:18px;left:0;right:0;text-align:center;font-size:.74rem;color:var(--muted);z-index:1}
+.beian a{color:var(--muted);text-decoration:none}
+.beian a:hover{color:var(--ink)}
+.sep{margin:0 8px;opacity:.4}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="wrap">
+  <span class="star">✦</span>
+  <h1>新站建设中</h1>
+  <p class="sub">这片新的自留地正在悄悄生长<br>星辰与冒险的新篇章，很快与你相见</p>
+  <div class="dots"><i></i><i></i><i></i></div>
+  <div><a class="btn" href="https://home.xiaoaijiang.cloud">先去逛逛现在的主站 →</a></div>
+</div>
+<div class="beian">
+  <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener">陕ICP备2026022295号-1</a>
+  <span class="sep">|</span>
+  <a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener">&copy; 萌ICP备20260854号</a>
+</div>
+<script>
+(function(){
+  var c=document.getElementById('stars'),x=c.getContext('2d'),W,H,stars=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;stars=[];var n=Math.min(160,Math.floor(W*H/9000));for(var i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.3,tw:Math.random()*6.28});}
+  resize();addEventListener('resize',resize);
+  (function draw(){x.clearRect(0,0,W,H);for(var i=0;i<stars.length;i++){var s=stars[i];s.tw+=.03;var a=.3+Math.abs(Math.sin(s.tw))*.6;x.beginPath();x.arc(s.x,s.y,s.r,0,6.28);x.fillStyle='rgba(212,168,67,'+a+')';x.fill();}requestAnimationFrame(draw);})();
+})();
+</script>
+</body>
+</html>
