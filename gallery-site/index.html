@@ -439,6 +439,30 @@ function buildProvIndex(){
 }
 // 把 API 的 photo 归一化成下游期望的形状（url->image，ord->index）
 function normPhoto(p){return {index:p.id,image:p.url,caption:p.caption||'',date:p.date||'',cityKey:p.cityKey};}
+/* 图片体积优化：原图是 12–36MP（单张最大 4.7MB），而网格仅显示约 180–300px、
+   3D 环图卡片约 330px，直接把原图塞进去是「图片加载慢」的根因。
+   图床已额外上传两档派生版本（文件名加 _600 / _1600 后缀，放在 webp/600/ 与 webp/1600/）：
+     600px  —— 网格 / 缩略条，69 张合计仅 2.5MB
+     1600px —— 3D 环图卡片，69 张合计 13.6MB
+   原图保留不动，后台仍使用原图 URL。 */
+function optUrl(imgUrl,size){
+  if(!imgUrl)return imgUrl;
+  // 只处理图床的 webp 照片；外链、非 webp 的自定义图片一律原样返回，避免 404
+  if(!/^https:\/\/img\.231060101\.xyz\/file\//.test(imgUrl))return imgUrl;
+  const i=imgUrl.lastIndexOf('/');if(i<0)return imgUrl;
+  const encName=imgUrl.slice(i+1);
+  let base;try{base=decodeURIComponent(encName);}catch(e){base=encName;}
+  if(!/\.webp$/i.test(base))return imgUrl;
+  // 幂等：入参可能已经是 _600/_1600 版（例如缩略条传进来的是环图用的 1600 地址）。
+  // 先剥掉可能已有的尺寸目录与文件名后缀，再按目标尺寸重新拼装，
+  // 既能避免拼出 xxx_1600_600.webp，也能正确处理 1600 <-> 600 互换。
+  const stem=base.replace(/_\d+\.webp$/i,'').replace(/\.[^.]+$/,'');
+  let dir=imgUrl.slice(0,i+1).replace(/\/webp\/\d+\/$/,'/webp/');
+  if(/\/webp\/$/.test(dir))dir=dir+size+'/';
+  return dir+encodeURIComponent(stem+'_'+size+'.webp');
+}
+const thumbUrl=u=>optUrl(u,600);
+const viewUrl=u=>optUrl(u,1600);
 function buildMapData(){
   buildProvIndex();
   const byKey=new Map();
@@ -739,7 +763,7 @@ function renderUnlocated(){
   const wrap=document.getElementById('unlocated');
   if(!mapUnlocated.length){wrap.innerHTML='';return;}
   wrap.innerHTML='<details><summary>未标注地点的照片（'+mapUnlocated.length+' 张）▾</summary><div class="photo-grid">'+
-    mapUnlocated.map(p=>'<div class="photo-thumb" onclick="openUnlocatedViewer('+p.index+')"><img src="'+escHtml(p.image)+'" alt="" loading="lazy"></div>').join('')+
+    mapUnlocated.map(p=>'<div class="photo-thumb" onclick="openUnlocatedViewer('+p.index+')"><img src="'+escHtml(thumbUrl(p.image))+'" alt="" loading="lazy"></div>').join('')+
     '</div></details>';
 }
 /* ===== 城市搜索 ===== */
@@ -810,9 +834,9 @@ function openCityDetail(city){
   const attrEl=document.getElementById('detAttractions');attrEl.innerHTML='';
   loadAttractions(city.cityKey,cover);
   document.getElementById('detPhotos').innerHTML=city.photos.map((p,i)=>
-    '<div class="dp" onclick="openPhotos(window.__detPhotos,'+i+',{bgUrl:\''+(cover?cover.replace(/'/g,"%27"):'')+'\'})"><img src="'+escHtml(p.image)+'" alt="" loading="lazy">'+(p.caption?'<div class="cap">'+escHtml(p.caption)+'</div>':'')+'</div>'
+    '<div class="dp" onclick="openPhotos(window.__detPhotos,'+i+',{bgUrl:\''+(cover?viewUrl(cover).replace(/'/g,"%27"):'')+'\'})"><img src="'+escHtml(thumbUrl(p.image))+'" alt="" loading="lazy">'+(p.caption?'<div class="cap">'+escHtml(p.caption)+'</div>':'')+'</div>'
   ).join('');
-  window.__detPhotos=city.photos.map(p=>({dataUrl:p.image,caption:p.caption}));
+  window.__detPhotos=city.photos.map(p=>({dataUrl:viewUrl(p.image),caption:p.caption}));
   syncViewerModeUI();
   const d=document.getElementById('city-detail');d.classList.add('show');d.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
 }
@@ -838,16 +862,16 @@ function openAttrDetail(i){
   document.getElementById('attrTitle').textContent=a.name;
   document.getElementById('attrSub').textContent=[a.visitDate,(a.photos||[]).length+' 张照片'].filter(Boolean).join(' · ');
   const notes=document.getElementById('attrNotes');notes.textContent=a.notes||'';notes.style.display=a.notes?'':'none';
-  const photos=(a.photos||[]).map(p=>({dataUrl:p.url,caption:''}));
+  const photos=(a.photos||[]).map(p=>({dataUrl:viewUrl(p.url),caption:''}));
   document.getElementById('attrPhotos').innerHTML=(a.photos||[]).map((p,idx)=>
-    '<div class="dp" onclick="openPhotos(window.__attrPhotos,'+idx+',{})"><img src="'+escHtml(p.url)+'" alt="" loading="lazy"></div>').join('')||'<p class="det-desc">这个景点还没有照片。</p>';
+    '<div class="dp" onclick="openPhotos(window.__attrPhotos,'+idx+',{})"><img src="'+escHtml(thumbUrl(p.url))+'" alt="" loading="lazy"></div>').join('')||'<p class="det-desc">这个景点还没有照片。</p>';
   window.__attrPhotos=photos;
   const d=document.getElementById('attr-detail');d.classList.add('show');d.setAttribute('aria-hidden','false');
 }
 function closeAttrDetail(){const d=document.getElementById('attr-detail');d.classList.remove('show');d.setAttribute('aria-hidden','true');}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('attr-detail').classList.contains('show')){if(!document.querySelector('.img-viewer.show'))closeAttrDetail();}});
 function openUnlocatedViewer(idx){
-  const list=mapUnlocated.map(p=>({dataUrl:p.image,caption:p.caption}));
+  const list=mapUnlocated.map(p=>({dataUrl:viewUrl(p.image),caption:p.caption}));
   const start=mapUnlocated.findIndex(p=>p.index===idx);
   openPhotos(list,Math.max(0,start),{});
 }
@@ -892,7 +916,8 @@ addEventListener('keydown',e=>{
   }
   function closeViewer(){viewer.classList.remove('show','cover-bg-mode');vBg.style.backgroundImage='';vRing.innerHTML='';cards=[];photoList=[];vThumbs.innerHTML='';}
   function updateActive(){cards.forEach((c,i)=>c.el.classList.toggle('is-active',i===currentIdx));}
-  function renderThumbs(){vThumbs.innerHTML='';photoList.forEach((p,i)=>{const t=document.createElement('img');t.className='thumb'+(i===currentIdx?' active':'');t.src=p.dataUrl;t.loading='lazy';t.addEventListener('click',e=>{e.stopPropagation();if(i!==currentIdx)switchTo(i);});vThumbs.appendChild(t);});}
+  // 缩略条尺寸只有 ~60px，用 600px 版本即可，避免为几十张小图拉取大图
+  function renderThumbs(){vThumbs.innerHTML='';photoList.forEach((p,i)=>{const t=document.createElement('img');t.className='thumb'+(i===currentIdx?' active':'');t.src=thumbUrl(p.dataUrl);t.loading='lazy';t.addEventListener('click',e=>{e.stopPropagation();if(i!==currentIdx)switchTo(i);});vThumbs.appendChild(t);});}
   function updateThumbActive(){vThumbs.querySelectorAll('.thumb').forEach((t,i)=>t.classList.toggle('active',i===currentIdx));const a=vThumbs.querySelector('.thumb.active');if(a)a.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}
   function updateNav(){const single=photoList.length<=1;vPrev.classList.toggle('disabled',single);vNext.classList.toggle('disabled',single);}
   function switchTo(newIdx){
