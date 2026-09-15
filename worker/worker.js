@@ -29,7 +29,7 @@ export default {
       'Content-Type': 'application/json',
     };
     const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
-    const R2_PUBLIC_PREFIX = 'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/';
+    const R2_PUBLIC_PREFIX = 'https://cdn.231060101.xyz/';
     const GALLERY_PREFIX = '映像馆/webp/';
     const IMAGE_EXTENSIONS = /\.webp$/i;
     const VIDEO_PREFIX = 'MP4/';
@@ -179,6 +179,15 @@ export default {
       }
     }
 
+    // 映像馆列表：以 KV（site:gallery）为准直接返回。
+    // 图片已迁至图床 img.231060101.xyz，KV 里保存的是含 caption/date/location 的完整条目，
+    // 不再需要按 R2 的 映像馆/webp/ 列举来拼装（那样在迁移后会与 KV 条目重复成两份）。
+    async function getGallery() {
+      const raw = await env.STORE.get('site:gallery');
+      try { const g = raw ? JSON.parse(raw) : []; return Array.isArray(g) ? g : []; } catch (e) { return []; }
+    }
+
+    // 旧实现（R2 枚举 + KV 覆盖）保留备查，当前未被调用。
     // 映像馆以 R2 的 webp 为准动态生成；KV 里的同名条目只用来覆盖 caption/location 等人工标注
     async function getGalleryWithR2() {
       const raw = await env.STORE.get('site:gallery');
@@ -330,7 +339,7 @@ export default {
       for (const k of keys) {
         try {
           const raw = await env.STORE.get('site:' + k);
-          if (raw) result[k] = k === 'gallery' ? await getGalleryWithR2() : JSON.parse(raw);
+          if (raw) result[k] = k === 'gallery' ? await getGallery() : JSON.parse(raw);
         } catch (e) { /* skip corrupt key */ }
       }
       return json(result);
@@ -339,7 +348,7 @@ export default {
     // ── GET /data/<key> ── 公开读取 ──
     if (p.startsWith('/data/') && method === 'GET') {
       const key = p.slice(6);
-      if (key === 'gallery') return json(await getGalleryWithR2());
+      if (key === 'gallery') return json(await getGallery());
       const raw = await env.STORE.get('site:' + key);
       return json(raw ? JSON.parse(raw) : null);
     }
@@ -632,7 +641,7 @@ export default {
       const key = 'Music/' + Date.now() + '-' + encodeURIComponent(safeName) + '.mp3';
       try {
         await env.BUCKET.put(key, request.body, { httpMetadata: { contentType: 'audio/mpeg' } });
-        return json({ ok: true, url: 'https://pub-1a72165d30ad42fc81dae51cefb3cdfc.r2.dev/' + key });
+        return json({ ok: true, url: 'https://cdn.231060101.xyz/' + key });
       } catch (e) {
         return json({ error: String(e.message || e) }, 500);
       }
