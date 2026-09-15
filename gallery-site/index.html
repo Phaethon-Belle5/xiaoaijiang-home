@@ -394,8 +394,11 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   </div>
 </div>
 
-<script src="assets/china-geo.js"></script>
-<script src="assets/cities-geo.js"></script>
+<!-- 资源加版本号：_headers 对 /assets/* 设了 immutable，若期间曾返回错误响应，
+     浏览器会在 max-age 内一直复用而不再回源，表现为「缺少地理数据」长期不消失。
+     带 ?v= 后每次改版都是新 URL，可绕开旧缓存。改版时同步更新 v 值即可。 -->
+<script src="assets/china-geo.js?v=20260915"></script>
+<script src="assets/cities-geo.js?v=20260915"></script>
 <script>
 const API='https://mapi.231060101.xyz';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -564,7 +567,7 @@ async function drawMap(){
   const el=document.getElementById('mapMount');
   // 城市视图需要地级市边界（3.9MB，按需加载）
   if(mapView==='city'){
-    if(!window.CHINA_PROVINCES_GEO){el.innerHTML='<div class="map-loading">加载城市行政边界…</div>';try{await loadScriptOnce('assets/china-provinces-geo.js','CHINA_PROVINCES_GEO');}catch(e){toast('城市边界加载失败，暂用省份视图');mapView='province';syncViewTabs();}}
+    if(!window.CHINA_PROVINCES_GEO){el.innerHTML='<div class="map-loading">加载城市行政边界…</div>';try{await loadScriptOnce('assets/china-provinces-geo.js?v=20260915','CHINA_PROVINCES_GEO');}catch(e){toast('城市边界加载失败，暂用省份视图');mapView='province';syncViewTabs();}}
   }
   if(!window.CHINA_GEO){el.innerHTML='<div class="map-empty">缺少地理数据</div>';return;}
   if(mapChart){mapChart.dispose();mapChart=null;}
@@ -1118,6 +1121,5 @@ addEventListener('keydown',e=>{
 /* ===== 启动 ===== */
 loadGallery();
 </script>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b809f94731cc4aae9231273effa3ce52"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
