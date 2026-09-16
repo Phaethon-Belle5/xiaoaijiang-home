@@ -734,7 +734,7 @@ function renderProvCards(animate){
     svg.appendChild(dot);
     const el=document.createElement('div');el.className='prov-card';el.style.left=c.cx+'px';el.style.top=c.cy+'px';
     el.onclick=()=>{setMapView('province');};
-    el.innerHTML=(c.p.cover?'<img class="pc-cover" src="'+escHtml(c.p.cover)+'" alt="" loading="lazy">':'<div class="pc-cover"></div>')+
+    el.innerHTML=(c.p.cover?'<img class="pc-cover" src="'+escHtml(thumbUrl(c.p.cover))+'" alt="" loading="lazy">':'<div class="pc-cover"></div>')+
       '<div class="pc-body"><div class="pc-name">'+escHtml(c.p.prov)+'</div><div class="pc-meta">'+c.p.cities+' 城 · '+c.p.photos+' 张</div></div>';
     host.appendChild(el);
     if(animate)setTimeout(()=>el.classList.add('in'),60*i);else el.classList.add('in');
@@ -818,7 +818,7 @@ function fmtVisitMonths(vm){
 }
 function openCityDetail(city){
   const cover=(city.cover)||(city.photos[0]?city.photos[0].image:'');
-  document.getElementById('detBg').style.backgroundImage=cover?'url("'+cover+'")':'';
+  document.getElementById('detBg').style.backgroundImage=cover?'url("'+viewUrl(cover)+'")':'';
   document.getElementById('detTitle').textContent=city.cityName;
   document.getElementById('detSub').textContent=(city.name&&city.name!==city.cityName?city.name+' · ':'')+city.photos.length+' 张照片';
   const vmStr=fmtVisitMonths(city.visitMonths);
@@ -851,7 +851,7 @@ async function loadAttractions(cityKey,cover){
   el.innerHTML='<h3 class="det-sec-title">景点（'+__attractions.length+'）</h3><div class="attr-grid">'+
     __attractions.map((a,i)=>{const ac=(a.photos&&a.photos[0]?a.photos[0].url:'')||cover||'';
       return '<div class="attr-card" onclick="openAttrDetail('+i+')">'+
-        '<div class="ac-cover" style="background-image:url(\''+escHtml(ac)+'\')">'+(a.photos&&a.photos.length?'<span class="ac-cnt">'+a.photos.length+' 图</span>':'')+'</div>'+
+        '<div class="ac-cover" style="background-image:url(\''+escHtml(thumbUrl(ac))+'\')">'+(a.photos&&a.photos.length?'<span class="ac-cnt">'+a.photos.length+' 图</span>':'')+'</div>'+
         '<div class="ac-body"><div class="ac-name">'+escHtml(a.name)+'</div>'+
           ((a.visitDate||a.notes)?'<div class="ac-meta">'+escHtml(a.visitDate||'')+(a.visitDate&&a.notes?' · ':'')+escHtml((a.notes||'').slice(0,30))+'</div>':'')+
         '</div></div>';
