@@ -335,20 +335,26 @@ export default {
       return json({ ok: true });
     }
 
-    // ── GET /hot ── 全网热点（服务端代理聚合，公开读取）──
-    // 前端不直连第三方：既可绕开 CORS/风控，也避免把源站暴露在浏览器侧。
-    // 结果按平台缓存 15 分钟；上游失败时回退到过期缓存，尽量不空窗。
+    // ── GET /hot ── 全网热点（公开读取）──
+    // 架构说明（重要）：
+    //   60s.viki.moe / 抖音 / 微博 / 知乎 都会拒绝 Cloudflare 数据中心出口 IP（实测 403），
+    //   但允许普通浏览器直连。因此这些源由「前端浏览器直连」，Worker 仅作兜底与缓存。
+    //   GitHub 官方 API 允许数据中心访问，因此由 Worker 直接抓取并缓存（30 分钟，注意
+    //   未鉴权限额 60 次/小时）。
     if (p === '/hot' && method === 'GET') {
       const HOT_SOURCES = {
-        weibo:  { url: 'https://60s.viki.moe/v2/weibo',  label: '微博' },
-        douyin: { url: 'https://60s.viki.moe/v2/douyin', label: '抖音' },
-        zhihu:  { url: 'https://60s.viki.moe/v2/zhihu',  label: '知乎' },
+        github: { kind: 'github', label: 'GitHub' },
+        douyin: { url: 'https://60s.viki.moe/v2/douyin', kind: '60s', label: '抖音' },
+        weibo:  { url: 'https://60s.viki.moe/v2/weibo',  kind: '60s', label: '微博' },
+        zhihu:  { url: 'https://60s.viki.moe/v2/zhihu',  kind: '60s', label: '知乎' },
       };
       const HOT_TTL = 15 * 60 * 1000;
       const HOT_LIMIT = 30;
-      const want = String(url.searchParams.get('src') || 'weibo').toLowerCase();
-      const cfgSrc = HOT_SOURCES[want] || HOT_SOURCES.weibo;
-      const key = 'hot:' + (HOT_SOURCES[want] ? want : 'weibo');
+      const HOT_DEFAULT = 'github';
+      const want = String(url.searchParams.get('src') || HOT_DEFAULT).toLowerCase();
+      const useSrc = HOT_SOURCES[want] ? want : HOT_DEFAULT;
+      const cfgSrc = HOT_SOURCES[useSrc];
+      const key = 'hot:' + useSrc;
       const fallback = { label: cfgSrc.label, items: [], updatedAt: 0 };
 
       let cached = null;
@@ -357,7 +363,8 @@ export default {
         return json(cached, 200, { 'Cache-Control': 'public, max-age=300' });
       }
 
-      const normalize = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
+      // 60s 系：{ title, detail/desc, link, hot_value|hot_value_desc }
+      const normalize60s = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
         rank: i + 1,
         title: String(it && it.title != null ? it.title : ''),
         // 已抓到的热搜条目正文可能很长，截断以免把面板撑爆
@@ -366,34 +373,62 @@ export default {
         hot: (it && (it.hot_value != null ? it.hot_value : it.hot_value_desc)) || '',
       })).filter(x => x.title);
 
+      // GitHub：search/repositories 的 items[]
+      //   官方没有「trending」接口，这里用「近 30 天新建 且 star>50」+ 按 star 排序近似热榜，
+      //   既能反映当下最受关注的新项目，也不会像纯 stars 排序那样常年不变。
+      const normalizeGithub = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
+        rank: i + 1,
+        title: String((it && it.full_name) || ''),
+        desc: String((it && it.description) || '').slice(0, 140),
+        link: String((it && it.html_url) || ''),
+        // 用 star 数作热度；前端会格式化成「54.8万」
+        hot: (it && it.stargazers_count != null) ? it.stargazers_count : '',
+        star: true,
+        // 语言作为补充信息展示
+        up: String((it && it.language) || ''),
+      })).filter(x => x.title);
+
       let items = null, err = '';
       try {
-        const up = await fetch(cfgSrc.url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-            'Accept': 'application/json,text/plain,*/*',
-          },
-          signal: AbortSignal.timeout(10000),
-        });
+        let upUrl = cfgSrc.url;
+        const upHeaders = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+          'Accept': 'application/json,text/plain,*/*',
+        };
+        if (cfgSrc.kind === 'github') {
+          // 近 30 天新建的高星项目（按 star 降序）
+          const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+          upUrl = 'https://api.github.com/search/repositories?q=' + encodeURIComponent('created:>' + since + ' stars:>50')
+            + '&sort=stars&order=desc&per_page=' + HOT_LIMIT;
+          upHeaders['Accept'] = 'application/vnd.github+json';
+          upHeaders['X-GitHub-Api-Version'] = '2022-11-28';
+          delete upHeaders['User-Agent'];
+          upHeaders['User-Agent'] = 'xiaoaijiang-home-worker';
+        }
+        const up = await fetch(upUrl, { headers: upHeaders, signal: AbortSignal.timeout(10000) });
         if (!up.ok) throw new Error('upstream HTTP ' + up.status);
         const uj = await up.json();
-        const data = uj && uj.data;
-        if (Array.isArray(data)) items = normalize(data);
-        else if (data && Array.isArray(data.list)) items = normalize(data.list);
+        const data = uj && (uj.data !== undefined ? uj.data : uj);
+        const body = uj && uj.items ? uj.items : data;
+        const arr = Array.isArray(body) ? body : (body && Array.isArray(body.list) ? body.list : null);
+        if (arr) {
+          if (cfgSrc.kind === 'github') items = normalizeGithub(arr);
+          else items = normalize60s(arr);
+        }
         if (!items || !items.length) throw new Error('empty payload');
       } catch (e) {
         err = String((e && e.message) || e).slice(0, 120);
       }
 
       if (items && items.length) {
-        const payload = { source: want, label: cfgSrc.label, items, updatedAt: Date.now() };
+        const payload = { source: useSrc, label: cfgSrc.label, items, updatedAt: Date.now() };
         try { await env.STORE.put(key, JSON.stringify(payload), { expirationTtl: 6 * 60 * 60 }); } catch (e) {}
         return json(payload, 200, { 'Cache-Control': 'public, max-age=300' });
       }
       if (cached && Array.isArray(cached.items) && cached.items.length) {
         return json(Object.assign({}, cached, { stale: true, error: err }), 200, { 'Cache-Control': 'public, max-age=60' });
       }
-      return json(Object.assign({}, fallback, { source: want, error: err || 'no_data' }), 200, { 'Cache-Control': 'public, max-age=60' });
+      return json(Object.assign({}, fallback, { source: useSrc, error: err || 'no_data' }), 200, { 'Cache-Control': 'public, max-age=60' });
     }
 
     // ── GET /data ── 公开读取 ──

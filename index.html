@@ -526,6 +526,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .hot-item:nth-child(2) .hot-rank{color:#D4A843;font-weight:700}
 .hot-item:nth-child(3) .hot-rank{color:#B8943A;font-weight:700}
 .hot-text{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hot-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.hot-up{font-size:.86em;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hot-item:hover .hot-up{color:var(--gold-pale)}
 .hot-val{flex:none;font-family:var(--font-mono);font-size:.78em;color:var(--text-muted)}
 .hot-state{padding:var(--space-6) var(--space-3);text-align:center;color:var(--text-muted);font-size:.8em;line-height:1.7}
 .hot-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:var(--space-3);padding-top:var(--space-2);border-top:1px solid var(--glass-border);font-size:.68em;color:var(--text-muted);font-family:var(--font-mono)}
@@ -1469,8 +1472,9 @@ function renderMain(){
             </button>
           </div>
           <div class="hot-tabs" id="hot-tabs" role="tablist">
-            <button class="hot-tab on" data-src="weibo" role="tab" type="button">微博</button>
+            <button class="hot-tab on" data-src="github" role="tab" type="button">GitHub</button>
             <button class="hot-tab" data-src="douyin" role="tab" type="button">抖音</button>
+            <button class="hot-tab" data-src="weibo" role="tab" type="button">微博</button>
             <button class="hot-tab" data-src="zhihu" role="tab" type="button">知乎</button>
           </div>
           <div class="hot-list" id="hot-list">
@@ -2750,8 +2754,8 @@ function escHtml(s){const d=document.createElement('div');d.textContent=s;return
 // ============================================================
 // 全网热点（右卡）—— 数据经后端 Worker 代理聚合，避免浏览器直连第三方被 CORS/风控拦
 // ============================================================
-const HOT_SRC_LABEL={weibo:'微博',douyin:'抖音',zhihu:'知乎'};
-let _hotSrc='weibo';
+const HOT_SRC_LABEL={github:'GitHub',douyin:'抖音',weibo:'微博',zhihu:'知乎'};
+let _hotSrc='github';
 let _hotCache={};
 function fmtHotVal(v){
   if(v==null||v==='')return'';
@@ -2774,17 +2778,48 @@ function renderHotList(list,src,note){
     const link=String(it.link||'');
     const rank=it.rank||(i+1);
     const hv=fmtHotVal(it.hot);
+    // 哔哩哔哩额外带 UP 主名，放在标题前做小字标注
+    const up=it.up?'<span class="hot-up">'+escHtml(String(it.up))+'</span>':'';
     const text=escHtml(title);
-    const val=hv?'<span class="hot-val">'+escHtml(hv)+'</span>':'';
+    // GitHub 的热度是 star 数，加个星号避免被误读
+    const val=hv?'<span class="hot-val">'+(it.star?'⭐ ':'')+escHtml(hv)+'</span>':'';
     // 只允许 http(s)，避免 javascript: 之类的注入
     if(/^https?:\/\//i.test(link)){
       return '<a class="hot-item" href="'+escHtml(link)+'" target="_blank" rel="noopener noreferrer">'
-        +'<span class="hot-rank">'+rank+'</span><span class="hot-text" title="'+text+'">'+text+'</span>'+val+'</a>';
+        +'<span class="hot-rank">'+rank+'</span><span class="hot-main"><span class="hot-text" title="'+text+'">'+text+'</span>'+up+'</span>'+val+'</a>';
     }
-    return '<div class="hot-item"><span class="hot-rank">'+rank+'</span><span class="hot-text" title="'+text+'">'+text+'</span>'+val+'</div>';
+    return '<div class="hot-item"><span class="hot-rank">'+rank+'</span><span class="hot-main"><span class="hot-text" title="'+text+'">'+text+'</span>'+up+'</span>'+val+'</div>';
   }).join('');
   const up=document.getElementById('hot-updated');
   if(up)up.textContent=HOT_SRC_LABEL[src]+' · '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+}
+// 60s 系来源允许浏览器直连，但会拒绝 Cloudflare 数据中心出口 IP（Worker 侧 403）。
+// 因此先走 Worker（有缓存），失败后再由浏览器直连兜底。
+const HOT_DIRECT={
+  douyin:{url:'https://60s.viki.moe/v2/douyin'},
+  weibo: {url:'https://60s.viki.moe/v2/weibo'},
+  zhihu: {url:'https://60s.viki.moe/v2/zhihu'},
+};
+function normalizeHot60s(arr){
+  return (Array.isArray(arr)?arr:[]).slice(0,30).map((it,i)=>({
+    rank:i+1,
+    title:String((it&&it.title)||''),
+    link:String((it&&it.link)||''),
+    hot:(it&&(it.hot_value!=null?it.hot_value:it.hot_value_desc))||'',
+  })).filter(x=>x.title);
+}
+async function loadHotDirect(src){
+  const cfg=HOT_DIRECT[src];
+  if(!cfg)return null;
+  try{
+    const r=await fetch(cfg.url,{signal:AbortSignal.timeout(12000),cache:'no-store'});
+    if(!r.ok)return null;
+    const j=await r.json();
+    const d=j&&j.data;
+    const arr=Array.isArray(d)?d:(d&&Array.isArray(d.list)?d.list:null);
+    const list=arr?normalizeHot60s(arr):null;
+    return (list&&list.length)?list:null;
+  }catch(e){return null;}
 }
 async function loadHot(src,force){
   src=src||_hotSrc;
@@ -2792,16 +2827,25 @@ async function loadHot(src,force){
   if(force)delete _hotCache[src];
   if(_hotCache[src]){renderHotList(_hotCache[src],src);return;}
   if(box)box.innerHTML='<div class="hot-state">正在获取热点…</div>';
+  let list=[],note=null;
   try{
-    const r=await fetch(API_URL+'/hot?src='+encodeURIComponent(src),{signal:AbortSignal.timeout(12000)});
+    // cache:'no-store' 很关键：接口失败时曾返回可缓存 60s 的错误响应，
+    // 不绕过缓存会让面板一直停在旧的失败状态。
+    const r=await fetch(API_URL+'/hot?src='+encodeURIComponent(src),{signal:AbortSignal.timeout(12000),cache:'no-store'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    const list=Array.isArray(j.items)?j.items:[];
-    if(list.length)_hotCache[src]=list;
-    renderHotList(list,src,j.error?('上游暂时不可用：'+j.error):null);
+    list=Array.isArray(j.items)?j.items:[];
+    if(!list.length&&j.error)note='上游暂时不可用：'+j.error;
   }catch(e){
-    renderHotList([],src,'热点获取失败（'+String(e.message||e).slice(0,40)+'）');
+    note='热点获取失败（'+String(e.message||e).slice(0,40)+'）';
   }
+  // Worker 取不到时，由浏览器直连兜底（60s 系依赖此项）
+  if(!list.length){
+    const direct=await loadHotDirect(src);
+    if(direct){list=direct;note=null;}
+  }
+  if(list.length)_hotCache[src]=list;
+  renderHotList(list,src,note);
 }
 function initHotTopics(){
   const tabs=document.getElementById('hot-tabs');
@@ -2810,7 +2854,7 @@ function initHotTopics(){
     const t=e.target.closest('.hot-tab');
     if(!t)return;
     e.preventDefault();
-    _hotSrc=t.dataset.src||'weibo';
+    _hotSrc=t.dataset.src||'github';
     tabs.querySelectorAll('.hot-tab').forEach(x=>x.classList.toggle('on',x===t));
     loadHot(_hotSrc);
   });
