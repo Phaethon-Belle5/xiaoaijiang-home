@@ -489,6 +489,55 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .music-card-section{max-width:var(--container-max);margin:0 auto;padding:var(--space-16) var(--container-padding) var(--space-24)}
 .music-card{display:flex;align-items:center;gap:var(--space-6);max-width:760px;margin:0 auto;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-6) var(--space-8);box-shadow:var(--shadow-card);justify-content:center}
 .music-card-section{padding-left:var(--space-6);padding-right:var(--space-6)}
+/* ---- 主页双卡布局：左=音乐竖卡，中=预留空位，右=全网热点 ---- */
+.home-pair{display:grid;grid-template-columns:minmax(210px,232px) minmax(120px,1.35fr) minmax(300px,360px);gap:var(--space-8);align-items:stretch;max-width:1180px;margin:0 auto}
+/* 覆盖上方的居中样式：改名选择器优先级更高，原规则保持不动便于回退 */
+.music-card-section .home-pair .music-card{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;max-width:none;margin:0;padding:var(--space-6)}
+.home-pair .mc-disc{width:150px;height:150px;margin:0 auto}
+.home-pair .mc-info{max-width:none;flex:1 1 auto;display:flex;flex-direction:column;margin-top:var(--space-5);text-align:center;min-width:0}
+.home-pair .mc-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.98em;line-height:1.45}
+.home-pair .mc-stage{height:auto;min-height:96px;margin-bottom:var(--space-4)}
+.home-pair .mc-lyric{height:auto;min-height:96px;font-size:.83em;line-height:1.65}
+.home-pair .mc-progress{margin-bottom:var(--space-4)}
+.home-pair .mc-controls{gap:var(--space-3)}
+.home-pair .mc-list-btn{margin-top:var(--space-4);width:100%}
+/* 中间预留空位：插入内容卡片时直接放进 #hp-slot 即可，布局无需改动 */
+.hp-slot{min-height:100%;border-radius:var(--radius-xl);border:1px dashed transparent}
+.hp-slot:empty{border-color:transparent}
+/* ---- 全网热点卡 ---- */
+.hot-card{display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-5) var(--space-5) var(--space-3);box-shadow:var(--shadow-card);min-width:0}
+.hot-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}
+.hot-eyebrow{font-size:.68em;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.hot-title{font-family:var(--font-display);font-size:1.02em;color:var(--text-primary);line-height:1.2}
+.hot-refresh{width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--glass-border);border-radius:50%;background:rgba(255,255,255,.05);color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.hot-refresh:hover{border-color:var(--gold);color:var(--gold)}
+.hot-refresh.spin svg{animation:discspin .8s linear}
+.hot-tabs{display:flex;gap:var(--space-2);margin-bottom:var(--space-3)}
+.hot-tab{padding:4px 12px;border-radius:var(--radius-pill);border:1px solid var(--glass-border);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:.73em;cursor:pointer;transition:all .2s}
+.hot-tab:hover{border-color:var(--gold);color:var(--gold)}
+.hot-tab.on{border-color:var(--gold);color:var(--gold-bright);background:rgba(212,168,67,.12);font-weight:600}
+.hot-list{flex:none;height:440px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;overscroll-behavior:contain}
+.hot-list::-webkit-scrollbar{width:4px}
+.hot-list::-webkit-scrollbar-thumb{background:rgba(212,168,67,.4);border-radius:2px}
+.hot-item{display:flex;align-items:center;gap:var(--space-3);padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:.82em;line-height:1.45;transition:background .15s,color .15s}
+.hot-item:hover{background:rgba(255,255,255,.07);color:var(--text-primary)}
+.hot-rank{flex:none;width:22px;text-align:center;font-family:var(--font-mono);font-size:.85em;color:var(--text-muted)}
+.hot-item:nth-child(1) .hot-rank{color:#E8C456;font-weight:700}
+.hot-item:nth-child(2) .hot-rank{color:#D4A843;font-weight:700}
+.hot-item:nth-child(3) .hot-rank{color:#B8943A;font-weight:700}
+.hot-text{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hot-val{flex:none;font-family:var(--font-mono);font-size:.78em;color:var(--text-muted)}
+.hot-state{padding:var(--space-6) var(--space-3);text-align:center;color:var(--text-muted);font-size:.8em;line-height:1.7}
+.hot-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:var(--space-3);padding-top:var(--space-2);border-top:1px solid var(--glass-border);font-size:.68em;color:var(--text-muted);font-family:var(--font-mono)}
+[data-theme="light"] .hot-item:hover{background:rgba(0,0,0,.05)}
+@media (max-width:1080px){
+  .home-pair{grid-template-columns:minmax(200px,1fr) minmax(280px,1.5fr);gap:var(--space-6)}
+  .hp-slot{display:none}
+}
+@media (max-width:768px){
+  .home-pair{grid-template-columns:1fr;gap:var(--space-6)}
+  .hot-list{max-height:360px}
+}
 .mc-disc{width:170px;height:170px;border-radius:50%;background:repeating-radial-gradient(circle,#2a2a2a 0 2px,#151515 2px 4px);flex-shrink:0;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .mc-disc.playing{animation:discspin 8s linear infinite}
 @keyframes discspin{to{transform:rotate(360deg)}}
@@ -1384,22 +1433,50 @@ function renderMain(){
          MUSIC CARD (主页音乐播放器卡片)
          ============================================================ -->
     <section class="music-card-section reveal">
-      <div class="music-card">
-        <div class="mc-disc" id="mc-disc"><div class="mc-disc-hole"></div></div>
-        <div class="mc-info">
-          <p class="mc-eyebrow">♪ Music Player</p>
-          <h3 class="mc-title" id="mc-title">未在播放</h3>
-          <div class="mc-stage">
-            <p class="mc-lyric" id="mc-lyric">♪ 设置网易云歌曲ID后，这里同步显示歌词 ♪</p>
-            <div class="mc-playlist" id="mc-playlist"></div>
+      <div class="home-pair">
+        <!-- 左：竖长条音乐播放卡 -->
+        <div class="music-card">
+          <div class="mc-disc" id="mc-disc"><div class="mc-disc-hole"></div></div>
+          <div class="mc-info">
+            <p class="mc-eyebrow">♪ Music Player</p>
+            <h3 class="mc-title" id="mc-title">未在播放</h3>
+            <div class="mc-stage">
+              <p class="mc-lyric" id="mc-lyric">♪ 设置网易云歌曲ID后，这里同步显示歌词 ♪</p>
+              <div class="mc-playlist" id="mc-playlist"></div>
+            </div>
+            <div class="mc-progress" id="mc-progress"><div class="mc-bar" id="mc-bar"></div></div>
+            <div class="mc-controls">
+              <button class="mc-btn" id="mc-prev" title="上一首" aria-label="上一首"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M20 5v14a1 1 0 0 1 -1.5 .87l-9 -5a1 1 0 0 1 0 -1.74l9 -5A1 1 0 0 1 20 5z"/><rect x="4" y="5" width="2.6" height="14" rx="1.1"/></svg></button>
+              <button class="mc-btn mc-play" id="mc-play" title="播放/暂停" aria-label="播放/暂停"><svg class="ic-play" viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><rect x="7" y="5" width="3.4" height="14" rx="1.1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1.1"/></svg></button>
+              <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M4 5v14a1 1 0 0 0 1.5 .87l9 -5a1 1 0 0 0 0 -1.74l-9 -5A1 1 0 0 0 4 5z"/><rect x="17.4" y="5" width="2.6" height="14" rx="1.1"/></svg></button>
+            </div>
+            <button id="mc-list-btn" class="mc-list-btn">播放列表</button>
           </div>
-          <div class="mc-progress" id="mc-progress"><div class="mc-bar" id="mc-bar"></div></div>
-          <div class="mc-controls">
-            <button class="mc-btn" id="mc-prev" title="上一首" aria-label="上一首"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M20 5v14a1 1 0 0 1 -1.5 .87l-9 -5a1 1 0 0 1 0 -1.74l9 -5A1 1 0 0 1 20 5z"/><rect x="4" y="5" width="2.6" height="14" rx="1.1"/></svg></button>
-            <button class="mc-btn mc-play" id="mc-play" title="播放/暂停" aria-label="播放/暂停"><svg class="ic-play" viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" width="21" height="21" fill="currentColor"><rect x="7" y="5" width="3.4" height="14" rx="1.1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1.1"/></svg></button>
-            <button class="mc-btn" id="mc-next" title="下一首" aria-label="下一首"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M4 5v14a1 1 0 0 0 1.5 .87l9 -5a1 1 0 0 0 0 -1.74l-9 -5A1 1 0 0 0 4 5z"/><rect x="17.4" y="5" width="2.6" height="14" rx="1.1"/></svg></button>
+        </div>
+
+        <!-- 中：预留给后续内容卡片（当前为空占位，插入卡片时直接放进 #hp-slot） -->
+        <div class="hp-slot" id="hp-slot" aria-hidden="true"></div>
+
+        <!-- 右：全网热点 -->
+        <div class="hot-card" id="hot-card">
+          <div class="hot-head">
+            <div>
+              <p class="hot-eyebrow">Trending Now</p>
+              <h3 class="hot-title">全网热点</h3>
+            </div>
+            <button class="hot-refresh" id="hot-refresh" type="button" title="刷新" aria-label="刷新热点">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1 -2.64 -6.36"/><path d="M21 3v6h-6"/></svg>
+            </button>
           </div>
-          <button id="mc-list-btn" class="mc-list-btn">播放列表</button>
+          <div class="hot-tabs" id="hot-tabs" role="tablist">
+            <button class="hot-tab on" data-src="weibo" role="tab" type="button">微博</button>
+            <button class="hot-tab" data-src="douyin" role="tab" type="button">抖音</button>
+            <button class="hot-tab" data-src="zhihu" role="tab" type="button">知乎</button>
+          </div>
+          <div class="hot-list" id="hot-list">
+            <div class="hot-state">正在获取热点…</div>
+          </div>
+          <div class="hot-foot"><span id="hot-updated">—</span><span>公开聚合接口</span></div>
         </div>
       </div>
     </section>
@@ -2670,6 +2747,83 @@ function escHtml(s){const d=document.createElement('div');d.textContent=s;return
 // INIT
 // ============================================================
 // Init - deferred to ensure DOM is fully painted
+// ============================================================
+// 全网热点（右卡）—— 数据经后端 Worker 代理聚合，避免浏览器直连第三方被 CORS/风控拦
+// ============================================================
+const HOT_SRC_LABEL={weibo:'微博',douyin:'抖音',zhihu:'知乎'};
+let _hotSrc='weibo';
+let _hotCache={};
+function fmtHotVal(v){
+  if(v==null||v==='')return'';
+  if(typeof v==='string')return v.replace(/\s+/g,'');
+  const n=Number(v);
+  if(!isFinite(n))return'';
+  if(n>=1e8)return (n/1e8).toFixed(1).replace(/\.0$/,'')+'亿';
+  if(n>=1e4)return (n/1e4).toFixed(1).replace(/\.0$/,'')+'万';
+  return String(n);
+}
+function renderHotList(list,src,note){
+  const box=document.getElementById('hot-list');
+  if(!box)return;
+  if(!Array.isArray(list)||!list.length){
+    box.innerHTML='<div class="hot-state">'+(note||'暂时没有取到热点内容')+'<br><span style="opacity:.7">可点右上角刷新重试</span></div>';
+    return;
+  }
+  box.innerHTML=list.map((it,i)=>{
+    const title=String(it.title==null?'':it.title);
+    const link=String(it.link||'');
+    const rank=it.rank||(i+1);
+    const hv=fmtHotVal(it.hot);
+    const text=escHtml(title);
+    const val=hv?'<span class="hot-val">'+escHtml(hv)+'</span>':'';
+    // 只允许 http(s)，避免 javascript: 之类的注入
+    if(/^https?:\/\//i.test(link)){
+      return '<a class="hot-item" href="'+escHtml(link)+'" target="_blank" rel="noopener noreferrer">'
+        +'<span class="hot-rank">'+rank+'</span><span class="hot-text" title="'+text+'">'+text+'</span>'+val+'</a>';
+    }
+    return '<div class="hot-item"><span class="hot-rank">'+rank+'</span><span class="hot-text" title="'+text+'">'+text+'</span>'+val+'</div>';
+  }).join('');
+  const up=document.getElementById('hot-updated');
+  if(up)up.textContent=HOT_SRC_LABEL[src]+' · '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+}
+async function loadHot(src,force){
+  src=src||_hotSrc;
+  const box=document.getElementById('hot-list');
+  if(force)delete _hotCache[src];
+  if(_hotCache[src]){renderHotList(_hotCache[src],src);return;}
+  if(box)box.innerHTML='<div class="hot-state">正在获取热点…</div>';
+  try{
+    const r=await fetch(API_URL+'/hot?src='+encodeURIComponent(src),{signal:AbortSignal.timeout(12000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const list=Array.isArray(j.items)?j.items:[];
+    if(list.length)_hotCache[src]=list;
+    renderHotList(list,src,j.error?('上游暂时不可用：'+j.error):null);
+  }catch(e){
+    renderHotList([],src,'热点获取失败（'+String(e.message||e).slice(0,40)+'）');
+  }
+}
+function initHotTopics(){
+  const tabs=document.getElementById('hot-tabs');
+  if(!tabs)return;
+  tabs.addEventListener('click',e=>{
+    const t=e.target.closest('.hot-tab');
+    if(!t)return;
+    e.preventDefault();
+    _hotSrc=t.dataset.src||'weibo';
+    tabs.querySelectorAll('.hot-tab').forEach(x=>x.classList.toggle('on',x===t));
+    loadHot(_hotSrc);
+  });
+  const rf=document.getElementById('hot-refresh');
+  if(rf)rf.addEventListener('click',e=>{
+    e.preventDefault();
+    rf.classList.add('spin');
+    setTimeout(()=>rf.classList.remove('spin'),900);
+    loadHot(_hotSrc,true);
+  });
+  loadHot(_hotSrc);
+}
+
 setTimeout(async function(){
   initTheme();
   try{
@@ -2682,6 +2836,7 @@ setTimeout(async function(){
   applyAll();
   navigateTo(readViewFromHash(),{updateHash:false});
   try{initMusicPlayer();}catch(e){console.warn('music init:',e);}
+  try{initHotTopics();}catch(e){console.warn('hot init:',e);}
   window.addEventListener("load", function(){ if(!document.getElementById("main").innerHTML.length){applyAll();renderViewState();} });
 }, 0);;
 </script>
@@ -2823,6 +2978,6 @@ setTimeout(async function(){
   },true);
 })();
 </script>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "9a887ece262d468da6b564a8899fdcee"}'></script><!-- End Cloudflare Web Analytics -->
+
 </body>
 </html>

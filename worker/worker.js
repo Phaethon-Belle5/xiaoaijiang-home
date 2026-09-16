@@ -28,7 +28,10 @@ export default {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Content-Type': 'application/json',
     };
-    const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
+    const json = (data, status = 200, extra) => new Response(JSON.stringify(data), {
+      status,
+      headers: extra ? Object.assign({}, headers, extra) : headers,
+    });
     const R2_PUBLIC_PREFIX = 'https://cdn.231060101.xyz/';
     const GALLERY_PREFIX = '映像馆/webp/';
     const IMAGE_EXTENSIONS = /\.webp$/i;
@@ -330,6 +333,67 @@ export default {
       const token = getToken();
       if (token) await env.STORE.delete('ghsession:' + token);
       return json({ ok: true });
+    }
+
+    // ── GET /hot ── 全网热点（服务端代理聚合，公开读取）──
+    // 前端不直连第三方：既可绕开 CORS/风控，也避免把源站暴露在浏览器侧。
+    // 结果按平台缓存 15 分钟；上游失败时回退到过期缓存，尽量不空窗。
+    if (p === '/hot' && method === 'GET') {
+      const HOT_SOURCES = {
+        weibo:  { url: 'https://60s.viki.moe/v2/weibo',  label: '微博' },
+        douyin: { url: 'https://60s.viki.moe/v2/douyin', label: '抖音' },
+        zhihu:  { url: 'https://60s.viki.moe/v2/zhihu',  label: '知乎' },
+      };
+      const HOT_TTL = 15 * 60 * 1000;
+      const HOT_LIMIT = 30;
+      const want = String(url.searchParams.get('src') || 'weibo').toLowerCase();
+      const cfgSrc = HOT_SOURCES[want] || HOT_SOURCES.weibo;
+      const key = 'hot:' + (HOT_SOURCES[want] ? want : 'weibo');
+      const fallback = { label: cfgSrc.label, items: [], updatedAt: 0 };
+
+      let cached = null;
+      try { const raw = await env.STORE.get(key); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
+      if (cached && Array.isArray(cached.items) && cached.items.length && Date.now() - (cached.updatedAt || 0) < HOT_TTL) {
+        return json(cached, 200, { 'Cache-Control': 'public, max-age=300' });
+      }
+
+      const normalize = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
+        rank: i + 1,
+        title: String(it && it.title != null ? it.title : ''),
+        // 已抓到的热搜条目正文可能很长，截断以免把面板撑爆
+        desc: String((it && (it.detail || it.desc)) || '').slice(0, 140),
+        link: String((it && it.link) || ''),
+        hot: (it && (it.hot_value != null ? it.hot_value : it.hot_value_desc)) || '',
+      })).filter(x => x.title);
+
+      let items = null, err = '';
+      try {
+        const up = await fetch(cfgSrc.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            'Accept': 'application/json,text/plain,*/*',
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!up.ok) throw new Error('upstream HTTP ' + up.status);
+        const uj = await up.json();
+        const data = uj && uj.data;
+        if (Array.isArray(data)) items = normalize(data);
+        else if (data && Array.isArray(data.list)) items = normalize(data.list);
+        if (!items || !items.length) throw new Error('empty payload');
+      } catch (e) {
+        err = String((e && e.message) || e).slice(0, 120);
+      }
+
+      if (items && items.length) {
+        const payload = { source: want, label: cfgSrc.label, items, updatedAt: Date.now() };
+        try { await env.STORE.put(key, JSON.stringify(payload), { expirationTtl: 6 * 60 * 60 }); } catch (e) {}
+        return json(payload, 200, { 'Cache-Control': 'public, max-age=300' });
+      }
+      if (cached && Array.isArray(cached.items) && cached.items.length) {
+        return json(Object.assign({}, cached, { stale: true, error: err }), 200, { 'Cache-Control': 'public, max-age=60' });
+      }
+      return json(Object.assign({}, fallback, { source: want, error: err || 'no_data' }), 200, { 'Cache-Control': 'public, max-age=60' });
     }
 
     // ── GET /data ── 公开读取 ──
