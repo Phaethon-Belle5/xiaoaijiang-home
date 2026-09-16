@@ -94,19 +94,71 @@
 .glass-btn:hover{border-color:var(--gold);color:var(--gold)}
 .glass-input{background:var(--glass-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:var(--radius-md);color:var(--text-primary)}
 .glass-input:focus{border-color:var(--gold);outline:none}
-/* 说说（毛玻璃便利贴） */
+/* 说说（纸质便利贴） */
 .memo-wall{display:flex;flex-wrap:wrap;gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding);justify-content:center;align-items:flex-start}
-.memo-card{position:relative;width:240px;padding:var(--space-6);border-radius:var(--radius-lg);
-  background:var(--glass-bg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border:1px solid var(--glass-border);box-shadow:var(--shadow-card);
+/* 用「纸」的层次做真实感：
+   1) 极淡的斜向条纹 + 暖黄渐变  -> 纸张的纤维与色差
+   2) 内阴影 inset（顶部提亮、底部压暗） -> 纸面受光
+   3) 外阴影分两层（近距离硬边 + 远距离柔化） -> 纸片离墙的悬浮感
+   4) 右下折角（.memo-card::after）-> 翘边的贴纸
+   文字统一用暖褐色而不是主题的 text-primary，否则深色主题下浅灰字压在黄纸上几乎看不见。 */
+.memo-card{position:relative;width:240px;min-height:196px;padding:var(--space-6);border-radius:3px 3px 4px 4px;
+  --memo-ink:#413318;--memo-ink-soft:#6B5A2C;--memo-ink-faint:#7C6733;
+  color:var(--memo-ink);
+  display:flex;flex-direction:column;gap:var(--space-4);
+  background:
+    repeating-linear-gradient(112deg,rgba(255,255,255,.30) 0 3px,rgba(255,255,255,0) 3px 9px),
+    radial-gradient(120% 90% at 22% 12%,rgba(255,255,255,.55),rgba(255,255,255,0) 62%),
+    linear-gradient(158deg,var(--memo-bg) 0%,var(--memo-bg2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -14px 22px -16px rgba(120,95,30,.28),
+    0 2px 3px rgba(0,0,0,.20),
+    0 14px 30px rgba(0,0,0,.34);
   transition:transform 0.3s var(--ease-out),box-shadow 0.3s var(--ease-out)}
-.memo-card:hover{transform:rotate(0deg) translateY(-6px) scale(1.03);box-shadow:var(--shadow-card-hover);z-index:2}
-.memo-card.pinned{border-color:rgba(212,168,67,0.45);box-shadow:0 0 26px var(--gold-glow)}
-.memo-text{font-size:0.95em;color:var(--text-primary);line-height:1.7;white-space:pre-wrap;word-break:break-word}
-.memo-date{display:block;margin-top:var(--space-4);font-family:var(--font-mono);font-size:0.72em;color:var(--text-muted);text-align:right}
+/* 右下折角：两层叠加做出"纸被掀起"的立体感
+   —— 三角面（亮） + 被掀起处落在纸上的阴影（暗） */
+.memo-card::after{content:'';position:absolute;right:0;bottom:0;width:26px;height:26px;pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(0,0,0,0) 47%,rgba(255,255,255,.72) 50%,rgba(255,255,255,.34) 100%);
+  border-bottom-right-radius:4px;
+  filter:drop-shadow(-2px -2px 3px rgba(120,95,30,.34))}
+/* 折角下方的暗影，让掀起的边缘有落影 */
+.memo-card::before{content:'';position:absolute;right:2px;bottom:2px;width:24px;height:24px;pointer-events:none;
+  background:radial-gradient(circle at 100% 100%,rgba(90,72,26,.30),rgba(90,72,26,0) 72%);border-radius:0 0 4px 0}
+/* 不同卡片让折角略有深浅差异，避免每张一模一样显得机械 */
+.memo-card:nth-child(3n+1)::after{width:22px;height:22px}
+.memo-card:nth-child(3n+2)::after{width:30px;height:30px}
+.memo-card:hover{transform:rotate(0deg) translateY(-6px) scale(1.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    inset 0 -14px 22px -16px rgba(120,95,30,.26),
+    0 3px 5px rgba(0,0,0,.22),
+    0 22px 44px rgba(0,0,0,.42);z-index:2}
+/* 置顶：金色描边 + 顶部一条胶带（胶带用 ::after，避免与折角阴影 ::before 冲突） */
+.memo-card.pinned{box-shadow:
+    inset 0 0 0 1px rgba(212,168,67,.75),
+    inset 0 1px 0 rgba(255,255,255,.55),
+    0 2px 3px rgba(0,0,0,.20),
+    0 14px 34px rgba(212,168,67,.30)}
+.memo-card.pinned::after{top:-9px;bottom:auto;right:auto;left:50%;transform:translateX(-50%) rotate(-2.5deg);
+  width:78px;height:18px;border-radius:2px;filter:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(232,196,86,.34));
+  border:1px solid rgba(255,255,255,.32);box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.memo-card.pinned{border-color:transparent}
+.memo-text{font-size:0.95em;color:var(--memo-ink);line-height:1.75;white-space:pre-wrap;word-break:break-word}
+/* 日期与评论标记并排贴在便签底部（内容不足时由 margin-top:auto 顶到底边） */
+.memo-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:auto}
+.memo-date{font-family:var(--font-mono);font-size:0.72em;color:var(--memo-ink-faint);text-align:right}
 .memo-card{cursor:pointer}
-.memo-card-img{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-bottom:var(--space-4);display:block;border:1px solid var(--glass-border)}
-.memo-cmt-count{display:inline-flex;align-items:center;gap:4px;margin-top:var(--space-3);font-size:.7em;color:var(--text-muted)}
+.memo-card-img{width:100%;height:130px;object-fit:cover;border-radius:2px;margin-bottom:var(--space-4);display:block;
+  border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 6px rgba(90,72,26,.22)}
+/* 评论标记做成纸质标签样式，与便签同色系 */
+.memo-cmt-count{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;
+  border-radius:var(--radius-pill);font-size:.7em;color:var(--memo-ink-soft);flex:none;
+  background:rgba(255,255,255,.42);border:1px solid rgba(122,102,54,.22)}
+.memo-cmt-count svg{width:12px;height:12px;flex:none;opacity:.85}
+[data-theme="light"] .memo-card{--memo-ink:#3D3118;--memo-ink-soft:#6B5A2C;--memo-ink-faint:#8A7644}
 /* 说说详情弹窗 + 评论 */
 .memo-detail-overlay{position:fixed;inset:0;z-index:10060;background:rgba(5,8,14,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:var(--space-5)}
 .memo-detail-overlay.show{display:flex}
@@ -132,6 +184,13 @@
 .comment-send{padding:0 20px;border-radius:var(--radius-pill);background:var(--gold);color:#0B0E14;border:none;cursor:pointer;font-weight:600;font-size:.9em}
 .comment-send:disabled{opacity:.5;cursor:not-allowed}
 .gh-login-btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:9px 16px;border-radius:var(--radius-pill);background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-primary);cursor:pointer;font-size:.85em;transition:all .2s}
+.gh-login-btn .gh-ic{width:15px;height:15px;flex:none;fill:currentColor}
+/* 评论图标：跟随文字颜色，与标题/按钮基线对齐 */
+.ic-cmt{width:1em;height:1em;flex:none;display:inline-block;vertical-align:-0.16em}
+#memo-cmt-title{display:flex;align-items:center;gap:7px}
+#memo-cmt-title .ic-cmt{width:15px;height:15px;color:var(--gold)}
+.comment-send{display:inline-flex;align-items:center;gap:6px}
+.comment-send .ic-cmt{width:13px;height:13px}
 .gh-login-btn:hover{border-color:var(--gold);color:var(--gold)}
 .gh-login-btn .gh-user{color:var(--gold-bright);font-weight:600}
 .comment-auth-row{margin-top:var(--space-4)}
@@ -785,12 +844,12 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
     <p class="memo-detail-text" id="memo-detail-text"></p>
     <span class="memo-detail-date" id="memo-detail-date"></span>
     <div class="memo-comments">
-      <h4 id="memo-cmt-title">评论</h4>
+      <h4 id="memo-cmt-title"><svg class="ic-cmt" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>评论</h4>
       <div id="memo-cmt-list"></div>
       <div class="comment-auth-row" id="memo-cmt-auth"></div>
       <div class="comment-input-row" id="memo-cmt-input-row" style="display:none">
         <input class="comment-input" id="memo-cmt-input" placeholder="写下你的评论…" maxlength="1000">
-        <button class="comment-send" id="memo-cmt-send" onclick="submitComment()">发送</button>
+        <button class="comment-send" id="memo-cmt-send" onclick="submitComment()"><svg class="ic-cmt" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M3.4 20.6 21 12 3.4 3.4 3.4 10l12.6 2-12.6 2z"/></svg><span>发送</span></button>
       </div>
     </div>
   </div>
@@ -845,6 +904,10 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 // DATA
 // ============================================================
 const API_URL='https://home.xiaoaijiang.cloud/api';
+// 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
+// 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
+const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
+const ICON_GITHUB_SVG='<svg class="gh-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.7.08-.7 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.42.36.79 1.07.79 2.15v3.19c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>';
 const DEFAULT_MUSIC_COVER='assets/wallpaper-default.jpg';
 const LS_KEY='xiaoaijiang-site-v5';
 const MAX_VIDEO_MB=100;
@@ -1555,8 +1618,10 @@ function renderMain(){
           <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" style="transform:rotate(${(i%3-1)*2}deg)" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
             ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:''}
             <p class="memo-text">${escHtml(memoPreview(m.text))}</p>
-            <span class="memo-date">${escHtml(m.date||'')}</span>
-            <span class="memo-cmt-count">💬 评论</span>
+            <div class="memo-foot">
+              <span class="memo-cmt-count">${ICON_COMMENT_SVG}评论</span>
+              <span class="memo-date">${escHtml(m.date||'')}</span>
+            </div>
           </div>`).join(''):`
           <p class="empty-text" style="text-align:center;color:var(--text-muted)">还没有说说，去管理面板添加吧。</p>`}
       </div>
@@ -2567,7 +2632,7 @@ async function loadComments(id){
     const r=await fetch(API_URL+'/comments/'+encodeURIComponent(id));
     if(!r.ok)throw new Error('err');
     const comments=await r.json();
-    title.textContent='评论 ('+(comments.length||0)+')';
+    title.innerHTML=ICON_COMMENT_SVG+'评论 ('+(comments.length||0)+')';
     renderComments(comments);
   }catch(e){list.innerHTML='<div class="comment-empty">评论加载失败</div>';}
 }
@@ -2590,10 +2655,10 @@ function renderCommentAuth(){
   if(token){
     let uname='';
     try{uname=JSON.parse(sessionStorage.getItem('xiaoaijiang-gh-user')||'{}').login||'';}catch(e){}
-    auth.innerHTML='<span class="gh-login-btn" style="cursor:default">已登录：<span class="gh-user">'+escHtml(uname||'GitHub')+'</span></span> <button class="gh-login-btn" onclick="ghLogout()">退出</button>';
+    auth.innerHTML='<span class="gh-login-btn" style="cursor:default">'+ICON_GITHUB_SVG+'已登录：<span class="gh-user">'+escHtml(uname||'GitHub')+'</span></span> <button class="gh-login-btn" onclick="ghLogout()">退出</button>';
     if(inputRow)inputRow.style.display='flex';
   }else{
-    auth.innerHTML='<button class="gh-login-btn" onclick="ghLogin()">用 GitHub 登录评论</button>';
+    auth.innerHTML='<button class="gh-login-btn" onclick="ghLogin()">'+ICON_GITHUB_SVG+'用 GitHub 登录评论</button>';
     if(inputRow)inputRow.style.display='none';
   }
 }
