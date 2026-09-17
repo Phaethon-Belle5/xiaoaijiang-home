@@ -73,16 +73,10 @@
 }
 [data-theme="light"] ::-webkit-scrollbar-track{background:#EDE4D0}
 [data-theme="light"] ::selection{color:#fff}
-/* 浅色下管理面板/登录框覆盖（原为硬编码暗色） */
-[data-theme="light"] #admin-panel,[data-theme="light"] #login-box{background:#fff;color:#333;border-color:#ddd;box-shadow:0 24px 48px rgba(0,0,0,0.15)}
-[data-theme="light"] #admin-panel h3,[data-theme="light"] #login-box h3{color:#1C2342}
-[data-theme="light"] #admin-panel .admin-group input[type="text"],[data-theme="light"] #admin-panel .admin-group textarea,[data-theme="light"] #admin-panel .admin-group input[type="url"],[data-theme="light"] #admin-panel .admin-group input[type="color"],[data-theme="light"] #admin-panel .admin-group select,[data-theme="light"] #login-box input{background:#f7f5f0;color:#333;border-color:#ddd}
-[data-theme="light"] #admin-panel .wp-list-item{background:#f7f5f0}
-[data-theme="light"] #admin-panel .wp-list-actions button{background:#f0ede6;border-color:#ddd;color:#555}
-[data-theme="light"] #admin-panel .admin-tab{background:#f0ede6;border-color:#ddd;color:#555}
-[data-theme="light"] #admin-panel .admin-tab:hover{color:#1C2342;border-color:#bbb;background:#eae6dd}
-[data-theme="light"] #admin-panel .admin-tab.active{background:var(--gold);color:#1a1a1a;border-color:var(--gold)}
-[data-theme="light"] #admin-panel .admin-btn-row{background:#fff;border-top-color:#ddd}
+/* 浅色下登录框覆盖（管理面板已改用主题令牌，不再需要逐条覆盖） */
+[data-theme="light"] #login-box{background:#fff;color:#333;border-color:#ddd;box-shadow:0 24px 48px rgba(0,0,0,0.15)}
+[data-theme="light"] #login-box h3{color:#1C2342}
+[data-theme="light"] #login-box input{background:#f7f5f0;color:#333;border-color:#ddd}
 [data-theme="light"] .slide-cta:hover,[data-theme="light"] .glass-btn:hover{background:rgba(0,0,0,0.08)}
 [data-theme="light"] .carousel-arrow{background:rgba(255,255,255,0.5);border-color:rgba(0,0,0,0.12)}
 [data-theme="light"] .carousel-arrow:hover{background:rgba(255,255,255,0.8);border-color:var(--gold);color:var(--gold)}
@@ -655,34 +649,182 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .wp-video-toggle:hover,.wp-cycle-btn:hover{color:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
 .wp-cycle-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;color:var(--text-muted);border-color:var(--surface-border)}
 
-/* ---- Admin Panel (Dark) ---- */
-#admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;display:none;align-items:center;justify-content:center}
+/* ---- Admin Panel v2（跟随站点主题令牌，不再自成一套深色） ----
+   布局：#admin-shell = 顶栏 + 左导航 + 右内容 + 底部操作行（可选预览第三列） */
+#admin-overlay{position:fixed;inset:0;background:rgba(5,8,14,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9998;display:none;align-items:center;justify-content:center;padding:var(--space-5)}
 #admin-overlay.show{display:flex}
-#admin-panel{background:#1a1a1a;border:1px solid #333;border-radius:8px;box-shadow:0 24px 48px rgba(0,0,0,0.4);max-width:640px;width:94vw;max-height:88vh;z-index:9999;color:#e0e0e0;display:flex;flex-direction:column;overflow:hidden}
-#admin-panel h3{font-family:var(--font-display);font-size:0.95em;font-weight:600;color:#fff;letter-spacing:0.04em}
-.admin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 20px 0}
-.admin-head h3{margin:0}
-.admin-tabs{display:flex;gap:6px;padding:14px 20px 0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;flex-shrink:0}
-.admin-tab{flex-shrink:0;padding:7px 14px;border-radius:6px;font-size:.78em;color:#bbb;background:#2a2a2a;border:1px solid #3a3a3a;cursor:pointer;user-select:none;white-space:nowrap;transition:all .15s;font-family:var(--font-body)}
-.admin-tab:hover{color:#fff;border-color:#555}
-.admin-tab.active{background:var(--gold);color:#1a1a1a;border-color:var(--gold);font-weight:600}
-.admin-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 20px}
+#admin-panel{width:min(1240px,97vw);height:min(880px,93vh);max-height:92vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-card-hover);color:var(--text-primary)}
+#admin-panel h3{font-family:var(--font-display);font-size:1.02em;font-weight:600;color:var(--text-primary);letter-spacing:.03em;margin:0}
+#admin-panel h4{font-size:.84em;color:var(--text-primary);margin:0 0 var(--space-3)}
+
+/* 顶栏：标题 + 搜索 + 保存状态 + 撤销 + 预览开关 */
+.admin-head{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-5) var(--space-4);flex:none;flex-wrap:wrap}
+.admin-head h3{flex:none}
+.admin-search{flex:1;min-width:150px;max-width:280px;padding:7px 12px;border-radius:var(--radius-pill);
+  border:1px solid var(--surface-border);background:rgba(255,255,255,.04);color:var(--text-primary);
+  font-family:var(--font-body);font-size:.82em}
+.admin-search:focus{outline:none;border-color:var(--gold)}
+.admin-status{display:inline-flex;align-items:center;gap:6px;font-size:.74em;color:var(--text-muted);
+  padding:4px 11px;border-radius:var(--radius-pill);border:1px solid var(--surface-border);white-space:nowrap}
+.admin-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex:none}
+.admin-status[data-state="dirty"]{color:var(--gold-bright);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.admin-status[data-state="dirty"]::before{background:var(--gold-bright)}
+.admin-status[data-state="saving"]::before{background:var(--gold);animation:adminPulse 1s ease-in-out infinite}
+.admin-status[data-state="saved"]{color:#4ade80;border-color:rgba(74,222,128,.35)}
+.admin-status[data-state="saved"]::before{background:#4ade80}
+.admin-status[data-state="error"]{color:var(--crimson-hover);border-color:rgba(194,58,79,.4)}
+.admin-status[data-state="error"]::before{background:var(--crimson-hover)}
+@keyframes adminPulse{0%,100%{opacity:.35}50%{opacity:1}}
+.admin-iconbtn{width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;border:1px solid var(--surface-border);background:rgba(255,255,255,.04);
+  color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.admin-iconbtn:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.admin-iconbtn:disabled{opacity:.32;cursor:not-allowed}
+.admin-iconbtn.on{border-color:var(--gold);color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.admin-iconbtn svg{width:15px;height:15px}
+
+.admin-main{flex:1;min-height:0;display:flex;overflow:hidden}
+/* 左导航：竖排，分组标题 + 项 + 未保存圆点 */
+.admin-nav{width:186px;flex:none;overflow-y:auto;padding:0 var(--space-3) var(--space-4) var(--space-4);
+  border-right:1px solid var(--glass-border)}
+.admin-nav-group{margin-bottom:var(--space-4)}
+.admin-nav-label{font-size:.66em;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);
+  padding:0 10px;margin-bottom:5px}
+.admin-nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;margin-bottom:2px;
+  border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;
+  color:var(--text-secondary);font-size:.82em;font-family:var(--font-body);text-align:left;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.admin-nav-item:hover{background:rgba(255,255,255,.05);color:var(--text-primary)}
+.admin-nav-item.active{background:color-mix(in srgb,var(--gold) 14%,transparent);
+  border-color:color-mix(in srgb,var(--gold) 42%,transparent);color:var(--gold-bright);font-weight:600}
+.admin-nav-item svg{width:15px;height:15px;flex:none;opacity:.85}
+.admin-nav-item .nav-dot{width:6px;height:6px;border-radius:50%;background:var(--gold-bright);margin-left:auto;flex:none;display:none}
+.admin-nav-item.dirty .nav-dot{display:block}
+
+/* 右内容 */
+.admin-body{flex:1;min-width:0;overflow-y:auto;padding:var(--space-4) var(--space-5) var(--space-6)}
+/* 所有分区常驻 DOM（仅切换显示），否则 saveAdmin() 读不到未显示分区的控件 */
 .tab-page{display:none}
 .tab-page.active{display:block}
-.admin-group label{display:block;font-size:0.74em;color:#999;margin-bottom:4px;letter-spacing:.02em}
-.admin-group input[type="text"],.admin-group textarea,.admin-group input[type="url"],.admin-group input[type="color"],.admin-group select{width:100%;padding:9px 12px;border:1px solid #444;border-radius:4px;font-family:var(--font-body);font-size:.85em;color:#e0e0e0;background:#2a2a2a;outline:none;transition:border-color 0.2s}
-.admin-group input:focus,.admin-group textarea:focus,.admin-group select:focus{border-color:#666}
-.admin-btn-row{display:flex;gap:8px;padding:14px 20px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid #333;background:#1a1a1a;flex-shrink:0}
+.admin-sec-head{margin-bottom:var(--space-4)}
+.admin-sec-desc{font-size:.76em;color:var(--text-muted);margin:4px 0 0;line-height:1.6}
+.admin-group{margin-bottom:var(--space-4)}
+.admin-group > label{display:block;font-size:.76em;color:var(--text-secondary);margin-bottom:5px}
+.admin-help{font-size:.72em;color:var(--text-muted);margin:5px 0 0;line-height:1.6}
+.admin-group input[type="text"],.admin-group input[type="url"],.admin-group input[type="color"],
+.admin-group input[type="number"],.admin-group textarea,.admin-group select{width:100%;padding:9px 12px;
+  border:1px solid var(--surface-border);border-radius:var(--radius-sm);font-family:var(--font-body);
+  font-size:.85em;color:var(--text-primary);background:rgba(255,255,255,.04);outline:none;transition:border-color .2s}
+.admin-group input:focus,.admin-group textarea:focus,.admin-group select:focus{border-color:var(--gold)}
+.admin-group textarea{resize:vertical;min-height:76px;line-height:1.65}
+.admin-group input[type="color"]{height:38px;padding:3px;cursor:pointer}
+/* 两列栅格，减少无谓滚动 */
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--space-3) var(--space-4)}
+.admin-card{padding:var(--space-4);border-radius:var(--radius-md);border:1px solid var(--surface-border);
+  background:rgba(255,255,255,.035);margin-bottom:var(--space-3)}
+.admin-card-head{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.admin-card-title{font-size:.8em;color:var(--text-secondary);flex:1;min-width:0}
 
-/* Wallpaper list items */
-.wp-list{margin-bottom:12px}
-.wp-list-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#2a2a2a;border-radius:8px;margin-bottom:6px}
-.wp-list-thumb{width:48px;height:30px;border-radius:4px;object-fit:cover;flex-shrink:0;background:#333}
-.wp-list-url{flex:1;min-width:0;font-size:.78em;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wp-list-actions{display:flex;gap:4px;flex-shrink:0}
-.wp-list-actions button{padding:3px 8px;font-size:.7em;border-radius:4px;border:1px solid #444;background:#333;cursor:pointer;color:#aaa;transition:all 0.15s}
-.wp-list-actions button:hover{background:#444;color:#fff}
-.wp-list-actions button.del:hover{background:rgba(238,29,54,0.2);color:#ee1d36;border-color:#ee1d36}
+.admin-btn-row{display:flex;gap:var(--space-2);padding:var(--space-3) var(--space-5) var(--space-4);
+  justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--glass-border);flex:none}
+.admin-btn-row .admin-btn-row-left{margin-right:auto;display:flex;gap:var(--space-2)}
+.admin-save-note{font-size:.72em;color:var(--text-muted);align-self:center;margin-right:auto}
+
+/* 小按钮：真图标 + 明确语义（替换原来的 e/x/+/- 文本占位） */
+.admin-sbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 9px;
+  border-radius:var(--radius-sm);border:1px solid var(--surface-border);background:rgba(255,255,255,.05);
+  color:var(--text-secondary);font-size:.72em;font-family:var(--font-body);cursor:pointer;transition:all .15s;white-space:nowrap}
+.admin-sbtn:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.admin-sbtn:disabled{opacity:.3;cursor:not-allowed}
+.admin-sbtn.danger:hover{border-color:var(--crimson-hover);color:var(--crimson-hover)}
+.admin-sbtn svg{width:13px;height:13px;flex:none}
+.admin-sbtn.icon{width:28px;padding:0}
+
+/* 列表项（壁纸等） */
+.wp-list{margin-bottom:var(--space-3)}
+.wp-list-item{display:flex;align-items:center;gap:var(--space-3);padding:8px 10px;
+  background:rgba(255,255,255,.04);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--surface-border)}
+.wp-list-thumb{width:52px;height:32px;border-radius:4px;object-fit:cover;flex:none;background:rgba(0,0,0,.3)}
+.wp-list-url{flex:1;min-width:0;font-size:.76em;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wp-list-actions{display:flex;gap:5px;flex-shrink:0}
+
+/* ============ 说说（便签）专用 ============ */
+.memo-bulk{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;
+  padding:10px var(--space-3);margin-bottom:var(--space-3);border-radius:var(--radius-md);
+  border:1px solid var(--surface-border);background:rgba(255,255,255,.035);position:sticky;top:0;z-index:3;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.memo-bulk .bulk-count{font-size:.75em;color:var(--text-secondary);margin-right:auto}
+.memo-item{display:grid;grid-template-columns:20px 92px minmax(0,1fr) auto;gap:var(--space-3);align-items:start;
+  padding:var(--space-3);margin-bottom:var(--space-3);border-radius:var(--radius-md);
+  border:1px solid var(--surface-border);background:rgba(255,255,255,.035);transition:border-color .15s,background .15s}
+.memo-item:hover{border-color:color-mix(in srgb,var(--gold) 34%,transparent)}
+.memo-item.pinned{border-color:color-mix(in srgb,var(--gold) 55%,transparent);
+  background:color-mix(in srgb,var(--gold) 7%,transparent)}
+.memo-item.dragging{opacity:.45}
+.memo-item.drop-target{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.memo-grip{display:flex;align-items:center;justify-content:center;height:30px;color:var(--text-muted);
+  cursor:grab;border-radius:4px}
+.memo-grip:hover{color:var(--gold);background:rgba(255,255,255,.06)}
+.memo-grip svg{width:14px;height:14px}
+.memo-thumb{position:relative;width:92px;height:70px;border-radius:var(--radius-sm);overflow:hidden;flex:none;
+  border:1px dashed var(--surface-border);background:rgba(0,0,0,.25);display:flex;align-items:center;
+  justify-content:center;color:var(--text-muted);font-size:.62em;text-align:center;cursor:pointer;transition:border-color .15s;line-height:1.4}
+.memo-thumb:hover{border-color:var(--gold);color:var(--gold)}
+.memo-thumb.has-img{border-style:solid;border-color:var(--surface-border)}
+.memo-thumb > img{width:100%;height:100%;object-fit:cover;display:block}
+.memo-thumb > svg{width:18px;height:18px;margin-bottom:2px}
+.memo-thumb .thumb-x{position:absolute;top:3px;right:3px;width:19px;height:19px;border-radius:50%;
+  border:none;background:rgba(0,0,0,.62);color:#fff;font-size:11px;line-height:1;cursor:pointer;
+  display:none;align-items:center;justify-content:center}
+.memo-thumb:hover .thumb-x{display:flex}
+.memo-fields{min-width:0;display:flex;flex-direction:column;gap:7px}
+.memo-fields textarea,.memo-fields input[type="text"]{padding:8px 11px;
+  border:1px solid var(--surface-border);border-radius:var(--radius-sm);font-family:var(--font-body);
+  font-size:.84em;color:var(--text-primary);background:rgba(255,255,255,.04);outline:none;
+  transition:border-color .2s;width:100%;min-width:0}
+.memo-fields textarea:focus,.memo-fields input[type="text"]:focus{border-color:var(--gold)}
+.memo-fields textarea{min-height:84px;resize:vertical;line-height:1.6;display:block;overflow-y:auto}
+.memo-meta{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
+.memo-meta > input[type="text"]{width:126px;flex:none}
+.memo-meta label{display:inline-flex;align-items:center;gap:5px;font-size:.75em;color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.memo-counter{font-size:.68em;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.memo-counter.over{color:var(--gold-bright)}
+.memo-actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.memo-empty{padding:var(--space-8) var(--space-4);text-align:center;color:var(--text-muted);font-size:.84em;
+  border:1px dashed var(--surface-border);border-radius:var(--radius-md)}
+
+/* 实时预览列 */
+.admin-preview{width:320px;flex:none;border-left:1px solid var(--glass-border);
+  background:rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
+.admin-preview-head{display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);
+  border-bottom:1px solid var(--glass-border);font-size:.74em;color:var(--text-muted);flex:none;white-space:nowrap}
+.admin-preview-head > svg{width:15px;height:15px;flex:none}
+.admin-preview-head > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-preview-frame{flex:1;min-height:0;border:0;width:100%;background:transparent}
+.admin-preview-body{flex:1;min-height:0;overflow-y:auto;padding:var(--space-4)}
+/* 预览里的便签只要一个 1 列的小网格，别继承列表的 4 列栅格 */
+.admin-preview-body .memo-card{width:100%;max-width:258px}
+.admin-preview-body .memo-item{grid-template-columns:1fr}
+#admin-panel.preview-off .admin-preview{display:none}
+
+/* 空状态 / 搜索无结果 */
+.admin-empty{padding:var(--space-8) var(--space-4);text-align:center;color:var(--text-muted);font-size:.86em}
+.admin-search-hits{margin-bottom:var(--space-4)}
+.admin-search-hits button{display:inline-flex;align-items:center;gap:6px;margin:0 6px 6px 0;padding:5px 11px;
+  border-radius:var(--radius-pill);border:1px solid var(--surface-border);background:rgba(255,255,255,.05);
+  color:var(--text-secondary);font-size:.75em;cursor:pointer}
+.admin-search-hits button:hover{border-color:var(--gold);color:var(--gold)}
+/* 中等宽度：预览列变窄；再窄则由下方 768 断点整体隐藏 */
+@media(max-width:1100px){
+  .admin-preview{width:264px}
+  .admin-nav{width:160px}
+  .memo-item{grid-template-columns:20px 84px 1fr}
+  .memo-thumb{width:84px;height:64px}
+}
 
 /* Login */
 #login-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;display:none;align-items:center;justify-content:center}
@@ -727,8 +869,18 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
   .carousel-arrow{width:36px;height:36px;font-size:0.9em}
   .carousel-arrow.prev{left:var(--space-3)}.carousel-arrow.next{right:var(--space-3)}
   .wp-controls{bottom:88px;right:16px}
-  .admin-tabs{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
-  .admin-tab{padding:6px 10px;font-size:.72em}
+  /* 窄屏：隐藏预览列，左导航改成顶部横向可滚动 */
+  .admin-preview{display:none !important}
+  .admin-nav{width:auto;flex:none;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;
+    padding:0 var(--space-4) var(--space-3);border-right:none;border-bottom:1px solid var(--glass-border)}
+  .admin-nav-group{display:flex;gap:6px;margin-bottom:0}
+  .admin-nav-label{display:none}
+  .admin-nav-item{width:auto;flex:none;margin-bottom:0;white-space:nowrap}
+  .admin-main{flex-direction:column}
+  .memo-item{grid-template-columns:18px 68px minmax(0,1fr);gap:var(--space-2)}
+  .memo-actions{flex-direction:row;grid-column:1 / -1;justify-content:flex-end}
+  .memo-thumb{width:68px;height:54px}
+  .memo-meta > input[type="text"]{width:112px}
   #back-to-top{bottom:140px;right:16px}
   .music-float{right:16px;bottom:136px}
   .music-float.panel-open{width:min(312px,calc(100vw - 32px))}
@@ -869,7 +1021,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 <input type="file" id="wallpaper-upload" accept="image/*" multiple style="display:none">
 <input type="file" id="wallpaper-video" accept="video/mp4" style="display:none">
 <input type="file" id="portfolio-image" accept="image/*" style="display:none">
-<input type="file" id="gallery-image" accept="image/*" style="display:none">
+
 <input type="file" id="carousel-bg-image" accept="image/*" style="display:none">
 <input type="file" id="audio-upload" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg" style="display:none">
 <audio id="bgm-audio" preload="none" style="display:none"></audio>
@@ -915,14 +1067,737 @@ const API_URL='https://home.xiaoaijiang.cloud/api';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
-const ICON_GITHUB_SVG='<svg class="gh-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.7.08-.7 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.42.36.79 1.07.79 2.15v3.19c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>';
-const DEFAULT_MUSIC_COVER='assets/wallpaper-default.jpg';
+const ICON_GITHUB_SVG='<svg class="gh-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.7.08-.7 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.42.36.79 1.07.79 2.15v3.19c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>';const DEFAULT_MUSIC_COVER='assets/wallpaper-default.jpg';
 const LS_KEY='xiaoaijiang-site-v5';
 const MAX_VIDEO_MB=100;
+
+// ============================================================
+// 管理面板 v2 核心
+// 针对旧版的三个痛点：
+//   1) 旧版每个操作都重写 panel.innerHTML —— 滚动位置、当前分区、其它分区未保存的输入全丢。
+//      这里外壳只渲染一次，操作只重建「那一个列表」（ADMIN.refresh(id)）。
+//   2) 旧版分不清"存没存"（有的即时存、有的要按保存）—— 这里统一为：改动标脏、保存才同步。
+//   3) 所有分区常驻 DOM（仅切 display），所以按 id 读取未显示分区的控件依然可行，
+//      saveAdmin() 的行为保持不变。
+// ============================================================
+const ADMIN_SECTIONS=[
+  {id:'profile',   label:'资料', group:'站点'},
+  {id:'wallpaper', label:'壁纸', group:'站点'},
+  {id:'memos',     label:'说说', group:'内容'},
+  {id:'works',     label:'作品', group:'内容'},
+  {id:'copy',      label:'文案', group:'内容'},
+  {id:'music',     label:'音乐', group:'设置'},
+  {id:'pet',       label:'桌宠', group:'设置'},
+  {id:'contact',   label:'联系', group:'设置'},
+  {id:'comments',  label:'评论', group:'运营'},
+];
+const ADMIN_DESC={
+  profile:'头像、名字、标语、简介与主题色，显示在首页顶部。',
+  wallpaper:'首页背景的图片轮播或背景视频。',
+  memos:'说说（便签）：可拖拽排序、批量删除、直接上传配图。',
+  works:'个人作品卡片。',
+  copy:'各分区的标题与按钮文案。',
+  music:'音乐播放器的曲目来源。自托管直链最稳定。',
+  pet:'点击桌宠时随机显示的气泡消息。',
+  contact:'页脚的联系方式。',
+  comments:'访客在各条说说下的评论，可单独删除。',
+};
+// 普通输入控件 -> data 路径（数组类另由 data-* 监听器处理）
+const ADMIN_REG=[
+  ['e-name','profile.name'],['e-tagline','profile.tagline'],['e-bio','profile.bio'],
+  ['e-avatar-url','__avatar'],['e-accent','accent'],
+  ['e-wp-type','wallpaper.type'],['e-wp-int','wallpaper.interval'],
+  ['e-direct-urls','__lines:directUrls'],['e-music-ids','cloudMusicIds'],['e-bgm','bgm'],
+  ['e-pet-msgs','__lines:petMessages'],['e-about','about.text'],
+  ['e-email','contact.email'],['e-wechat','contact.wechat'],['e-other','contact.other'],
+  ['e-s1-eyebrow','content.slide1Eyebrow'],['e-s1-cta','content.slide1Cta'],['e-s1-bg','content.slide1Bg'],
+  ['e-s2-eyebrow','content.slide2Eyebrow'],['e-s2-headline','content.slide2Headline'],
+  ['e-s2-cta','content.slide2Cta'],['e-s2-bg','content.slide2Bg'],
+  ['e-s3-eyebrow','content.slide3Eyebrow'],['e-s3-headline','content.slide3Headline'],
+  ['e-s3-cta','content.slide3Cta'],['e-s3-bg','content.slide3Bg'],
+  ['e-sec-eyebrow','content.contentEyebrow'],['e-sec-headline','content.contentHeadline'],['e-sec-desc','content.contentDesc'],
+  ['e-portfolio-eyebrow','content.portfolioEyebrow'],['e-portfolio-headline','content.portfolioHeadline'],
+  ['e-portfolio-overlay','content.portfolioOverlay'],
+  ['e-con-eyebrow','content.contactEyebrow'],['e-con-headline','content.contactHeadline'],
+  ['e-footer-tagline','content.footerTagline'],
+  ['e-gal-sec-eyebrow','content.galleryEyebrow'],['e-gal-sec-headline','content.galleryHeadline'],['e-gal-sec-desc','content.galleryDesc'],
+];
+const AI={
+  grip:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.5 2.5 21.5 9.5l-3 1.2-3.6 3.6.4 3.4-1.7 1.7-4-4-4.4 4.4-1.4-1.4 4.4-4.4-4-4L5.9 8.3l3.4.4 3.6-3.6z"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/><path d="M10 11v6M14 11v6"/></svg>',
+  img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l4.5-4.5 3 3L15 13l5 5"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>',
+  image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M4 17l4.5-4.5 3 3L15 12l5 5"/></svg>',
+  note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  music:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>',
+  pet:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.6" cy="9.4" r="1.9"/><circle cx="12" cy="6.6" r="1.9"/><circle cx="17.4" cy="9.4" r="1.9"/><path d="M12 12c-3 0-5.5 2.4-5.5 5.2 0 1.6 1.2 2.3 2.6 2.3h5.8c1.4 0 2.6-.7 2.6-2.3C17.5 14.4 15 12 12 12z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>',
+  text:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 11h14M5 16h9"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.4-4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>',
+};
+const ADMIN_SEC_ICON={profile:'user',wallpaper:'image',memos:'note',works:'img',copy:'text',music:'music',pet:'pet',contact:'mail',comments:'chat'};
+
+const ADMIN={
+  active:'memos',
+  preview:true,
+  dirty:false,
+  sectionDirty:new Set(),
+  undoStack:[],
+  _shellBuilt:false,
+  _dragFrom:null,
+
+  esc(s){return escHtml(String(s==null?'':s));},
+  get(path){return String(path).split('.').reduce((o,k)=>(o==null?undefined:o[k]),data);},
+  set(path,val){const seg=String(path).split('.');let o=data;for(let i=0;i<seg.length-1;i++){if(o[seg[i]]==null)o[seg[i]]={};o=o[seg[i]];}o[seg[seg.length-1]]=val;},
+
+  // ---------- 保存状态 ----------
+  status(state,text){
+    const el=document.getElementById('admin-status');
+    if(!el)return;
+    const map={clean:'已保存',dirty:'有未保存的修改',saving:'同步中…',saved:'已同步',error:'同步失败'};
+    el.dataset.state=state;
+    el.textContent=text||map[state]||'';
+  },
+  markDirty(sec){
+    this.dirty=true;
+    if(sec)this.sectionDirty.add(sec);
+    this.status('dirty');
+    const item=document.querySelector('.admin-nav-item[data-sec="'+(sec||this.active)+'"]');
+    if(item)item.classList.add('dirty');
+  },
+  clearDirty(){
+    this.dirty=false;this.sectionDirty.clear();
+    this.status('saved');
+    document.querySelectorAll('.admin-nav-item.dirty').forEach(el=>el.classList.remove('dirty'));
+  },
+
+  // ---------- 撤销 ----------
+  snapshot(label){
+    try{
+      this.undoStack.push({label:label||'修改',data:JSON.stringify(data)});
+      if(this.undoStack.length>25)this.undoStack.shift();
+    }catch(e){}
+    const btn=document.getElementById('admin-undo');
+    if(btn){btn.disabled=this.undoStack.length===0;btn.title='撤销'+(this.undoStack.length?'：'+this.undoStack[this.undoStack.length-1].label:'');}
+  },
+  undo(){
+    if(!this.undoStack.length){toast('没有可撤销的操作','info');return;}
+    const last=this.undoStack.pop();
+    try{data=JSON.parse(last.data);}catch(e){toast('撤销失败','error');return;}
+    this.dirty=true;
+    this.refreshAll();
+    this.status('dirty','已撤销：'+last.label);
+    const btn=document.getElementById('admin-undo');
+    if(btn){btn.disabled=this.undoStack.length===0;btn.title='撤销';}
+    toast('已撤销：'+last.label,'success');
+  },
+
+  // ---------- 外壳（只渲染一次） ----------
+  shell(){
+    const panel=document.getElementById('admin-panel');
+    if(!panel)return;
+    const groups=[];
+    ADMIN_SECTIONS.forEach(s=>{
+      let g=groups.find(x=>x.name===s.group);
+      if(!g){g={name:s.group,items:[]};groups.push(g);}
+      g.items.push(s);
+    });
+    panel.innerHTML=`
+      <div class="admin-head">
+        <h3>管理面板</h3>
+        <input class="admin-search" id="admin-search" type="search" placeholder="搜索设置项…" aria-label="搜索设置项">
+        <span class="admin-status" id="admin-status" data-state="saved">已保存</span>
+        <button class="admin-iconbtn" id="admin-undo" type="button" onclick="ADMIN.undo()" disabled title="撤销">${AI.undo}</button>
+        <button class="admin-iconbtn on" id="admin-preview-btn" type="button" onclick="ADMIN.togglePreview()" title="显示/隐藏实时预览">${AI.eye}</button>
+      </div>
+      <div class="admin-main">
+        <nav class="admin-nav" id="admin-nav">
+          ${groups.map(g=>'<div class="admin-nav-group"><div class="admin-nav-label">'+g.name+'</div>'+
+            g.items.map(s=>'<button type="button" class="admin-nav-item'+(s.id===ADMIN.active?' active':'')+'" data-sec="'+s.id+'" onclick="ADMIN.go(\''+s.id+'\')">'+(AI[ADMIN_SEC_ICON[s.id]]||'')+'<span>'+s.label+'</span><i class="nav-dot"></i></button>').join('')+
+          '</div>').join('')}
+        </nav>
+        <div class="admin-body" id="admin-body">
+          ${ADMIN_SECTIONS.map(s=>'<div class="tab-page" data-apage="'+s.id+'"><div class="admin-sec-head"><h4 style="font-family:var(--font-display);font-size:.95em">'+s.label+'</h4><p class="admin-sec-desc">'+(ADMIN_DESC[s.id]||'')+'</p></div><div class="admin-sec-body" data-sec-body="'+s.id+'"></div></div>').join('')}
+        </div>
+        <aside class="admin-preview" id="admin-preview">
+          <div class="admin-preview-head">${AI.eye}<span>实时预览</span><span id="admin-preview-note" style="margin-left:auto;opacity:.75"></span></div>
+          <div class="admin-preview-body" id="admin-preview-body"></div>
+        </aside>
+      </div>
+      <div class="admin-btn-row">
+        <span class="admin-save-note" id="admin-save-note">改动只会标脏，点右侧「保存并同步」才写入云端</span>
+        <button class="btn btn-ghost" type="button" onclick="ADMIN.exportConfig()">导出</button>
+        <button class="btn btn-ghost" type="button" onclick="copySyncLink()">同步链接</button>
+        <button class="btn btn-ghost" type="button" onclick="logout()">退出</button>
+        <button class="btn btn-danger" type="button" onclick="ADMIN.resetAll()">重置</button>
+        <button class="btn btn-ghost" type="button" onclick="closeAdmin()">关闭</button>
+        <button class="btn" type="button" onclick="ADMIN.save()">保存并同步</button>
+      </div>`;
+    this._shellBuilt=true;
+    if(!this.preview)panel.classList.add('preview-off');
+    document.getElementById('admin-preview-btn').classList.toggle('on',this.preview);
+    const se=document.getElementById('admin-search');
+    se.addEventListener('input',()=>ADMIN.search(se.value));
+    // 普通控件：输入标脏，change 落库
+    ADMIN_REG.forEach(([id,path])=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      el.addEventListener('input',()=>ADMIN.markDirty(ADMIN.active));
+      el.addEventListener('change',()=>{ADMIN.readOne(id,path);ADMIN.previewUpdate();});
+    });
+    document.getElementById('admin-overlay').classList.add('show');
+    this.refreshAll();
+    this.go(this.active);
+  },
+
+  // ---------- 分区 ----------
+  go(id){
+    if(!ADMIN_SECTIONS.some(s=>s.id===id))return;
+    // 切分区前先把界面上未落库的输入写回 data：否则重绘目标分区时会把当前分区
+    // 刚填的内容按旧值重新渲染出来（表现为"切一下回来输入就没了"）。
+    this.readAll();
+    ADMIN.active=id;
+    document.querySelectorAll('.admin-nav-item').forEach(b=>b.classList.toggle('active',b.dataset.sec===id));
+    document.querySelectorAll('.tab-page').forEach(p=>p.classList.toggle('active',p.dataset.apage===id));
+    const body=document.getElementById('admin-body');
+    if(body)body.scrollTop=0;
+    if(id==='comments'){try{loadAdminComments();}catch(e){}}
+    ADMIN.render(id);
+    ADMIN.previewUpdate();
+  },
+  render(id){
+    const host=document.querySelector('[data-sec-body="'+id+'"]');
+    if(!host)return;
+    // 同理：重绘前先同步，保证未保存的编辑不会因为重绘而回退
+    this.readAll();
+    const fn=ADMIN_RENDER[id];
+    host.innerHTML=fn?fn():'<div class="admin-empty">该分区暂无内容</div>';
+    if(ADMIN_AFTER[id])ADMIN_AFTER[id](host);
+  },
+  // 只重绘一个分区（旧版是全量重建，导致滚动/输入丢失）
+  refresh(id){ if(!this._shellBuilt){this.shell();return;} this.render(id||this.active); this.previewUpdate(); },
+  refreshAll(){
+    if(!this._shellBuilt){this.shell();return;}
+    ADMIN_SECTIONS.forEach(s=>this.render(s.id));
+    this.previewUpdate();
+  },
+  readOne(id,path){
+    const el=document.getElementById(id);
+    if(!el)return;
+    const v=el.value;
+    if(path==='__avatar'){
+      const url=String(v||'').trim();
+      if(url&&!isProfileImageUrl(url))return;
+      if(url)data.profile.avatar=url;
+      else if(data.profile.avatar&&!data.profile.avatar.startsWith('data:'))data.profile.avatar=DEFAULT_DATA.profile.avatar;
+      return;
+    }
+    if(path.indexOf('__lines:')===0){ this.set(path.slice(8),String(v).split('\n').map(s=>s.trim()).filter(Boolean)); return; }
+    this.set(path,v);
+  },
+  readAll(){
+    ADMIN_REG.forEach(([id,path])=>this.readOne(id,path));
+    // 数组类：兜底再读一次，避免输入后未触发 change
+    document.querySelectorAll('#admin-panel [data-m-idx]').forEach(el=>{const i=+el.dataset.mIdx;if(data.modules[i])data.modules[i][el.dataset.mField]=el.value;});
+    document.querySelectorAll('#admin-panel [data-p-idx]').forEach(el=>{const i=+el.dataset.pIdx;if(data.portfolio[i])data.portfolio[i][el.dataset.pField]=el.value;});
+    document.querySelectorAll('#admin-panel [data-v-dur]').forEach(el=>{const i=+el.dataset.vDur;if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
+  },
+
+  // ---------- 保存 ----------
+  async save(){
+    this.readAll();
+    this.status('saving');
+    try{
+      await Promise.resolve(saveData());
+      this.clearDirty();
+      try{applyAll();}catch(e){console.warn(e);}
+      try{initMusicPlayer();}catch(e){console.warn(e);}
+      toast('已保存并同步','success');
+      this.previewUpdate();
+    }catch(e){
+      this.status('error','同步失败：'+String((e&&e.message)||e).slice(0,26));
+      toast('同步失败，但已存到本地','error');
+    }
+  },
+  resetAll(){
+    if(!confirm('确定重置所有内容？此操作不可恢复（可用左上角撤销挽回）。'))return;
+    this.snapshot('重置全部内容');
+    resetData();
+    this.refreshAll();
+    toast('已重置','info');
+  },
+  exportConfig(){ exportConfig(); },
+
+  // ---------- 实时预览 ----------
+  togglePreview(){
+    ADMIN.preview=!ADMIN.preview;
+    const panel=document.getElementById('admin-panel');
+    const btn=document.getElementById('admin-preview-btn');
+    if(panel)panel.classList.toggle('preview-off',!ADMIN.preview);
+    if(btn)btn.classList.toggle('on',ADMIN.preview);
+    try{localStorage.setItem('xiaoaijiang-admin-preview',ADMIN.preview?'1':'0');}catch(e){}
+    if(ADMIN.preview)this.previewUpdate();
+  },
+  previewUpdate(){
+    if(!ADMIN.preview)return;
+    const host=document.getElementById('admin-preview-body');
+    if(!host)return;
+    const fn=ADMIN_PREVIEW[ADMIN.active];
+    host.innerHTML=fn?fn():'<div class="admin-empty">该分区没有可预览的内容</div>';
+    const note=document.getElementById('admin-preview-note');
+    if(note){const s=ADMIN_SECTIONS.find(x=>x.id===ADMIN.active);note.textContent=s?s.label:'';}
+  },
+
+  // ---------- 搜索 ----------
+  search(q){
+    this.clearSearchHighlight();
+    q=String(q||'').trim().toLowerCase();
+    if(!q){document.querySelectorAll('.admin-nav-item').forEach(b=>b.style.display='');return;}
+    const hits=[];
+    ADMIN_SECTIONS.forEach(s=>{ if(s.label.toLowerCase().indexOf(q)>=0)hits.push({sec:s.id,label:s.label,kind:'分区'}); });
+    document.querySelectorAll('#admin-panel [data-adm-label]').forEach(el=>{
+      const lb=String(el.dataset.admLabel||'');
+      if(lb.toLowerCase().indexOf(q)>=0){
+        const page=el.closest('.tab-page');
+        hits.push({sec:page?page.dataset.apage:ADMIN.active,label:lb,kind:'设置项'});
+      }
+    });
+    const body=document.getElementById('admin-body');
+    if(!body)return;
+    const div=document.createElement('div');
+    div.id='admin-search-hits';div.className='admin-search-hits';
+    div.innerHTML=hits.length
+      ? '<p class="admin-sec-desc" style="margin-bottom:8px">找到 '+hits.length+' 项，点击跳转：</p>'+
+        hits.slice(0,16).map(h=>'<button type="button" onclick="ADMIN.go(\''+h.sec+'\')">'+this.esc(h.label)+'<span style="opacity:.55;margin-left:4px">'+this.esc(h.kind)+'</span></button>').join('')
+      : '<p class="admin-sec-desc">没有匹配「'+this.esc(q)+'」的设置项</p>';
+    body.insertBefore(div,body.firstChild);
+  },
+  clearSearchHighlight(){const b=document.getElementById('admin-search-hits');if(b)b.remove();},
+};
+// 多行框自动增高：让内容完整可见、各条高度随内容自然变化，避免出现内部滚动条
+function admAUTOGROW(el){
+  if(!el||el.tagName!=='TEXTAREA')return;
+  el.style.height='auto';
+  const h=Math.max(84,Math.min(el.scrollHeight+2,340));
+  el.style.height=h+'px';
+  el.style.overflowY=el.scrollHeight>340?'auto':'hidden';
+}
+// 分区渲染器（在下方依次补全）
+const ADMIN_RENDER={};
+const ADMIN_AFTER={};
+const ADMIN_PREVIEW={};
+// 统一的增删改入口：先 readAll 把界面上未落库的输入写回 data（避免"删一个素材顺手丢掉别处刚填的内容"），
+// 再 snapshot 供撤销，最后只重绘该分区 —— 不再整块重建面板。
+ADMIN.mutate=function(sec,label,fn){
+  this.readAll();
+  this.snapshot(label);
+  fn();
+  this.markDirty(sec);
+  this.refresh(sec);
+  toast(label+'完成','success');
+};
+// 便签缩略量（与站点 .memo-card 同一套样式，用于预览与列表配图）
+// 预览里的图默认按通栏处理（加 img-land，不依赖 orientation 判定，避免出现未定样式时的变形）
+function memoMiniCard(m,opts){
+  opts=opts||{};
+  const img=m.image?'<img class="memo-card-img img-land" src="'+escHtml(m.image)+'" alt="" onerror="this.style.display=\'none\'">':'';
+  const linedCls='memo-lined'+(m.image?' has-img img-land':'');
+  return '<div class="memo-card'+(m.pinned?' pinned':'')+(m.image?' has-img':'')+'">'+
+    '<div class="memo-head">'+escHtml(m.date||'')+'</div>'+
+    '<div class="'+linedCls+'">'+img+'<p class="memo-text">'+escHtml(m.text||'')+'</p></div>'+
+    '<div class="memo-foot"><span class="memo-cmt-count">'+ICON_COMMENT_SVG+'评论</span></div></div>';
+}
+function admField(label,inner,help){
+  return '<div class="admin-group" data-adm-label="'+escHtml(label)+'"><label>'+escHtml(label)+'</label>'+inner+(help?'<p class="admin-help">'+help+'</p>':'')+'</div>';
+}
+function admText(label,id,val,ph){
+  return admField(label,'<input type="text" id="'+id+'" value="'+escHtml(val==null?'':val)+'"'+(ph?' placeholder="'+escHtml(ph)+'"':'')+'>');
+}
+function admArea(label,id,val,rows){
+  return admField(label,'<textarea id="'+id+'" rows="'+(rows||4)+'">'+escHtml(val==null?'':val)+'</textarea>');
+}
+
+ADMIN_RENDER.profile=function(){
+  const p=data.profile||{};
+  return '<div class="admin-grid">'+
+      admText('名字','e-name',p.name)+
+      admText('标语','e-tagline',p.tagline)+
+    '</div>'+
+    admArea('简介','e-bio',p.bio,3)+
+    admField('头像图片网址','<input type="url" id="e-avatar-url" value="'+escHtml(profileAvatarUrlForInput(p.avatar))+'" placeholder="https://… 或 assets/avatar-default.jpg">',
+      '留空则用默认头像。也可用下方按钮上传本地图片。')+
+    '<button class="admin-sbtn" type="button" onclick="document.getElementById(\'avatar-upload\').click()">'+AI.img+'上传本地图片</button>'+
+    admField('主题色','<input type="color" id="e-accent" value="'+escHtml(data.accent||'#D4A843')+'">','会影响按钮、链接、便签横线等强调色。');
+};
+ADMIN_PREVIEW.profile=function(){
+  const p=data.profile||{};
+  const av=profileAvatarUrlForInput(p.avatar);
+  return '<div style="text-align:center">'+
+    '<img src="'+escHtml(av)+'" alt="" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-bottom:12px" onerror="this.style.visibility=\'hidden\'">'+
+    '<div style="font-family:var(--font-display);font-size:1.25em;color:var(--text-primary);margin-bottom:6px">'+escHtml(p.name||'')+'</div>'+
+    '<div style="font-size:.82em;color:var(--gold);margin-bottom:10px">'+escHtml(p.tagline||'')+'</div>'+
+    '<p style="font-size:.8em;color:var(--text-secondary);line-height:1.7;text-align:left">'+escHtml(p.bio||'')+'</p>'+
+    '<div style="margin-top:14px"><span style="display:inline-block;padding:5px 14px;border-radius:9999px;background:var(--gold);color:#0B0E14;font-size:.76em;font-weight:600">主色按钮</span></div>'+
+  '</div>';
+};
+
+ADMIN_RENDER.wallpaper=function(){
+  const w=data.wallpaper||{};
+  const vids=w.videos||[];
+  return '<div class="admin-grid">'+
+      admField('背景类型','<select id="e-wp-type"><option value="image"'+(w.type==='image'?' selected':'')+'>图片轮播</option><option value="video"'+(w.type==='video'?' selected':'')+'>视频背景</option></select>')+
+      admText('轮播间隔（秒）','e-wp-int',w.interval==null?8:w.interval)+
+    '</div>'+
+    admField('上传本地图片','<button class="admin-sbtn" type="button" onclick="document.getElementById(\'wallpaper-upload\').click()">'+AI.img+'选择图片（可多选）</button>')+
+    admField('添加图片网址','<div style="display:flex;gap:8px"><input type="text" id="e-wp-new-url" placeholder="https://…" style="flex:1"><button class="admin-sbtn" type="button" onclick="addWpUrl()">添加</button></div>')+
+    '<div class="admin-group" data-adm-label="壁纸图片列表"><label>壁纸图片（'+((w.images||[]).length)+' 张）</label><div class="wp-list" id="wp-list">'+
+      ((w.images||[]).length?(w.images||[]).map((u,i)=>
+        '<div class="wp-list-item"><img class="wp-list-thumb" src="'+escHtml(u)+'" loading="lazy" alt="" onerror="this.style.display=\'none\'">'+
+        '<span class="wp-list-url" title="'+escHtml(u)+'">'+escHtml(String(u).slice(0,70))+'</span>'+
+        '<div class="wp-list-actions">'+
+          '<button class="admin-sbtn" type="button" onclick="ADMIN.editWp('+i+')">编辑</button>'+
+          '<button class="admin-sbtn danger" type="button" onclick="ADMIN.delWp('+i+')">'+AI.trash+'</button>'+
+        '</div></div>').join(''):'<p class="admin-help">还没有壁纸图片</p>')+
+    '</div></div>'+
+    admField('背景视频（最多 '+MAX_VIDEO_MB+'MB）','<button class="admin-sbtn" type="button" onclick="uploadVideo()">'+AI.img+'选择 MP4 文件</button>')+
+    '<div class="admin-group" data-adm-label="视频播放列表"><label>视频列表（'+vids.length+' 个）</label>'+
+      (vids.length?vids.map((v,i)=>
+        '<div class="wp-list-item"><span style="font-size:.72em;color:var(--text-muted);flex:none">#'+(i+1)+'</span>'+
+        '<span class="wp-list-url" title="'+escHtml(v.src||'')+'">'+escHtml(v.src&&v.src.indexOf('data:')===0?'本地视频':String(v.src||'').slice(0,50))+'</span>'+
+        '<input type="text" value="'+escHtml(v.duration||8)+'" data-v-dur="'+i+'" aria-label="播放时长秒" style="width:46px;padding:4px 6px;font-size:.75em;text-align:center;border:1px solid var(--surface-border);border-radius:6px;background:rgba(255,255,255,.04);color:var(--text-primary)">'+
+        '<div class="wp-list-actions">'+
+          '<button class="admin-sbtn icon" type="button" onclick="moveVideo('+i+',-1)" '+(i===0?'disabled':'')+' title="上移">'+AI.up+'</button>'+
+          '<button class="admin-sbtn icon" type="button" onclick="moveVideo('+i+',1)" '+(i===vids.length-1?'disabled':'')+' title="下移">'+AI.down+'</button>'+
+          '<button class="admin-sbtn icon danger" type="button" onclick="deleteVideo('+i+')" title="删除">'+AI.trash+'</button>'+
+        '</div></div>').join(''):'<p class="admin-help">还没有背景视频</p>')+
+    '</div>';
+};
+ADMIN_PREVIEW.wallpaper=function(){
+  const w=data.wallpaper||{};
+  const n=(w.images||[]).length;
+  return '<p class="admin-sec-desc" style="margin-bottom:10px">背景类型：'+(w.type==='video'?'视频背景':'图片轮播')+'（间隔 '+(w.interval||8)+' 秒）</p>'+
+    (n?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+(w.images||[]).slice(0,6).map(u=>
+      '<img src="'+escHtml(u)+'" alt="" style="width:100%;height:58px;object-fit:cover;border-radius:6px;border:1px solid var(--surface-border)" onerror="this.style.opacity=.3">').join('')+'</div>'
+     :'<div class="admin-empty">还没有壁纸图片</div>');
+};
+
+ADMIN_RENDER.music=function(){
+  return admArea('自托管歌曲直链','e-direct-urls',(data.directUrls||[]).join('\n'),5)+
+    '<button class="admin-sbtn" type="button" onclick="document.getElementById(\'audio-upload\').click()">'+AI.music+'上传音乐文件到 R2</button>'+
+    '<p class="admin-help">上传后会自动把直链填到上面的输入框。每行一个 https:// 直链。</p>'+
+    admText('网易云歌曲 ID','e-music-ids',data.cloudMusicIds||'','例如 1901371647,1387090681')+
+    admField('调整歌曲顺序','<div id="music-id-order"></div>','拖动或点箭头调整播放顺序，自动识别歌名。')+
+    admText('背景音乐直链','e-bgm',data.bgm||'','音频直链（https://…）')+
+    '<p class="admin-help">播放优先级：自托管直链 → 网易云歌曲ID → 背景音乐直链。网易云接口可能被风控，建议用自托管。</p>';
+};
+ADMIN_AFTER.music=function(){ if(window.renderMusicIdOrder)renderMusicIdOrder(); if(window.fetchMusicOrderNames)fetchMusicOrderNames(); };
+
+ADMIN_RENDER.pet=function(){
+  return admArea('气泡消息（每行一条）','e-pet-msgs',(data.petMessages||[]).join('\n'),9)+
+    '<p class="admin-help">点击桌宠时随机显示一条，空行会被忽略。</p>';
+};
+ADMIN_PREVIEW.pet=function(){
+  const msgs=data.petMessages||[];
+  return '<p class="admin-sec-desc" style="margin-bottom:10px">共 '+msgs.length+' 条消息</p>'+
+    (msgs.length?'<div style="display:flex;flex-direction:column;gap:6px">'+msgs.slice(0,10).map(t=>
+      '<span style="align-self:flex-start;max-width:100%;padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--surface-border);font-size:.78em;color:var(--text-secondary)">'+escHtml(t)+'</span>').join('')+'</div>'
+     :'<div class="admin-empty">还没有气泡消息</div>');
+};
+
+ADMIN_RENDER.content=function(){
+  const c=data.content||{};
+  return admArea('关于我','e-about',(data.about&&data.about.text)||'',4)+
+    '<div class="admin-group" data-adm-label="功能模块"><label>功能模块（'+((data.modules||[]).length)+' 个）</label>'+
+      (data.modules||[]).map((m,i)=>
+        '<div class="admin-card"><div class="admin-card-head">'+
+          '<input type="text" value="'+escHtml(m.title)+'" data-m-idx="'+i+'" data-m-field="title" style="flex:1" aria-label="模块标题">'+
+          '<input type="text" value="'+escHtml(m.icon)+'" data-m-idx="'+i+'" data-m-field="icon" style="width:52px;text-align:center" aria-label="模块图标">'+
+          '<button class="admin-sbtn icon danger" type="button" onclick="removeModule('+i+')" title="删除模块">'+AI.trash+'</button>'+
+        '</div>'+
+        '<textarea data-m-idx="'+i+'" data-m-field="text" style="width:100%;min-height:64px" aria-label="模块内容">'+escHtml(m.text)+'</textarea></div>').join('')+
+      '<button class="admin-sbtn" type="button" onclick="addModule()">添加模块</button>'+
+    '</div>';
+};
+
+ADMIN_RENDER.copy=function(){
+  const c=data.content||{};
+  let h='<div class="admin-grid">';
+  h+=admText('轮播1 眉题','e-s1-eyebrow',c.slide1Eyebrow);
+  h+=admText('轮播1 按钮文字','e-s1-cta',c.slide1Cta);
+  h+='</div>';
+  h+='<div class="admin-group" data-adm-label="轮播1 背景图"><label>轮播1 背景图</label>'+
+    '<input type="url" id="e-s1-bg" value="'+escHtml(c.slide1Bg||'')+'" placeholder="https://… 或留空用壁纸">'+
+    '<button class="admin-sbtn" type="button" style="margin-top:6px" onclick="uploadCarouselBg(1)">'+AI.img+'上传图片</button></div>';
+  h+='<div class="admin-grid">';
+  h+=admText('轮播2 眉题','e-s2-eyebrow',c.slide2Eyebrow);
+  h+=admText('轮播2 标题','e-s2-headline',c.slide2Headline);
+  h+=admText('轮播2 按钮文字','e-s2-cta',c.slide2Cta);
+  h+='</div>';
+  h+='<div class="admin-group" data-adm-label="轮播2 背景图"><label>轮播2 背景图</label>'+
+    '<input type="url" id="e-s2-bg" value="'+escHtml(c.slide2Bg||'')+'" placeholder="https://… 或留空用壁纸">'+
+    '<button class="admin-sbtn" type="button" style="margin-top:6px" onclick="uploadCarouselBg(2)">'+AI.img+'上传图片</button></div>';
+  h+='<div class="admin-grid">';
+  h+=admText('轮播3 眉题','e-s3-eyebrow',c.slide3Eyebrow);
+  h+=admText('轮播3 标题','e-s3-headline',c.slide3Headline);
+  h+=admText('轮播3 按钮文字','e-s3-cta',c.slide3Cta);
+  h+='</div>';
+  h+='<div class="admin-group" data-adm-label="轮播3 背景图"><label>轮播3 背景图</label>'+
+    '<input type="url" id="e-s3-bg" value="'+escHtml(c.slide3Bg||'')+'" placeholder="https://… 或留空用壁纸">'+
+    '<button class="admin-sbtn" type="button" style="margin-top:6px" onclick="uploadCarouselBg(3)">'+AI.img+'上传图片</button></div>';
+  h+='<div class="admin-grid">';
+  h+=admText('内容区 眉题','e-sec-eyebrow',c.contentEyebrow);
+  h+=admText('内容区 标题','e-sec-headline',c.contentHeadline);
+  h+='</div>'+admArea('内容区 描述','e-sec-desc',c.contentDesc,3);
+  h+='<div class="admin-grid">';
+  h+=admText('作品区 眉题','e-portfolio-eyebrow',c.portfolioEyebrow);
+  h+=admText('作品区 标题','e-portfolio-headline',c.portfolioHeadline);
+  h+=admText('作品悬浮按钮文字','e-portfolio-overlay',c.portfolioOverlay);
+  h+='</div><div class="admin-grid">';
+  h+=admText('联系区 眉题','e-con-eyebrow',c.contactEyebrow);
+  h+=admText('联系区 标题','e-con-headline',c.contactHeadline);
+  h+=admText('页脚标语','e-footer-tagline',c.footerTagline);
+  h+='</div><div class="admin-grid">';
+  h+=admText('映像馆 眉题','e-gal-sec-eyebrow',c.galleryEyebrow);
+  h+=admText('映像馆 标题','e-gal-sec-headline',c.galleryHeadline);
+  h+='</div>'+admArea('映像馆 描述','e-gal-sec-desc',c.galleryDesc,3);
+  return h;
+};
+ADMIN_PREVIEW.copy=function(){
+  const c=data.content||{};
+  const row=(k,v)=>'<div style="margin-bottom:9px"><div style="font-size:.66em;color:var(--text-muted);margin-bottom:2px">'+escHtml(k)+'</div><div style="font-size:.82em;color:var(--text-primary);line-height:1.5">'+escHtml(v||'—')+'</div></div>';
+  return row('轮播1',[c.slide1Eyebrow,c.slide1Cta].filter(Boolean).join(' · '))+
+    row('轮播2',[c.slide2Eyebrow,c.slide2Headline,c.slide2Cta].filter(Boolean).join(' · '))+
+    row('轮播3',[c.slide3Eyebrow,c.slide3Headline,c.slide3Cta].filter(Boolean).join(' · '))+
+    row('页脚标语',c.footerTagline)+row('映像馆标题',c.galleryHeadline);
+};
+
+ADMIN_RENDER.contact=function(){
+  const c=data.contact||{};
+  return admText('邮箱','e-email',c.email)+
+    admText('微信','e-wechat',c.wechat)+
+    admArea('其他联系方式','e-other',c.other,3);
+};
+
+ADMIN_RENDER.comments=function(){
+  return '<div id="admin-comment-list"><div class="admin-empty">正在加载评论…</div></div>';
+};
+
+ADMIN_RENDER.works=function(){
+  const list=data.portfolio||[];
+  return '<div class="admin-group" data-adm-label="个人作品列表"><label>作品（'+list.length+' 个）</label>'+
+    (list.map((it,i)=>
+      '<div class="admin-card"><div class="admin-card-head">'+
+        '<input type="text" value="'+escHtml(it.title)+'" data-p-idx="'+i+'" data-p-field="title" placeholder="作品名" style="flex:1">'+
+        '<button class="admin-sbtn icon danger" type="button" onclick="removePortfolio('+i+')" title="删除">'+AI.trash+'</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:flex-start">'+
+        (it.image?'<img src="'+escHtml(it.image)+'" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--surface-border);flex:none" onerror="this.style.opacity=.3">'
+                :'<div style="width:64px;height:46px;border-radius:6px;border:1px dashed var(--surface-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.62em;flex:none">无图</div>')+
+        '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">'+
+          '<input type="text" value="'+escHtml(it.url||'')+'" data-p-idx="'+i+'" data-p-field="url" placeholder="链接地址（可选）">'+
+          '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（不填则不显示网址）">'+
+          '<button class="admin-sbtn" type="button" onclick="uploadPortfolioImg('+i+')">'+AI.img+'上传图片</button>'+
+        '</div>'+
+      '</div></div>').join('')||'<p class="admin-help">还没有作品</p>')+
+    '<button class="admin-sbtn" type="button" onclick="addPortfolio()">添加作品</button></div>';
+};
+ADMIN_PREVIEW.works=function(){
+  const list=data.portfolio||[];
+  return list.length?'<div style="display:flex;flex-direction:column;gap:10px">'+list.slice(0,6).map(it=>
+      '<div class="admin-card" style="margin:0;display:flex;gap:10px;align-items:center">'+
+      (it.image?'<img src="'+escHtml(it.image)+'" alt="" style="width:56px;height:40px;object-fit:cover;border-radius:6px;flex:none" onerror="this.style.opacity=.3">':'')+
+      '<div style="min-width:0"><div style="font-size:.82em;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.title||'')+'</div>'+
+      (it.url?'<div style="font-size:.72em;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.linkName||it.url)+'</div>':'')+'</div></div>').join('')+'</div>'
+    :'<div class="admin-empty">还没有作品</div>';
+};
+
+// ============ 说说（重点优化） ============
+ADMIN_RENDER.memos=function(){
+  const list=data.memos||[];
+  if(!list.length)return '<div class="memo-empty">还没有说说，点下方「新增说说」开始写。</div>';
+  return '<div class="memo-bulk">'+
+      '<label style="display:inline-flex;align-items:center;gap:6px;font-size:.76em;color:var(--text-secondary);cursor:pointer">'+
+        '<input type="checkbox" id="memo-sel-all" onchange="ADMIN.memoSelAll(this.checked)"> 全选</label>'+
+      '<span class="bulk-count" id="memo-bulk-count">'+list.length+' 条</span>'+
+      '<button class="admin-sbtn" type="button" onclick="ADMIN.memoBatchPin(true)">'+AI.pin+'置顶所选</button>'+
+      '<button class="admin-sbtn" type="button" onclick="ADMIN.memoBatchPin(false)">取消置顶</button>'+
+      '<button class="admin-sbtn danger" type="button" onclick="ADMIN.memoBatchDel()">'+AI.trash+'删除所选</button>'+
+    '</div>'+
+    '<div id="memo-list">'+list.map((m,i)=>ADMIN.memoItem(m,i,list.length)).join('')+'</div>'+
+    '<button class="admin-sbtn" type="button" style="width:100%;justify-content:center;height:34px" onclick="addMemo()">新增说说</button>';
+};
+ADMIN.memoItem=function(m,i,total){
+  const len=Array.from(String(m.text||'').length?String(m.text):'').length;
+  return '<div class="memo-item'+(m.pinned?' pinned':'')+'" data-memo-row="'+i+'" draggable="true">'+
+    '<div class="memo-grip" title="拖拽调整顺序">'+AI.grip+'</div>'+
+    '<div class="memo-thumb'+(m.image?' has-img':'')+'" onclick="ADMIN.memoPickImg('+i+')" title="点击上传/替换配图">'+
+      (m.image?'<img src="'+escHtml(m.image)+'" alt="" onerror="this.style.display=\'none\'">'+AI.img
+              :'<span style="display:flex;flex-direction:column;align-items:center;gap:3px">'+AI.img+'点击上传</span>')+
+      (m.image?'<button class="thumb-x" type="button" onclick="event.stopPropagation();ADMIN.memoClearImg('+i+')" title="移除配图">×</button>':'')+
+    '</div>'+
+    '<div class="memo-fields">'+
+      '<textarea data-memo-idx="'+i+'" data-memo-field="text" aria-label="说说内容" placeholder="写点什么…">'+escHtml(m.text||'')+'</textarea>'+
+      '<input type="text" value="'+escHtml(m.image||'')+'" data-memo-idx="'+i+'" data-memo-field="image" placeholder="配图地址（也可点左侧缩略图直接上传）" aria-label="配图地址">'+
+      '<div class="memo-meta">'+
+        '<input type="text" value="'+escHtml(m.date||'')+'" data-memo-idx="'+i+'" data-memo-field="date" aria-label="日期" placeholder="日期">'+
+        '<label><input type="checkbox" data-batch-memo="'+i+'" onchange="ADMIN.memoSelChange()" aria-label="选择">选择</label>'+
+        '<span class="memo-counter" id="memo-count-'+i+'">'+len+' 字</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="memo-actions">'+
+      '<button class="admin-sbtn icon'+(m.pinned?' on':'')+'" type="button" onclick="ADMIN.memoPin('+i+')" title="'+(m.pinned?'取消置顶':'置顶')+'">'+AI.pin+'</button>'+
+      '<button class="admin-sbtn icon" type="button" onclick="ADMIN.memoMove('+i+',-1)" '+(i===0?'disabled':'')+' title="上移">'+AI.up+'</button>'+
+      '<button class="admin-sbtn icon" type="button" onclick="ADMIN.memoMove('+i+',1)" '+(i===total-1?'disabled':'')+' title="下移">'+AI.down+'</button>'+
+      '<button class="admin-sbtn icon danger" type="button" onclick="ADMIN.memoDel('+i+')" title="删除">'+AI.trash+'</button>'+
+    '</div></div>';
+};
+ADMIN_AFTER.memos=function(host){
+  const list=data.memos||[];
+  // 输入即更新 data（旧版行为），并联动字数与预览
+  host.querySelectorAll('[data-memo-idx]').forEach(el=>{
+    const i=+el.dataset.memoIdx,f=el.dataset.memoField;
+    const evt=(el.type==='checkbox')?'change':'input';
+    el.addEventListener(evt,()=>{
+      if(!data.memos[i])return;
+      data.memos[i][f]=(el.type==='checkbox')?el.checked:el.value;
+      if(f==='text'){const c=document.getElementById('memo-count-'+i);if(c)c.textContent=Array.from(String(el.value||'')).length+' 字';}
+      if(el.tagName==='TEXTAREA')admAUTOGROW(el);
+      ADMIN.markDirty('memos');
+      clearTimeout(ADMIN._pvT);
+      ADMIN._pvT=setTimeout(()=>ADMIN.previewUpdate(),320);
+    });
+    if(el.tagName==='TEXTAREA')admAUTOGROW(el);
+  });
+  // 拖拽排序
+  let from=null;
+  host.querySelectorAll('[data-memo-row]').forEach(row=>{
+    row.addEventListener('dragstart',e=>{
+      from=+row.dataset.memoRow;row.classList.add('dragging');
+      try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(from));}catch(err){}
+    });
+    row.addEventListener('dragend',()=>{row.classList.remove('dragging');host.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));});
+    row.addEventListener('dragover',e=>{e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(err){}row.classList.add('drop-target');});
+    row.addEventListener('dragleave',()=>row.classList.remove('drop-target'));
+    row.addEventListener('drop',e=>{
+      e.preventDefault();row.classList.remove('drop-target');
+      const to=+row.dataset.memoRow;
+      if(from===null||from===to)return;
+      ADMIN.memoReorder(from,to);
+    });
+  });
+};
+// —— 说说动作 ——
+ADMIN._memoMutate=function(label,fn){
+  this.snapshot(label);
+  fn();
+  this.markDirty('memos');
+  this.refresh('memos');
+  toast(label+'完成','success');
+};
+ADMIN.memoReorder=function(from,to){
+  this.snapshot('调整说说顺序');
+  const arr=data.memos;
+  const [it]=arr.splice(from,1);
+  arr.splice(to,0,it);
+  this.markDirty('memos');
+  this.refresh('memos');
+};
+ADMIN.memoMove=function(i,dir){
+  const j=i+dir,arr=data.memos||[];
+  if(j<0||j>=arr.length)return;
+  this.memoReorder(i,j);
+};
+ADMIN.memoPin=function(i){
+  const m=(data.memos||[])[i];if(!m)return;
+  this._memoMutate(m.pinned?'取消置顶':'置顶说说',()=>{m.pinned=!m.pinned;});
+};
+ADMIN.memoDel=function(i){
+  const m=(data.memos||[])[i];if(!m)return;
+  const t=String(m.text||'').slice(0,18);
+  if(!confirm('删除这条说说？\n\n「'+t+'」'))return;
+  this._memoMutate('删除说说',()=>{data.memos.splice(i,1);});
+};
+ADMIN.memoSelAll=function(on){
+  document.querySelectorAll('#memo-list [data-batch-memo]').forEach(cb=>{cb.checked=!!on;});
+  this.memoSelChange();
+};
+ADMIN.memoSelChange=function(){
+  const boxes=document.querySelectorAll('#memo-list [data-batch-memo]');
+  const n=Array.from(boxes).filter(b=>b.checked).length;
+  const el=document.getElementById('memo-bulk-count');
+  if(el)el.textContent=n?('已选 '+n+' 条 / 共 '+boxes.length+' 条'):(boxes.length+' 条');
+  const all=document.getElementById('memo-sel-all');
+  if(all)all.checked=boxes.length>0&&n===boxes.length;
+};
+ADMIN._memoSelIdx=function(){
+  return Array.from(document.querySelectorAll('#memo-list [data-batch-memo]')).filter(b=>b.checked).map(b=>+b.dataset.batchMemo);
+};
+ADMIN.memoBatchDel=function(){
+  const idx=this._memoSelIdx();
+  if(!idx.length){toast('请先勾选要删除的说说','info');return;}
+  if(!confirm('删除选中的 '+idx.length+' 条说说？'))return;
+  this._memoMutate('批量删除说说',()=>{
+    idx.slice().sort((a,b)=>b-a).forEach(i=>data.memos.splice(i,1));
+  });
+};
+ADMIN.memoBatchPin=function(on){
+  const idx=this._memoSelIdx();
+  if(!idx.length){toast('请先勾选要操作的说说','info');return;}
+  this._memoMutate(on?'批量置顶':'批量取消置顶',()=>{
+    idx.forEach(i=>{if(data.memos[i])data.memos[i].pinned=!!on;});
+  });
+};
+ADMIN.memoPickImg=function(i){
+  const m=(data.memos||[])[i];if(!m)return;
+  this._memoImgIdx=i;
+  let inp=document.getElementById('memo-image');
+  if(!inp){
+    inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='memo-image';inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',()=>ADMIN.memoImgChosen(inp));
+  }
+  inp.value='';inp.click();
+};
+ADMIN.memoImgChosen=function(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const i=this._memoImgIdx;
+  if(i==null||!(data.memos||[])[i])return;
+  if(f.size>3*1024*1024){toast('配图建议小于 3MB（当前 '+(f.size/1048576).toFixed(1)+'MB）','error');}
+  const r=new FileReader();
+  r.onload=ev=>{
+    this.snapshot('更换说说配图');
+    data.memos[i].image=ev.target.result;
+    this.markDirty('memos');
+    this.refresh('memos');
+    toast('配图已更新（保存后生效）','success');
+  };
+  r.onerror=()=>toast('图片读取失败','error');
+  r.readAsDataURL(f);
+  this._memoImgIdx=null;
+};
+ADMIN.memoClearImg=function(i){
+  const m=(data.memos||[])[i];if(!m)return;
+  this._memoMutate('移除说说配图',()=>{m.image='';});
+};
+ADMIN_PREVIEW.memos=function(){
+  const list=data.memos||[];
+  if(!list.length)return '<div class="admin-empty">还没有说说</div>';
+  const sorted=list.slice().sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
+  return '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:12px">'+
+    sorted.slice(0,4).map(m=>memoMiniCard(m)).join('')+'</div>'+
+    (list.length>4?'<p class="admin-sec-desc" style="text-align:center;margin-top:10px">还有 '+(list.length-4)+' 条未显示</p>':'');
+};
+
+
 var currentSlide=0,totalSlides=0,carouselTimer=null;
 var CAROUSEL_INTERVAL=6000;
 var _pendPf=-1;
-var _pendG=-1, _pendCb=-1;
+var _pendCb=-1;
 
 // ============================================================
 // SPA VIEWS
@@ -2263,287 +3138,9 @@ async function verifyLogin(){
 }
 function closeLogin(){document.getElementById('login-overlay').classList.remove('show');}
 
-function showAdminPanel(){
-  const p=data.profile,w=data.wallpaper,c=data.content||{},panel=document.getElementById('admin-panel');
-  panel.innerHTML=`
-    <div class="admin-head"><h3>管理面板</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="copySyncLink()" style="font-size:.7em">复制同步链接</button><button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:.7em">退出</button></div></div>
-    <div class="admin-tabs">
-      <div class="admin-tab active" data-atab="profile">资料</div>
-      <div class="admin-tab" data-atab="wallpaper">壁纸</div>
-      <div class="admin-tab" data-atab="music">音乐</div>
-      <div class="admin-tab" data-atab="pet">桌宠</div>
-      <div class="admin-tab" data-atab="content">内容</div>
-      <div class="admin-tab" data-atab="memos">说说</div>
-      <div class="admin-tab" data-atab="works">作品</div>
-      <div class="admin-tab" data-atab="copy">文案</div>
-      <div class="admin-tab" data-atab="contact">联系</div>
-      <div class="admin-tab" data-atab="comments">评论</div>
-    </div>
-    <div class="admin-body">
-    <div class="tab-page active" data-apage="profile">
-    <div class="admin-group"><label>头像</label><button class="btn btn-ghost" style="display:block;width:100%;margin-bottom:6px" onclick="document.getElementById('avatar-upload').click()">上传头像</button><input type="url" id="e-avatar-url" value="${escHtml(profileAvatarUrlForInput(p.avatar))}" placeholder="头像图片网址：https://... 或 assets/avatar-default.jpg"></div>
-    <div class="admin-group"><label>名字</label><input type="text" id="e-name" value="${escHtml(p.name)}"></div>
-    <div class="admin-group"><label>标语</label><input type="text" id="e-tagline" value="${escHtml(p.tagline)}"></div>
-    <div class="admin-group"><label>简介</label><textarea id="e-bio">${escHtml(p.bio)}</textarea></div>
-    <div class="admin-group"><label>主题色</label><input type="color" id="e-accent" value="${data.accent}"></div>
-
-    </div>
-    <div class="tab-page" data-apage="wallpaper">
-    <h3>壁纸设置</h3>
-    <div class="admin-group"><label>类型</label><select id="e-wp-type"><option value="image" ${w.type==='image'?'selected':''}>图片轮播</option><option value="video" ${w.type==='video'?'selected':''}>视频背景 (MP4)</option></select></div>
-    <div class="admin-group"><label>上传 MP4 视频 (最大${MAX_VIDEO_MB}MB)</label><button class="btn btn-ghost" style="display:block;width:100%" onclick="uploadVideo()">选择 MP4 文件</button></div>
-    <h4 style="margin-bottom:8px;color:var(--text-primary)">视频播放列表</h4>
-    <div id="video-list">
-      ${(w.videos||[]).length?(w.videos||[]).map((v,i)=>`
-        <div style="padding:8px 10px;background:var(--astral-elevated);border-radius:10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:.75em;color:var(--text-secondary);white-space:nowrap">#${i+1}</span>
-          <span style="flex:1;min-width:0;font-size:.72em;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.src&&v.src.startsWith('data:')?'本地视频':escHtml((v.src||'').substring(0,50))}</span>
-          <input type="text" value="${v.duration||8}" data-v-dur="${i}" placeholder="秒" style="width:44px;padding:4px 6px;font-size:.75em;text-align:center;border:1px solid var(--surface-border);border-radius:6px;background:var(--astral);color:var(--text-primary)" aria-label="播放时长(秒)">
-          <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.65em" onclick="moveVideo(${i},-1)" ${i===0?'disabled':''}>+</button>
-          <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.65em" onclick="moveVideo(${i},1)" ${i===w.videos.length-1?'disabled':''}>-</button>
-          <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.65em;color:var(--crimson)" onclick="deleteVideo(${i})">x</button>
-        </div>
-      `).join(''):'<p style="font-size:.78em;color:var(--text-secondary);margin-bottom:8px">暂无视频，点击上方按钮上传</p>'}
-    </div>
-
-    <h4 style="margin-bottom:8px;color:var(--text-primary)">壁纸图片管理</h4>
-    <div class="wp-list" id="wp-list">
-      ${(w.images||[]).map((url,i)=>`
-        <div class="wp-list-item">
-          <img class="wp-list-thumb" src="${url}" loading="lazy" onerror="this.style.display='none'" alt="">
-          <span class="wp-list-url" title="${escHtml(url)}">${escHtml(url.length>50?url.substring(0,50)+'...':url)}</span>
-          <div class="wp-list-actions">
-            <button onclick="editWpUrl(${i})" title="编辑">e</button>
-            <button class="del" onclick="deleteWpUrl(${i})" title="删除">x</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:8px">
-      <input type="text" id="e-wp-new-url" placeholder="输入新壁纸 URL..." style="flex:1;padding:8px 10px;border:1px solid var(--surface-border);border-radius:var(--radius-sm);font-size:.82em;background:var(--astral-elevated);color:var(--text-primary);font-family:var(--font-body)">
-      <button class="btn btn-sm" onclick="addWpUrl()">+ 添加</button>
-    </div>
-    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin-bottom:4px" onclick="document.getElementById('wallpaper-upload').click()">上传本地图片</button>
-    <div class="admin-group"><label>轮播间隔（秒）</label><input type="text" id="e-wp-int" value="${w.interval}"></div>
-
-    </div>
-    <div class="tab-page" data-apage="music">
-    <h3>音乐播放器</h3>
-    <div class="admin-group"><label>🎵 自托管歌曲（推荐：上传到 R2，永久稳定）</label>
-      <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin-bottom:6px" onclick="document.getElementById('audio-upload').click()">上传音乐文件到 R2</button>
-      <textarea id="e-direct-urls" rows="4" placeholder="每行一个音频直链（https://...）">${escHtml((data.directUrls||[]).join('\n'))}</textarea>
-      <p style="font-size:.72em;color:var(--text-muted);margin-top:2px">上传后自动填入直链并优先播放；也可手动粘贴其他直链</p>
-    </div>
-    <div class="admin-group"><label>网易云歌曲ID（可选，多个用英文逗号分隔）</label><input type="text" id="e-music-ids" value="${escHtml(data.cloudMusicIds||'')}" placeholder="例如 1901371647,1387090681"></div>
-    <div class="admin-group"><label>调整歌曲顺序（↑↓ 上下移动，自动识别歌名）</label><div id="music-id-order"></div></div>
-    <div class="admin-group"><label>背景音乐直链（可选，未填歌曲ID时用）</label><input type="text" id="e-bgm" value="${escHtml(data.bgm||'')}" placeholder="音频直链(https://...)" style="margin-top:4px"></div>
-    <p style="font-size:.75em;color:var(--text-muted);margin-top:2px">优先级：自托管直链 → 网易云歌曲ID → 背景音乐直链。网易云接口可能被风控，建议用自托管。</p>
-
-    </div>
-    <div class="tab-page" data-apage="pet">
-    <h3>桌宠（蕾米埃尔）</h3>
-    <div class="admin-group"><label>气泡消息（每行一条，点击桌宠时随机显示）</label><textarea id="e-pet-msgs" rows="8">${escHtml((data.petMessages||[]).join('\n'))}</textarea></div>
-    <p style="font-size:.72em;color:var(--text-muted);margin:0 0 8px">保存后下次点击桌宠生效；空行会被忽略。</p>
-
-    </div>
-    <div class="tab-page" data-apage="content">
-    <h3>关于我</h3>
-    <div class="admin-group"><label>内容</label><textarea id="e-about">${escHtml(data.about?.text||'')}</textarea></div>
-
-    <h3>功能模块</h3>
-    ${data.modules.map((m,i)=>`
-      <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
-        <div style="display:flex;gap:6px;margin-bottom:4px;">
-          <input type="text" value="${escHtml(m.title)}" data-m-idx="${i}" data-m-field="title" style="flex:1" aria-label="模块标题">
-          <input type="text" value="${escHtml(m.icon)}" data-m-idx="${i}" data-m-field="icon" style="width:48px;text-align:center" aria-label="图标">
-          <button class="btn btn-ghost btn-sm" style="padding:3px 7px;white-space:nowrap" onclick="removeModule(${i})">x</button>
-        </div>
-        <textarea data-m-idx="${i}" data-m-field="text" style="width:100%" aria-label="模块内容">${escHtml(m.text)}</textarea>
-      </div>
-    `).join('')}
-    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addModule()">+ 添加模块</button>
-
-    </div>
-    <div class="tab-page" data-apage="memos">
-    <h3>说说 (Memos)</h3>
-    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:6px 0;color:var(--crimson)" onclick="deleteSelectedMemos()">删除所选</button>
-    ${(data.memos||[]).map((m,i)=>`
-      <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
-        <label style="display:flex;gap:4px;font-size:.72em;align-items:center;margin-bottom:4px;cursor:pointer"><input type="checkbox" data-batch-memo="${i}"> 勾选以批量删除</label>
-        <textarea data-memo-idx="${i}" data-memo-field="text" style="width:100%" aria-label="说说内容">${escHtml(m.text)}</textarea>
-        <input type="text" value="${escHtml(m.image||'')}" data-memo-idx="${i}" data-memo-field="image" placeholder="图片 URL（可选）" style="width:100%;margin-top:4px" aria-label="图片链接">
-        <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
-          <input type="text" value="${escHtml(m.date||'')}" data-memo-idx="${i}" data-memo-field="date" placeholder="日期" style="width:120px" aria-label="日期">
-          <label style="display:flex;gap:4px;font-size:.75em;align-items:center"><input type="checkbox" data-memo-idx="${i}" data-memo-field="pinned" ${m.pinned?'checked':''}> 置顶</label>
-          <button class="btn btn-ghost btn-sm" style="padding:3px 7px;color:var(--crimson)" onclick="removeMemo(${i})">x</button>
-        </div>
-      </div>
-    `).join('')}
-    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addMemo()">+ 添加说说</button>
-
-    </div>
-    <div class="tab-page" data-apage="works">
-    <h3>个人作品</h3>
-    ${data.portfolio.map((item,i)=>`
-      <div style="margin-bottom:10px;padding:10px;background:var(--astral-elevated);border-radius:10px;">
-        <div style="display:flex;gap:6px;margin-bottom:4px;">
-          <input type="text" value="${escHtml(item.title)}" data-p-idx="${i}" data-p-field="title" placeholder="作品名" style="flex:1">
-          <button class="btn btn-ghost btn-sm" style="padding:3px 7px;white-space:nowrap" onclick="removePortfolio(${i})">x</button>
-        </div>
-        <input type="text" value="${escHtml(item.url||'')}" data-p-idx="${i}" data-p-field="url" placeholder="链接地址（可选）" style="width:100%;margin-bottom:4px">
-        <input type="text" value="${escHtml(item.linkName||'')}" data-p-idx="${i}" data-p-field="linkName" placeholder="链接显示名称（不填则不显示网址）" style="width:100%">
-        ${item.image?'<div style="font-size:.7em;color:#38A169;margin-bottom:4px">已有图片</div>':'<div style="font-size:.7em;color:var(--text-secondary);margin-bottom:4px">未上传</div>'}
-        <button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadPortfolioImg(${i})">上传图片</button>
-      </div>
-    `).join('')}
-    <button class="btn btn-ghost btn-sm" style="display:block;width:100%;margin:8px 0" onclick="addPortfolio()">+ 添加作品</button>
-
-    </div>
-    <div class="tab-page" data-apage="copy">
-    <h3>页面文案</h3>
-    <div class="admin-group"><label>轮播第1张 - 眉题</label><input type="text" id="e-s1-eyebrow" value="${escHtml(c.slide1Eyebrow||'')}"></div>
-    <div class="admin-group"><label>轮播第1张 - 按钮文字</label><input type="text" id="e-s1-cta" value="${escHtml(c.slide1Cta||'')}"></div>
-    <div class="admin-group"><label>轮播第1张 - 背景图URL</label><input type="url" id="e-s1-bg" value="${escHtml(c.slide1Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
-    <div class="admin-group"><label>轮播第1张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(1)">选择本地图片</button></div>
-    <div class="admin-group"><label>轮播第2张 - 眉题</label><input type="text" id="e-s2-eyebrow" value="${escHtml(c.slide2Eyebrow||'')}"></div>
-    <div class="admin-group"><label>轮播第2张 - 标题</label><input type="text" id="e-s2-headline" value="${escHtml(c.slide2Headline||'')}"></div>
-    <div class="admin-group"><label>轮播第2张 - 按钮文字</label><input type="text" id="e-s2-cta" value="${escHtml(c.slide2Cta||'')}"></div>
-    <div class="admin-group"><label>轮播第2张 - 背景图URL</label><input type="url" id="e-s2-bg" value="${escHtml(c.slide2Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
-    <div class="admin-group"><label>轮播第2张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(2)">选择本地图片</button></div>
-    <div class="admin-group"><label>轮播第3张 - 眉题</label><input type="text" id="e-s3-eyebrow" value="${escHtml(c.slide3Eyebrow||'')}"></div>
-    <div class="admin-group"><label>轮播第3张 - 标题</label><input type="text" id="e-s3-headline" value="${escHtml(c.slide3Headline||'')}"></div>
-    <div class="admin-group"><label>轮播第3张 - 按钮文字</label><input type="text" id="e-s3-cta" value="${escHtml(c.slide3Cta||'')}"></div>
-    <div class="admin-group"><label>轮播第3张 - 背景图URL</label><input type="url" id="e-s3-bg" value="${escHtml(c.slide3Bg||'')}" placeholder="https://... 或留空用壁纸"></div>
-    <div class="admin-group"><label>轮播第3张 - 上传背景图</label><button class="btn btn-ghost btn-sm" style="display:block;width:100%" onclick="uploadCarouselBg(3)">选择本地图片</button></div>
-    <div class="admin-group"><label>内容分区 - 眉题</label><input type="text" id="e-sec-eyebrow" value="${escHtml(c.contentEyebrow||'')}"></div>
-    <div class="admin-group"><label>内容分区 - 标题</label><input type="text" id="e-sec-headline" value="${escHtml(c.contentHeadline||'')}"></div>
-    <div class="admin-group"><label>内容分区 - 描述</label><textarea id="e-sec-desc">${escHtml(c.contentDesc||'')}</textarea></div>
-    <div class="admin-group"><label>作品区 - 眉题</label><input type="text" id="e-portfolio-eyebrow" value="${escHtml(c.portfolioEyebrow||'')}"></div>
-    <div class="admin-group"><label>作品区 - 标题</label><input type="text" id="e-portfolio-headline" value="${escHtml(c.portfolioHeadline||'')}"></div>
-    <div class="admin-group"><label>联系区 - 眉题</label><input type="text" id="e-con-eyebrow" value="${escHtml(c.contactEyebrow||'')}"></div>
-    <div class="admin-group"><label>联系区 - 标题</label><input type="text" id="e-con-headline" value="${escHtml(c.contactHeadline||'')}"></div>
-    <div class="admin-group"><label>页脚标语</label><input type="text" id="e-footer-tagline" value="${escHtml(c.footerTagline||'')}"></div>
-    <div class="admin-group"><label>作品悬浮按钮文字</label><input type="text" id="e-portfolio-overlay" value="${escHtml(c.portfolioOverlay||'')}"></div>
-    <div class="admin-group"><label>映像馆 - 眉题</label><input type="text" id="e-gal-sec-eyebrow" value="${escHtml(c.galleryEyebrow||'')}"></div>
-    <div class="admin-group"><label>映像馆 - 标题</label><input type="text" id="e-gal-sec-headline" value="${escHtml(c.galleryHeadline||'')}"></div>
-    <div class="admin-group"><label>映像馆 - 描述</label><textarea id="e-gal-sec-desc">${escHtml(c.galleryDesc||'')}</textarea></div>
-
-    </div>
-    <div class="tab-page" data-apage="contact">
-    <h3>联系方式</h3>
-    <div class="admin-group"><label>邮箱</label><input type="text" id="e-email" value="${escHtml(data.contact?.email||'')}"></div>
-    <div class="admin-group"><label>微信</label><input type="text" id="e-wechat" value="${escHtml(data.contact?.wechat||'')}"></div>
-    <div class="admin-group"><label>其他</label><textarea id="e-other">${escHtml(data.contact?.other||'')}</textarea></div>
-
-    </div>
-    <div class="tab-page" data-apage="comments">
-    <h3>评论管理</h3>
-    <p style="font-size:.72em;color:var(--text-muted);margin-top:0">各说说的访客评论（GitHub 登录发表），可删除。</p>
-    <div id="admin-comment-list"><p style="font-size:.78em;color:var(--text-muted)">切换到本页时加载…</p></div>
-
-    </div>
-    </div>
-    <div class="admin-btn-row">
-      <button class="btn" onclick="saveAdmin()">保存</button>
-      <button class="btn btn-ghost" onclick="closeAdmin()">取消</button>
-      <button class="btn btn-ghost" style="color:var(--gold)" onclick="exportConfig()">导出</button>
-      <button class="btn btn-danger" onclick="if(confirm('确定重置所有内容？')){resetData();closeAdmin();}">重置</button>
-    </div>
-  `;
-
-  panel.querySelectorAll('[data-m-idx]').forEach(el=>{el.addEventListener('input',()=>{const i=parseInt(el.dataset.mIdx),f=el.dataset.mField;if(data.modules[i])data.modules[i][f]=el.value;});});
-  panel.querySelectorAll('[data-p-idx]').forEach(el=>{el.addEventListener('input',()=>{const i=parseInt(el.dataset.pIdx),f=el.dataset.pField;if(data.portfolio[i])data.portfolio[i][f]=el.value;});});
-  panel.querySelectorAll('[data-g-idx]').forEach(el=>{el.addEventListener('input',()=>{const i=parseInt(el.dataset.gIdx),f=el.dataset.gField;if(data.gallery[i])data.gallery[i][f]=el.value;});});
-  panel.querySelectorAll('[data-memo-idx]').forEach(el=>{const evt=el.type==='checkbox'?'change':'input';el.addEventListener(evt,()=>{const i=parseInt(el.dataset.memoIdx),f=el.dataset.memoField;if(data.memos[i])data.memos[i][f]=el.type==='checkbox'?el.checked:el.value;});});
-  const eMusicIds=document.getElementById('e-music-ids');
-  if(eMusicIds)eMusicIds.addEventListener('input',()=>{renderMusicIdOrder();clearTimeout(_mioDebounce);_mioDebounce=setTimeout(fetchMusicOrderNames,400);});
-  renderMusicIdOrder();
-  fetchMusicOrderNames();
-  bindAudioUpload();
-
-  // Tabs 切换
-  const tabs=panel.querySelectorAll('.admin-tab');
-  const pages=panel.querySelectorAll('.tab-page');
-  tabs.forEach(tab=>{
-    tab.addEventListener('click',()=>{
-      tabs.forEach(t=>t.classList.remove('active'));
-      pages.forEach(pg=>pg.classList.remove('active'));
-      tab.classList.add('active');
-      const pg=panel.querySelector('.tab-page[data-apage="'+tab.dataset.atab+'"]');
-      if(pg)pg.classList.add('active');
-      if(tab.dataset.atab==='comments')loadAdminComments();
-    });
-  });
-
-  document.getElementById('admin-overlay').classList.add('show');
-
-  document.getElementById('wallpaper-upload').onchange=function(e){
-    const files=Array.from(e.target.files);if(!files.length)return;let done=0;
-    files.forEach(f=>{const r=new FileReader();r.onload=ev=>{data.wallpaper.images.push(ev.target.result);data.wallpaper.type='image';done++;if(done===files.length){saveData();showAdminPanel();toast('壁纸已添加','success');}};r.readAsDataURL(f);});e.target.value='';
-  };
-}
-
-// Wallpaper CRUD
-function addWpUrl(){const inp=document.getElementById('e-wp-new-url');const url=inp.value.trim();if(!url){toast('请输入壁纸URL','error');return;}if(!url.startsWith('http')){toast('请输入完整URL (https://...)','error');return;}data.wallpaper.images.push(url);data.wallpaper.type='image';inp.value='';saveData();showAdminPanel();toast('壁纸已添加','success');}
-function deleteWpUrl(i){if(!confirm('确定删除？'))return;data.wallpaper.images.splice(i,1);if(data.wallpaper.images.length===0)data.wallpaper.type='image';saveData();showAdminPanel();toast('已删除','info');}
-function editWpUrl(i){const newUrl=prompt('编辑壁纸URL:',data.wallpaper.images[i]);if(newUrl&&newUrl.trim()){data.wallpaper.images[i]=newUrl.trim();saveData();showAdminPanel();toast('已更新','success');}}
-function uploadVideo(){document.getElementById('wallpaper-video').click();}
-document.getElementById('wallpaper-video').onchange=function(e){
-  const f=e.target.files[0];if(!f)return;
-  const maxBytes=MAX_VIDEO_MB*1024*1024;
-  if(f.size>maxBytes){toast('视频不能超过'+MAX_VIDEO_MB+'MB！当前: '+(f.size/1024/1024).toFixed(1)+'MB','error');e.target.value='';return;}
-  const r=new FileReader();
-  r.onload=ev=>{if(!data.wallpaper.videos)data.wallpaper.videos=[];data.wallpaper.videos.push({src:ev.target.result,duration:8});data.wallpaper.type='video';saveData();showAdminPanel();toast('视频已添加','success');};
-  r.onerror=()=>{toast('文件读取失败','error');};
-  r.readAsDataURL(f);e.target.value='';
-};
-function deleteVideo(i){if(!confirm('删除？'))return;data.wallpaper.videos.splice(i,1);if(!data.wallpaper.videos.length)data.wallpaper.type='image';saveData();showAdminPanel();toast('已删除','info');}
-function moveVideo(i,dir){const v=data.wallpaper.videos;const j=i+dir;if(j<0||j>=v.length)return;[v[i],v[j]]=[v[j],v[i]];saveData();showAdminPanel();}
-
-// 音乐歌单顺序调整（管理面板）
-const _musicNameCache={};
-let _mioDebounce=null,_mioSaveTimer=null;
-function musicIdList(){const v=document.getElementById('e-music-ids');return v?(v.value.split(',').map(s=>s.trim()).filter(Boolean)):[];}
-function setMusicIdList(ids){const v=document.getElementById('e-music-ids');if(v)v.value=ids.join(',');}
-function renderMusicIdOrder(){
-  const box=document.getElementById('music-id-order');
-  if(!box)return;
-  const ids=musicIdList();
-  box.innerHTML=ids.length?ids.map((id,i)=>`
-    <div class="mio-row" data-mio="${i}" style="padding:5px 8px;background:var(--astral-elevated);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:6px">
-      <span style="font-size:.72em;color:var(--text-secondary);white-space:nowrap">#${i+1}</span>
-      <span class="mio-name" data-mio-id="${escHtml(id)}" style="flex:1;min-width:0;font-size:.78em;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(_musicNameCache[id]||'加载歌名中...')}</span>
-      <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.7em" onclick="moveMusicId(${i},-1)" ${i===0?'disabled':''}>↑</button>
-      <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:.7em" onclick="moveMusicId(${i},1)" ${i===ids.length-1?'disabled':''}>↓</button>
-    </div>`).join(''):'<p style="font-size:.78em;color:var(--text-secondary)">暂无歌曲，在上方输入歌曲ID</p>';
-}
-function moveMusicId(i,dir){
-  const ids=musicIdList();const j=i+dir;
-  if(j<0||j>=ids.length)return;
-  [ids[i],ids[j]]=[ids[j],ids[i]];
-  setMusicIdList(ids);
-  data.cloudMusicIds=ids.join(','); // 同步到 data；保存做防抖合并，避免连点竞态
-  renderMusicIdOrder();
-  clearTimeout(_mioSaveTimer);
-  _mioSaveTimer=setTimeout(()=>{saveData();toast('顺序已保存','success');},700);
-}
-function fetchMusicOrderNames(){
-  const ids=musicIdList();
-  ids.forEach(id=>{
-    if(_musicNameCache[id])return;
-    fetch(API_URL+'/meting?server=netease&type=song&id='+id,{signal:AbortSignal.timeout(8000)})
-      .then(r=>r.ok?r.json():null).catch(()=>null)
-      .then(res=>{
-        const s=(Array.isArray(res)?res[0]:res)||{};
-        const nm=(s.name||s.title||'').trim(),ar=(s.artist||s.author||'').trim();
-        _musicNameCache[id]=(nm||ar)?((nm||'未知歌曲')+(ar?' - '+ar:'')):('(无法解析，ID '+id+')');
-        const box=document.getElementById('music-id-order');
-        if(box){const el=box.querySelector('.mio-name[data-mio-id="'+id+'"]');if(el)el.textContent=_musicNameCache[id];}
-      }).catch(()=>{_musicNameCache[id]='ID '+id;});
-  });
-}
-
-// Save / Module / Portfolio / Reset
+// 旧版 showAdminPanel() 每次调用都重写整个面板（281 行），导致滚动位置、当前分区与
+// 其它分区未保存的输入全部丢失。现在改为：外壳只渲染一次，后续调用只是重新进入当前分区。
+function showAdminPanel(){ ADMIN.shell(); }
 function saveAdmin(){
   const avatarUrl=(document.getElementById('e-avatar-url')?.value||'').trim();
   if(avatarUrl&&!isProfileImageUrl(avatarUrl)){toast('头像网址需要以 http(s)://、assets/ 或 data:image/ 开头','error');return;}
@@ -2593,18 +3190,11 @@ function saveAdmin(){
   saveData();applyAll();closeAdmin();toast('已保存','success');
   try{initMusicPlayer();}catch(e){console.warn(e);}
 }
-function addModule(){data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});saveData();showAdminPanel();}
-function removeModule(i){data.modules.splice(i,1);saveData();showAdminPanel();}
-function addMemo(){if(!Array.isArray(data.memos))data.memos=[];data.memos.push({id:'memo_'+Date.now(),text:'新便利贴…',date:new Date().toISOString().slice(0,10),pinned:false,image:''});saveData();showAdminPanel();}
-function deleteSelectedMemos(){
-  const boxes=document.querySelectorAll('#admin-panel [data-batch-memo]:checked');
-  if(!boxes.length){toast('请先勾选要删除的说说','info');return;}
-  const idxs=Array.from(boxes).map(b=>parseInt(b.dataset.batchMemo)).sort((a,b)=>b-a);
-  if(!confirm('确定删除选中的 '+idxs.length+' 条说说？'))return;
-  idxs.forEach(i=>data.memos.splice(i,1));
-  saveData();showAdminPanel();toast('已删除','success');
-}
-function removeMemo(i){data.memos.splice(i,1);saveData();showAdminPanel();}
+function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});}
+function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
+function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:''});});}
+function deleteSelectedMemos(){ ADMIN.memoBatchDel(); }
+function removeMemo(i){ADMIN.memoDel(i);}
 
 // ============================================================
 // 说说详情 + 评论（GitHub OAuth 登录）
@@ -2706,23 +3296,19 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_curMemoId)
     }).catch(()=>{});
   }
 })();
-function addPortfolio(){data.portfolio.push({image:'',title:'新作品',url:''});saveData();showAdminPanel();}
-function removePortfolio(i){data.portfolio.splice(i,1);saveData();showAdminPanel();}
+function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'新作品',url:''});});}
+function removePortfolio(i){if(!confirm('删除这个作品？'))return;ADMIN.mutate('works','删除作品',()=>{data.portfolio.splice(i,1);});}
 function deleteTestimonialPanel(i){}
-// Gallery CRUD
-function addGallery(){if(!data.gallery)data.gallery=[];data.gallery.push({image:'',caption:'新照片',date:new Date().toISOString().slice(0,10)});saveData(false);showAdminPanel();}
-function removeGallery(i){data.gallery.splice(i,1);saveData(false);showAdminPanel();}
-var _pendG=-1, _pendCb=-1;
-function uploadGalleryImg(i){_pendG=i;document.getElementById('gallery-image')?.click();}
+// Gallery CRUD —— 映像馆的数据在 D1/图床侧维护，面板不直接改，这里不再保留旧入口
+var _pendCb=-1;
 function uploadCarouselBg(n){_pendCb=n;document.getElementById('carousel-bg-image')?.click();}
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('show');}
 function logout(){isAdmin=false;sessionToken='';sessionStorage.removeItem('xiaoaijiang-session');fetch(API_URL+'/logout',{method:'POST',headers:authHeaders()}).catch(()=>{});closeAdmin();toast('已退出登录','info');}
 function resetData(){data=JSON.parse(JSON.stringify(DEFAULT_DATA));dbDel(LS_KEY).catch(()=>{});fetchWithRetry(API_URL+'/data',{method:'POST',headers:authHeaders(),body:JSON.stringify(DEFAULT_DATA)}).then(r=>{if(r.status===401)handleAuthFail();}).catch(()=>{});applyAll();}
 var _pendPf=-1;
 function uploadPortfolioImg(i){_pendPf=i;document.getElementById('portfolio-image').click();}
-document.getElementById('portfolio-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendPf>=0&&data.portfolio[_pendPf]){data.portfolio[_pendPf].image=ev.target.result;saveData();showAdminPanel();toast('图片已上传','success');}_pendPf=-1;};r.readAsDataURL(f);e.target.value='';};
-document.getElementById('gallery-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendG>=0&&data.gallery&&data.gallery[_pendG]){data.gallery[_pendG].image=ev.target.result;saveData();showAdminPanel();toast('照片已上传','success');}_pendG=-1;};r.readAsDataURL(f);e.target.value='';};
-document.getElementById('carousel-bg-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendCb>0){data.content=data.content||{};const bgKey='slide'+_pendCb+'Bg';data.content[bgKey]=ev.target.result;saveData();showAdminPanel();toast('轮播背景'+_pendCb+'已上传','success');}_pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
+document.getElementById('portfolio-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendPf>=0&&data.portfolio[_pendPf]){data.portfolio[_pendPf].image=ev.target.result;ADMIN.markDirty('works');ADMIN.refresh('works');toast('图片已上传（保存后生效）','success');}_pendPf=-1;};r.readAsDataURL(f);e.target.value='';};
+document.getElementById('carousel-bg-image').onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(_pendCb>0){data.content=data.content||{};const bgKey='slide'+_pendCb+'Bg';data.content[bgKey]=ev.target.result;ADMIN.markDirty('copy');ADMIN.refresh('copy');toast('轮播背景'+_pendCb+'已上传（保存后生效）','success');}_pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
 // 音乐文件上传到 R2
 function bindAudioUpload(){
   const inp=document.getElementById('audio-upload');
@@ -2736,7 +3322,8 @@ function bindAudioUpload(){
         if(j&&j.url){
           const ta=document.getElementById('e-direct-urls');
           if(ta){ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+j.url;}
-          toast('上传成功，直链已填入（记得点保存）','success');
+          ADMIN.markDirty('music');
+          toast('上传成功，直链已填入（记得点「保存并同步」）','success');
         }else{toast('上传失败：'+(j&&j.error||'未知错误'),'error');}
       }).catch(err=>{if(err.message!=='auth')toast('上传失败，请重试','error');});
     e.target.value='';
@@ -3002,10 +3589,10 @@ setTimeout(async function(){
       try{initFooterStats();}catch(e){}
     
 	      // File upload handlers
-	      var pi=document.getElementById('portfolio-image');if(pi)pi.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendPf>=0&&data.portfolio&&data.portfolio[window._pendPf]){data.portfolio[window._pendPf].image=ev.target.result;saveData();showAdminPanel();toast('图片已上传','success');}window._pendPf=-1;};r.readAsDataURL(f);e.target.value='';};
-	      var gi=document.getElementById('gallery-image');if(gi)gi.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendG>=0&&data.gallery&&data.gallery[window._pendG]){data.gallery[window._pendG].image=ev.target.result;saveData();showAdminPanel();toast('照片已上传','success');}window._pendG=-1;};r.readAsDataURL(f);e.target.value='';};
-	      var cb=document.getElementById('carousel-bg-image');if(cb)cb.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendCb>0){data.content=data.content||{};var bgKey='slide'+window._pendCb+'Bg';data.content[bgKey]=ev.target.result;saveData();showAdminPanel();toast('轮播背景'+window._pendCb+'已上传','success');}window._pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
-	      var wv=document.getElementById('wallpaper-video');if(wv)wv.onchange=function(e){var f=e.target.files[0];if(!f)return;var maxBytes=MAX_VIDEO_MB*1024*1024;if(f.size>maxBytes){toast('视频不能超过'+MAX_VIDEO_MB+'MB！当前: '+(f.size/1024/1024).toFixed(1)+'MB','error');e.target.value='';return;}var r=new FileReader();r.onload=function(ev){if(!data.wallpaper.videos)data.wallpaper.videos=[];data.wallpaper.videos.push({src:ev.target.result,duration:8});data.wallpaper.type='video';saveData();showAdminPanel();toast('视频已添加','success');};r.onerror=function(){toast('文件读取失败','error');};r.readAsDataURL(f);e.target.value='';};}
+	      var pi=document.getElementById('portfolio-image');if(pi)pi.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendPf>=0&&data.portfolio&&data.portfolio[window._pendPf]){data.portfolio[window._pendPf].image=ev.target.result;ADMIN.markDirty('works');ADMIN.refresh('works');toast('图片已上传（保存后生效）','success');}window._pendPf=-1;};r.readAsDataURL(f);e.target.value='';};
+	      
+	      var cb=document.getElementById('carousel-bg-image');if(cb)cb.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){if(window._pendCb>0){data.content=data.content||{};var bgKey='slide'+window._pendCb+'Bg';data.content[bgKey]=ev.target.result;ADMIN.markDirty('copy');ADMIN.refresh('copy');toast('轮播背景'+window._pendCb+'已上传（保存后生效）','success');}window._pendCb=-1;};r.readAsDataURL(f);e.target.value='';};
+	      var wv=document.getElementById('wallpaper-video');if(wv)wv.onchange=function(e){var f=e.target.files[0];if(!f)return;var maxBytes=MAX_VIDEO_MB*1024*1024;if(f.size>maxBytes){toast('视频不能超过'+MAX_VIDEO_MB+'MB！当前: '+(f.size/1024/1024).toFixed(1)+'MB','error');e.target.value='';return;}var r=new FileReader();r.onload=function(ev){if(!data.wallpaper.videos)data.wallpaper.videos=[];data.wallpaper.videos.push({src:ev.target.result,duration:8});data.wallpaper.type='video';ADMIN.markDirty('wallpaper');ADMIN.refresh('wallpaper');toast('视频已添加（保存后生效）','success');};r.onerror=function(){toast('文件读取失败','error');};r.readAsDataURL(f);e.target.value='';};}
   }else{
     setTimeout(rf,100);
   }
