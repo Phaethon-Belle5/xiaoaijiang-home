@@ -52,9 +52,8 @@
   --wf-body:#A09888;   --wf-mute:#857B6B; --wf-mute-soft:rgba(255,255,255,0.12);
   --wf-hairline:rgba(255,255,255,0.08);  --wf-purple:#9075D9;
   --grad-a:var(--text-secondary); --grad-b:#ffffff;
-  /* 说说便签：与整站同色调（暗色主题=星夜蓝纸面 + 暖白墨色） */
-  --memo-paper:#20264A; --memo-paper-edge:#171C38;
-  --memo-ink:#E8E2D9; --memo-muted:#A9A191;
+  /* 说说便签：与毛玻璃卡片一致（同 --glass-bg / --glass-border，自带模糊与描边） */
+  --memo-ink:#E8E2D9; --memo-muted:#A09888;
 }
 /* 浅色主题 */
 [data-theme="light"]{
@@ -69,9 +68,8 @@
   --wf-body:#5C4E3A; --wf-mute:#75685A; --wf-mute-soft:rgba(0,0,0,0.10);
   --wf-hairline:rgba(0,0,0,0.10); --wf-purple:#6A4FB8;
   --grad-a:var(--text-secondary); --grad-b:var(--text-primary);
-  /* 浅色主题：与全站一致的羊皮纸暖白纸面 + 深墨色 */
-  --memo-paper:#FBF6EA; --memo-paper-edge:#EFE6D2;
-  --memo-ink:#2D2418; --memo-muted:#7C6C50;
+  /* 说说便签：浅色主题下同 --glass-bg，与毛玻璃卡片一致 */
+  --memo-ink:#1C2342; --memo-muted:#5C4E3A;
 }
 [data-theme="light"] ::-webkit-scrollbar-track{background:#EDE4D0}
 [data-theme="light"] ::selection{color:#fff}
@@ -99,44 +97,33 @@
 .glass-input{background:var(--glass-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:var(--radius-md);color:var(--text-primary)}
 .glass-input:focus{border-color:var(--gold);outline:none}
 /* 说说（横线便签）—— 与整站同色调
-   配色全部走 :root / [data-theme] 里的令牌，不再写死颜色：
-     纸面 --memo-paper（暗色主题=星夜蓝，浅色主题=羊皮纸暖白）
-     文字 --memo-ink / --memo-muted
-     线   color-mix(currentColor) 自动跟随文字色，深浅主题都自然
-     边距红线 --gold（跟随用户在后台配置的主色）
-   尺寸固定：所有便签同宽同高，不再按内容长短参差。 */
+   配色与毛玻璃卡片一致：直接复用 --glass-bg / --glass-border，同样带 backdrop blur。
+   文字用 --memo-ink / --memo-muted；横线 color-mix(currentColor) 自动跟随文字色；
+   左边距竖线用 --gold（跟随后台配置的主色）。
+   尺寸固定：无图 264×300，有图同宽、高度让出照片空间。
+   正文最多 7 行，超出显示省略号（-webkit-line-clamp），未超行则完整显示。 */
 .memo-wall{display:flex;flex-wrap:wrap;gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding);justify-content:center;align-items:flex-start}
-.memo-card{position:relative;width:260px;height:250px;padding:0;border-radius:4px;
+/* 无图 264×308：正文净高 7×22=154 再加描述区上下内边距（11+6）正好容纳 7 行，
+   第 8 行起才由 line-clamp 出省略号；不满 7 行则完整显示。
+   有图加高到 264×376，把照片占用的高度补回来，正文仍是 7 行。 */
+.memo-card{position:relative;width:264px;height:308px;padding:0;border-radius:var(--radius-lg);
   color:var(--memo-ink);
   display:flex;flex-direction:column;overflow:hidden;
-  background:linear-gradient(160deg,var(--memo-paper) 0%,var(--memo-paper-edge) 100%);
+  background:var(--glass-bg);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border:1px solid var(--glass-border);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.07),
-    0 2px 3px rgba(0,0,0,.22),
-    0 12px 26px rgba(0,0,0,.32);
+  box-shadow:var(--shadow-card);
   transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
-/* 左下折角：纸被掀起的一小块 */
-.memo-card::after{content:'';position:absolute;left:0;bottom:0;width:22px;height:22px;pointer-events:none;
-  background:linear-gradient(45deg,rgba(0,0,0,0) 47%,rgba(255,255,255,.22) 50%,rgba(0,0,0,.10) 100%);
-  border-bottom-left-radius:4px}
-/* 折角处的落影 */
-.memo-card::before{content:'';position:absolute;left:3px;bottom:3px;width:20px;height:20px;pointer-events:none;
-  background:radial-gradient(circle at 0 100%,rgba(0,0,0,.28),rgba(0,0,0,0) 72%)}
-.memo-card:hover{transform:rotate(0deg) translateY(-6px) scale(1.03);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.1),
-    0 3px 5px rgba(0,0,0,.24),
-    0 20px 40px rgba(0,0,0,.40);z-index:2}
-/* 置顶：主色描边 + 顶部一条胶带（胶带用 ::after，避免与折角阴影 ::before 冲突） */
-.memo-card.pinned{box-shadow:
-    inset 0 0 0 1px color-mix(in srgb,var(--gold) 70%,transparent),
-    0 2px 3px rgba(0,0,0,.22),
-    0 12px 30px color-mix(in srgb,var(--gold) 28%,transparent)}
-.memo-card.pinned::after{left:50%;bottom:auto;top:-9px;transform:translateX(-50%) rotate(-2.5deg);
-  width:74px;height:17px;border-radius:2px;border:none;
-  background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 30%,transparent),color-mix(in srgb,var(--gold) 52%,transparent));
-  box-shadow:0 2px 6px rgba(0,0,0,.24)}
+/* 有图时整体加高，把照片占的高度补回来，正文仍保持 7 行 */
+.memo-card.has-img{height:376px}
+/* 毛玻璃卡片没有"纸折角"，这里只保留极轻的线性高光 */
+.memo-card::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 42%)}
+.memo-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:var(--shadow-card-hover);z-index:2}
+/* 置顶：主色描边（与其它毛玻璃卡片的 hover 描边同一套语言） */
+.memo-card.pinned{box-shadow:var(--shadow-card),inset 0 0 0 1px color-mix(in srgb,var(--gold) 55%,transparent)}
+.memo-card.pinned::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;pointer-events:none;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 75%,transparent),color-mix(in srgb,var(--gold) 25%,transparent))}
 /* 日期抬头 */
 .memo-head{padding:13px var(--space-5) 9px;font-family:var(--font-mono);font-size:.7em;
   color:var(--memo-muted);letter-spacing:.04em;flex:none}
@@ -145,33 +132,40 @@
      首行墨迹范围 12→32px；repeating 的线自带 21px 内偏移，
      故 background-position 纵向取 11px 时线正落在 32px，与墨迹底边重合（delta = 0）。
      取 0 时线在 21px（穿过字身）、取 7 时在 28px（压在字的下缘），都不对。 */
-.memo-lined{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+.memo-lined{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
   padding:11px var(--space-5) 6px 32px;
   background-image:
     repeating-linear-gradient(to bottom,transparent 0 21px,color-mix(in srgb,currentColor 11%,transparent) 21px 22px),
     linear-gradient(to right,transparent 23px,color-mix(in srgb,var(--gold) 45%,transparent) 23px 24px,transparent 24px);
   background-position:0 11px,0 0;
   background-repeat:repeat,no-repeat;background-attachment:local,scroll}
-.memo-text{font-size:0.95em;color:var(--memo-ink);line-height:22px;white-space:pre-wrap;word-break:break-word;margin:0}
-/* 底部：评论标记与「更多」提示 */
+/* 正文最多 7 行：超出由 line-clamp 出省略号，未超行则完整显示（不做字符截断）。
+   break-word 保证长串英文/URL 也能换行，否则一行装不下会漏出行数。 */
+.memo-text{font-size:0.95em;color:var(--memo-ink);line-height:22px;white-space:pre-wrap;
+  word-break:break-word;overflow-wrap:anywhere;margin:0;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;line-clamp:7;overflow:hidden}
+/* 底部：评论标记 */
 .memo-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);
-  flex:none;padding:0 var(--space-5) 13px 30px}
+  flex:none;padding:0 var(--space-5) 13px 32px}
 .memo-date{display:none}
 .memo-card{cursor:pointer}
-/* 配图像一张贴在纸上照片：绝对定位、不参与文字排版，
-   这样横线网格不会被 130px 的图整体推歪（曾导致有图卡片的文字偏移 147px）。 */
-.memo-card-img{position:absolute;top:38px;right:16px;width:96px;height:72px;object-fit:cover;
-  border-radius:2px;border:3px solid rgba(255,255,255,.82);
-  box-shadow:0 2px 8px rgba(0,0,0,.35);transform:rotate(2deg);z-index:2}
-/* 有图时文字往下让开照片（图片约占顶部 ~85px），必要时该卡内容可滚动，
-   保住"所有便签同尺寸"这个前提。 */
-.memo-lined.has-img .memo-text{padding-top:88px}
-.memo-lined.has-img{overflow-y:auto}
-/* 评论标记做成纸质标签样式，与便签同色系 */
+/* 配图按方向分两种排版（方向由 JS 加载后按 naturalWidth/Height 判定，先按横版渲染）：
+   横版：拉满便签内容宽度、作为通栏照片置顶，正文在其下方
+   竖版：整体靠左，正文紧接在右侧（float 让文字自动绕排） */
+.memo-card-img{display:block;object-fit:cover;border-radius:var(--radius-sm);
+  border:1px solid var(--glass-border);box-shadow:0 2px 8px rgba(0,0,0,.28);background:rgba(255,255,255,.04)}
+.memo-lined.has-img{padding-top:12px}
+/* 横版：拉满便签内容宽度、通栏置顶，正文在其下方 */
+.memo-lined.has-img.img-land .memo-card-img{width:100%;height:84px;margin:0 0 10px}
+/* 竖版：照片整体靠左，正文紧接在右侧（grid 自动分配剩余宽度，不写死偏移） */
+.memo-lined.has-img.img-port{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:start}
+.memo-lined.has-img.img-port .memo-card-img{grid-column:1;width:84px;height:112px;margin:0}
+.memo-lined.has-img.img-port .memo-text{grid-column:2;min-width:0}
+/* 评论标记做成与毛玻璃一致的浅色标签 */
 .memo-cmt-count{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;
   border-radius:var(--radius-pill);font-size:.7em;color:var(--memo-muted);flex:none;
-  background:color-mix(in srgb,currentColor 10%,transparent);
-  border:1px solid color-mix(in srgb,currentColor 22%,transparent)}
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--glass-border)}
 .memo-cmt-count svg{width:12px;height:12px;flex:none;opacity:.85}
 /* 说说详情弹窗 + 评论 */
 .memo-detail-overlay{position:fixed;inset:0;z-index:10060;background:rgba(5,8,14,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:var(--space-5)}
@@ -1629,12 +1623,12 @@ function renderMain(){
       <div class="section-divider"></div>
       <div class="memo-wall" id="memo-wall">
         ${(data.memos||[]).length?(data.memos||[]).slice().sort((a,b)=>(b.pinned-a.pinned)||(b.date||'').localeCompare(a.date||'')).map((m,i)=>`
-          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
+          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}${m.image?' has-img':''}" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
             <div class="memo-head">${escHtml(m.date||'')}</div>
-            <div class="memo-lined${m.image?' has-img':''}">
-              <p class="memo-text">${escHtml(memoPreview(m.text))}</p>
+            <div class="memo-lined${m.image?' has-img img-land':''}">
+              ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onload="memoImgOrient(this)" onerror="this.style.display='none'">`:''}
+              <p class="memo-text">${escHtml(m.text||'')}</p>
             </div>
-            ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:''}
             <div class="memo-foot">
               <span class="memo-cmt-count">${ICON_COMMENT_SVG}评论</span>
             </div>
@@ -2823,7 +2817,22 @@ function initFooterStats(){
 // UTILS
 // ============================================================
 function toast(msg,type='info'){const c=document.getElementById('toast-container'),el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},2500);}
-function memoPreview(text,limit=50){const chars=Array.from(String(text||'').replace(/\s+/g,' ').trim());return chars.length>limit?chars.slice(0,limit).join('')+'...':chars.join('');}
+// 便签配图按方向切换排版：竖版靠左、正文接在右侧；横版通栏置顶、正文在下。
+// 图片加载完成才知道方向，因此先按横版渲染，onload 时再纠正（后台数据里没有尺寸字段）。
+// 判定用「照片的自然比例 vs 两种排版的显示框比例」：竖版框 84×112、横版框为整行宽×84，
+// 哪一个把照片裁得更少就用哪一个（1:1 方图归入横版，通栏全景方图更好看）。
+function memoImgOrient(img){
+  if(!img||!img.naturalWidth)return;
+  const lined=img.closest('.memo-lined');
+  if(!lined)return;
+  const w=img.naturalWidth,h=img.naturalHeight;
+  const landW=Math.max(1, lined.clientWidth - 32);   // 通栏可用宽度
+  const landH=84, portW=84, portH=112;
+  const crop=(boxW,boxH)=>Math.max(boxW/boxH, w/h)/Math.min(boxW/boxH, w/h); // 越接近 1 裁得越少
+  const portrait=crop(portW,portH) < crop(landW,landH);
+  lined.classList.toggle('img-port',portrait);
+  lined.classList.toggle('img-land',!portrait);
+}
 function profileAvatarUrlForInput(url){const v=String(url||'').trim();return v.startsWith('data:')?'':v;}
 function isProfileImageUrl(url){return /^(https?:\/\/|assets\/|data:image\/)/i.test(String(url||'').trim());}
 function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
