@@ -141,14 +141,16 @@
 .memo-head{padding:13px var(--space-5) 9px;font-family:var(--font-mono);font-size:.7em;
   color:var(--memo-muted);letter-spacing:.04em;flex:none}
 /* 横线书写区：repeating-linear-gradient 每 22px 一条，线与文字 line-height:22px 对齐。
-   文字中心线本身就在 22px（行高 22，第一行居中即 11+11），而 repeating 的线出现在 22px 处，
-   两者天然重合，因此 background-position 的纵向偏移必须为 0，否则整片线会平移错位。 */
+   线的位置推导（实测：对真实卡片扫参得到，勿凭直觉改）：
+     首行墨迹范围 12→32px；repeating 的线自带 21px 内偏移，
+     故 background-position 纵向取 11px 时线正落在 32px，与墨迹底边重合（delta = 0）。
+     取 0 时线在 21px（穿过字身）、取 7 时在 28px（压在字的下缘），都不对。 */
 .memo-lined{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
   padding:11px var(--space-5) 6px 32px;
   background-image:
-    repeating-linear-gradient(to bottom,transparent 0 21px,color-mix(in srgb,currentColor 20%,transparent) 21px 22px),
+    repeating-linear-gradient(to bottom,transparent 0 21px,color-mix(in srgb,currentColor 11%,transparent) 21px 22px),
     linear-gradient(to right,transparent 23px,color-mix(in srgb,var(--gold) 45%,transparent) 23px 24px,transparent 24px);
-  background-position:0 0,0 0;
+  background-position:0 11px,0 0;
   background-repeat:repeat,no-repeat;background-attachment:local,scroll}
 .memo-text{font-size:0.95em;color:var(--memo-ink);line-height:22px;white-space:pre-wrap;word-break:break-word;margin:0}
 /* 底部：评论标记与「更多」提示 */
