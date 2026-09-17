@@ -52,7 +52,9 @@
   --wf-body:#A09888;   --wf-mute:#857B6B; --wf-mute-soft:rgba(255,255,255,0.12);
   --wf-hairline:rgba(255,255,255,0.08);  --wf-purple:#9075D9;
   --grad-a:var(--text-secondary); --grad-b:#ffffff;
-  --memo-bg:#FDF6B2; --memo-bg2:#F7E98C;
+  /* 说说便签：与整站同色调（暗色主题=星夜蓝纸面 + 暖白墨色） */
+  --memo-paper:#20264A; --memo-paper-edge:#171C38;
+  --memo-ink:#E8E2D9; --memo-muted:#A9A191;
 }
 /* 浅色主题 */
 [data-theme="light"]{
@@ -67,7 +69,9 @@
   --wf-body:#5C4E3A; --wf-mute:#75685A; --wf-mute-soft:rgba(0,0,0,0.10);
   --wf-hairline:rgba(0,0,0,0.10); --wf-purple:#6A4FB8;
   --grad-a:var(--text-secondary); --grad-b:var(--text-primary);
-  --memo-bg:#FFF3C4; --memo-bg2:#FCEAA6;
+  /* 浅色主题：与全站一致的羊皮纸暖白纸面 + 深墨色 */
+  --memo-paper:#FBF6EA; --memo-paper-edge:#EFE6D2;
+  --memo-ink:#2D2418; --memo-muted:#7C6C50;
 }
 [data-theme="light"] ::-webkit-scrollbar-track{background:#EDE4D0}
 [data-theme="light"] ::selection{color:#fff}
@@ -94,71 +98,79 @@
 .glass-btn:hover{border-color:var(--gold);color:var(--gold)}
 .glass-input{background:var(--glass-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:var(--radius-md);color:var(--text-primary)}
 .glass-input:focus{border-color:var(--gold);outline:none}
-/* 说说（纸质便利贴） */
+/* 说说（横线便签）—— 与整站同色调
+   配色全部走 :root / [data-theme] 里的令牌，不再写死颜色：
+     纸面 --memo-paper（暗色主题=星夜蓝，浅色主题=羊皮纸暖白）
+     文字 --memo-ink / --memo-muted
+     线   color-mix(currentColor) 自动跟随文字色，深浅主题都自然
+     边距红线 --gold（跟随用户在后台配置的主色）
+   尺寸固定：所有便签同宽同高，不再按内容长短参差。 */
 .memo-wall{display:flex;flex-wrap:wrap;gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding);justify-content:center;align-items:flex-start}
-/* 用「纸」的层次做真实感：
-   1) 极淡的斜向条纹 + 暖黄渐变  -> 纸张的纤维与色差
-   2) 内阴影 inset（顶部提亮、底部压暗） -> 纸面受光
-   3) 外阴影分两层（近距离硬边 + 远距离柔化） -> 纸片离墙的悬浮感
-   4) 右下折角（.memo-card::after）-> 翘边的贴纸
-   文字统一用暖褐色而不是主题的 text-primary，否则深色主题下浅灰字压在黄纸上几乎看不见。 */
-.memo-card{position:relative;width:240px;min-height:196px;padding:var(--space-6);border-radius:3px 3px 4px 4px;
-  --memo-ink:#413318;--memo-ink-soft:#6B5A2C;--memo-ink-faint:#7C6733;
+.memo-card{position:relative;width:260px;height:250px;padding:0;border-radius:4px;
   color:var(--memo-ink);
-  display:flex;flex-direction:column;gap:var(--space-4);
-  background:
-    repeating-linear-gradient(112deg,rgba(255,255,255,.30) 0 3px,rgba(255,255,255,0) 3px 9px),
-    radial-gradient(120% 90% at 22% 12%,rgba(255,255,255,.55),rgba(255,255,255,0) 62%),
-    linear-gradient(158deg,var(--memo-bg) 0%,var(--memo-bg2) 100%);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(160deg,var(--memo-paper) 0%,var(--memo-paper-edge) 100%);
+  border:1px solid var(--glass-border);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.55),
-    inset 0 -14px 22px -16px rgba(120,95,30,.28),
-    0 2px 3px rgba(0,0,0,.20),
-    0 14px 30px rgba(0,0,0,.34);
-  transition:transform 0.3s var(--ease-out),box-shadow 0.3s var(--ease-out)}
-/* 右下折角：两层叠加做出"纸被掀起"的立体感
-   —— 三角面（亮） + 被掀起处落在纸上的阴影（暗） */
-.memo-card::after{content:'';position:absolute;right:0;bottom:0;width:26px;height:26px;pointer-events:none;
-  background:
-    linear-gradient(135deg,rgba(0,0,0,0) 47%,rgba(255,255,255,.72) 50%,rgba(255,255,255,.34) 100%);
-  border-bottom-right-radius:4px;
-  filter:drop-shadow(-2px -2px 3px rgba(120,95,30,.34))}
-/* 折角下方的暗影，让掀起的边缘有落影 */
-.memo-card::before{content:'';position:absolute;right:2px;bottom:2px;width:24px;height:24px;pointer-events:none;
-  background:radial-gradient(circle at 100% 100%,rgba(90,72,26,.30),rgba(90,72,26,0) 72%);border-radius:0 0 4px 0}
-/* 不同卡片让折角略有深浅差异，避免每张一模一样显得机械 */
-.memo-card:nth-child(3n+1)::after{width:22px;height:22px}
-.memo-card:nth-child(3n+2)::after{width:30px;height:30px}
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 2px 3px rgba(0,0,0,.22),
+    0 12px 26px rgba(0,0,0,.32);
+  transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
+/* 左下折角：纸被掀起的一小块 */
+.memo-card::after{content:'';position:absolute;left:0;bottom:0;width:22px;height:22px;pointer-events:none;
+  background:linear-gradient(45deg,rgba(0,0,0,0) 47%,rgba(255,255,255,.22) 50%,rgba(0,0,0,.10) 100%);
+  border-bottom-left-radius:4px}
+/* 折角处的落影 */
+.memo-card::before{content:'';position:absolute;left:3px;bottom:3px;width:20px;height:20px;pointer-events:none;
+  background:radial-gradient(circle at 0 100%,rgba(0,0,0,.28),rgba(0,0,0,0) 72%)}
 .memo-card:hover{transform:rotate(0deg) translateY(-6px) scale(1.03);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.6),
-    inset 0 -14px 22px -16px rgba(120,95,30,.26),
-    0 3px 5px rgba(0,0,0,.22),
-    0 22px 44px rgba(0,0,0,.42);z-index:2}
-/* 置顶：金色描边 + 顶部一条胶带（胶带用 ::after，避免与折角阴影 ::before 冲突） */
+    inset 0 1px 0 rgba(255,255,255,.1),
+    0 3px 5px rgba(0,0,0,.24),
+    0 20px 40px rgba(0,0,0,.40);z-index:2}
+/* 置顶：主色描边 + 顶部一条胶带（胶带用 ::after，避免与折角阴影 ::before 冲突） */
 .memo-card.pinned{box-shadow:
-    inset 0 0 0 1px rgba(212,168,67,.75),
-    inset 0 1px 0 rgba(255,255,255,.55),
-    0 2px 3px rgba(0,0,0,.20),
-    0 14px 34px rgba(212,168,67,.30)}
-.memo-card.pinned::after{top:-9px;bottom:auto;right:auto;left:50%;transform:translateX(-50%) rotate(-2.5deg);
-  width:78px;height:18px;border-radius:2px;filter:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(232,196,86,.34));
-  border:1px solid rgba(255,255,255,.32);box-shadow:0 2px 6px rgba(0,0,0,.22)}
-.memo-card.pinned{border-color:transparent}
-.memo-text{font-size:0.95em;color:var(--memo-ink);line-height:1.75;white-space:pre-wrap;word-break:break-word}
-/* 日期与评论标记并排贴在便签底部（内容不足时由 margin-top:auto 顶到底边） */
-.memo-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:auto}
-.memo-date{font-family:var(--font-mono);font-size:0.72em;color:var(--memo-ink-faint);text-align:right}
+    inset 0 0 0 1px color-mix(in srgb,var(--gold) 70%,transparent),
+    0 2px 3px rgba(0,0,0,.22),
+    0 12px 30px color-mix(in srgb,var(--gold) 28%,transparent)}
+.memo-card.pinned::after{left:50%;bottom:auto;top:-9px;transform:translateX(-50%) rotate(-2.5deg);
+  width:74px;height:17px;border-radius:2px;border:none;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 30%,transparent),color-mix(in srgb,var(--gold) 52%,transparent));
+  box-shadow:0 2px 6px rgba(0,0,0,.24)}
+/* 日期抬头 */
+.memo-head{padding:13px var(--space-5) 9px;font-family:var(--font-mono);font-size:.7em;
+  color:var(--memo-muted);letter-spacing:.04em;flex:none}
+/* 横线书写区：repeating-linear-gradient 每 22px 一条，线与文字 line-height:22px 对齐。
+   文字中心线本身就在 22px（行高 22，第一行居中即 11+11），而 repeating 的线出现在 22px 处，
+   两者天然重合，因此 background-position 的纵向偏移必须为 0，否则整片线会平移错位。 */
+.memo-lined{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:11px var(--space-5) 6px 32px;
+  background-image:
+    repeating-linear-gradient(to bottom,transparent 0 21px,color-mix(in srgb,currentColor 20%,transparent) 21px 22px),
+    linear-gradient(to right,transparent 23px,color-mix(in srgb,var(--gold) 45%,transparent) 23px 24px,transparent 24px);
+  background-position:0 0,0 0;
+  background-repeat:repeat,no-repeat;background-attachment:local,scroll}
+.memo-text{font-size:0.95em;color:var(--memo-ink);line-height:22px;white-space:pre-wrap;word-break:break-word;margin:0}
+/* 底部：评论标记与「更多」提示 */
+.memo-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);
+  flex:none;padding:0 var(--space-5) 13px 30px}
+.memo-date{display:none}
 .memo-card{cursor:pointer}
-.memo-card-img{width:100%;height:130px;object-fit:cover;border-radius:2px;margin-bottom:var(--space-4);display:block;
-  border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 6px rgba(90,72,26,.22)}
+/* 配图像一张贴在纸上照片：绝对定位、不参与文字排版，
+   这样横线网格不会被 130px 的图整体推歪（曾导致有图卡片的文字偏移 147px）。 */
+.memo-card-img{position:absolute;top:38px;right:16px;width:96px;height:72px;object-fit:cover;
+  border-radius:2px;border:3px solid rgba(255,255,255,.82);
+  box-shadow:0 2px 8px rgba(0,0,0,.35);transform:rotate(2deg);z-index:2}
+/* 有图时文字往下让开照片（图片约占顶部 ~85px），必要时该卡内容可滚动，
+   保住"所有便签同尺寸"这个前提。 */
+.memo-lined.has-img .memo-text{padding-top:88px}
+.memo-lined.has-img{overflow-y:auto}
 /* 评论标记做成纸质标签样式，与便签同色系 */
 .memo-cmt-count{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;
-  border-radius:var(--radius-pill);font-size:.7em;color:var(--memo-ink-soft);flex:none;
-  background:rgba(255,255,255,.42);border:1px solid rgba(122,102,54,.22)}
+  border-radius:var(--radius-pill);font-size:.7em;color:var(--memo-muted);flex:none;
+  background:color-mix(in srgb,currentColor 10%,transparent);
+  border:1px solid color-mix(in srgb,currentColor 22%,transparent)}
 .memo-cmt-count svg{width:12px;height:12px;flex:none;opacity:.85}
-[data-theme="light"] .memo-card{--memo-ink:#3D3118;--memo-ink-soft:#6B5A2C;--memo-ink-faint:#8A7644}
 /* 说说详情弹窗 + 评论 */
 .memo-detail-overlay{position:fixed;inset:0;z-index:10060;background:rgba(5,8,14,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:var(--space-5)}
 .memo-detail-overlay.show{display:flex}
@@ -1615,12 +1627,14 @@ function renderMain(){
       <div class="section-divider"></div>
       <div class="memo-wall" id="memo-wall">
         ${(data.memos||[]).length?(data.memos||[]).slice().sort((a,b)=>(b.pinned-a.pinned)||(b.date||'').localeCompare(a.date||'')).map((m,i)=>`
-          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" style="transform:rotate(${(i%3-1)*2}deg)" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
+          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
+            <div class="memo-head">${escHtml(m.date||'')}</div>
+            <div class="memo-lined${m.image?' has-img':''}">
+              <p class="memo-text">${escHtml(memoPreview(m.text))}</p>
+            </div>
             ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:''}
-            <p class="memo-text">${escHtml(memoPreview(m.text))}</p>
             <div class="memo-foot">
               <span class="memo-cmt-count">${ICON_COMMENT_SVG}评论</span>
-              <span class="memo-date">${escHtml(m.date||'')}</span>
             </div>
           </div>`).join(''):`
           <p class="empty-text" style="text-align:center;color:var(--text-muted)">还没有说说，去管理面板添加吧。</p>`}
