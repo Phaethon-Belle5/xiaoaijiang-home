@@ -100,7 +100,7 @@
 /* 无图 264×308：正文净高 7×22=154 再加描述区上下内边距（11+6）正好容纳 7 行，
    第 8 行起才由 line-clamp 出省略号；不满 7 行则完整显示。
    有图加高到 264×376，把照片占用的高度补回来，正文仍是 7 行。 */
-.memo-card{position:relative;width:264px;height:308px;padding:0;border-radius:var(--radius-lg);
+.memo-card{position:relative;width:264px;height:254px;padding:0;border-radius:var(--radius-lg);
   color:var(--memo-ink);
   display:flex;flex-direction:column;overflow:hidden;
   background:var(--glass-bg);
@@ -109,7 +109,7 @@
   box-shadow:var(--shadow-card);
   transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
 /* 有图时整体加高，把照片占的高度补回来，正文仍保持 7 行 */
-.memo-card.has-img{height:376px}
+.memo-card.has-img{height:322px}
 /* 毛玻璃卡片没有"纸折角"，这里只保留极轻的线性高光 */
 .memo-card::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 42%)}
@@ -126,7 +126,11 @@
      首行墨迹范围 12→32px；repeating 的线自带 21px 内偏移，
      故 background-position 纵向取 11px 时线正落在 32px，与墨迹底边重合（delta = 0）。
      取 0 时线在 21px（穿过字身）、取 7 时在 28px（压在字的下缘），都不对。 */
-.memo-lined{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+/* 正文区高度写死，这样不论内容两行还是十行，便签外形都完全一致。
+   取值要让「内容盒」恰好等于 7×22 = 154px：padding 11 + 6 时容器取 171。
+   有图卡也把 padding 统一成 11+6，保证两种卡的内容盒都是 154、都正好 7 行。
+   第 8 行起由 .memo-text 的 line-clamp 出省略号。 */
+.memo-lined{flex:0 0 171px;height:171px;min-height:0;overflow:hidden;display:flex;flex-direction:column;
   padding:11px var(--space-5) 6px 32px;
   background-image:
     repeating-linear-gradient(to bottom,transparent 0 21px,color-mix(in srgb,currentColor 11%,transparent) 21px 22px),
@@ -148,7 +152,7 @@
    竖版：整体靠左，正文紧接在右侧（float 让文字自动绕排） */
 .memo-card-img{display:block;object-fit:cover;border-radius:var(--radius-sm);
   border:1px solid var(--glass-border);box-shadow:0 2px 8px rgba(0,0,0,.28);background:rgba(255,255,255,.04)}
-.memo-lined.has-img{padding-top:12px}
+.memo-lined.has-img{padding-top:11px;padding-bottom:6px} /* 与普通卡一致，内容盒同为 154 */
 /* 横版：拉满便签内容宽度、通栏置顶，正文在其下方 */
 .memo-lined.has-img.img-land .memo-card-img{width:100%;height:84px;margin:0 0 10px}
 /* 竖版：照片整体靠左，正文紧接在右侧（grid 自动分配剩余宽度，不写死偏移） */
@@ -806,8 +810,11 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .admin-preview-head > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin-preview-frame{flex:1;min-height:0;border:0;width:100%;background:transparent}
 .admin-preview-body{flex:1;min-height:0;overflow-y:auto;padding:var(--space-4)}
-/* 预览里的便签只要一个 1 列的小网格，别继承列表的 4 列栅格 */
-.admin-preview-body .memo-card{width:100%;max-width:258px}
+/* 预览里的便签只改宽度适配面板，高度沿用站点上那份固定值（无图 254 / 有图 322），
+   保证预览和线上看到的完全一致 */
+.admin-preview-body .memo-card{width:100%;max-width:258px;height:254px}
+.admin-preview-body .memo-card.has-img{height:322px}
+.admin-preview-body .memo-lined{flex:0 0 171px;height:171px}
 .admin-preview-body .memo-item{grid-template-columns:1fr}
 #admin-panel.preview-off .admin-preview{display:none}
 
