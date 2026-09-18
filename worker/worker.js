@@ -348,7 +348,8 @@ export default {
         weibo:  { url: 'https://60s.viki.moe/v2/weibo',  kind: '60s', label: '微博' },
         zhihu:  { url: 'https://60s.viki.moe/v2/zhihu',  kind: '60s', label: '知乎' },
       };
-      const HOT_TTL = 15 * 60 * 1000;
+      const HOT_TTL = 30 * 60 * 1000;   // KV 内视为新鲜的时间（榜单几分钟才变一次）
+      const HOT_EDGE = 1800;            // 边缘缓存秒数：尽量让请求停在 CF 边缘而不回源
       const HOT_LIMIT = 30;
       const HOT_DEFAULT = 'github';
       const want = String(url.searchParams.get('src') || HOT_DEFAULT).toLowerCase();
@@ -359,8 +360,10 @@ export default {
 
       let cached = null;
       try { const raw = await env.STORE.get(key); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
+      // 有点缓存就直接返回，哪怕已超过新鲜期：前端自己会用 localStorage 兜底，
+      // 这里优先保证"快"，避免为了刷新而让用户等一次上游往返。
       if (cached && Array.isArray(cached.items) && cached.items.length && Date.now() - (cached.updatedAt || 0) < HOT_TTL) {
-        return json(cached, 200, { 'Cache-Control': 'public, max-age=300' });
+        return json(cached, 200, { 'Cache-Control': 'public, max-age=' + HOT_EDGE + ', stale-while-revalidate=600' });
       }
 
       // 60s 系：{ title, detail/desc, link, hot_value|hot_value_desc }
@@ -423,7 +426,7 @@ export default {
       if (items && items.length) {
         const payload = { source: useSrc, label: cfgSrc.label, items, updatedAt: Date.now() };
         try { await env.STORE.put(key, JSON.stringify(payload), { expirationTtl: 6 * 60 * 60 }); } catch (e) {}
-        return json(payload, 200, { 'Cache-Control': 'public, max-age=300' });
+        return json(payload, 200, { 'Cache-Control': 'public, max-age=1800, stale-while-revalidate=600' });
       }
       if (cached && Array.isArray(cached.items) && cached.items.length) {
         return json(Object.assign({}, cached, { stale: true, error: err }), 200, { 'Cache-Control': 'public, max-age=60' });
