@@ -404,23 +404,21 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 
 /* Portfolio grid — unified Webflow card style */
 /* ---- 个人精选：整体改为与说说/热点/音乐同一套毛玻璃语言 ---- */
+/* 卡片是「一块玻璃」：图片内缩成圆角缩略图放在玻璃里，标题在图片下方。
+   之前图片是通栏不透明、文字区是半透明，背后又是视频壁纸，于是卡片内部出现
+   「上半不透光 + 下半透光」的材质断层，看着像两块料拼起来的 —— 这才是突兀的来源。 */
 .portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding)}
-.portfolio-item{position:relative;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);overflow:hidden;transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out),border-color .3s var(--ease-out);cursor:pointer;box-shadow:var(--shadow-card)}
+.portfolio-item{position:relative;display:flex;flex-direction:column;padding:10px;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out),border-color .3s var(--ease-out);cursor:pointer;box-shadow:var(--shadow-card)}
 .portfolio-item:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover);border-color:rgba(212,168,67,.38)}
-.portfolio-thumb{position:relative;overflow:hidden;border-bottom:1px solid var(--glass-border)}
-.portfolio-item img{width:100%;height:158px;object-fit:cover;display:block;transition:transform .5s var(--ease-out),filter .5s ease}
+.portfolio-thumb{position:relative;overflow:hidden;border-radius:var(--radius-md)}
+.portfolio-item img{width:100%;height:152px;object-fit:cover;display:block;transition:transform .5s var(--ease-out),filter .5s ease}
 .portfolio-item:hover img{transform:scale(1.05)}
 /* 悬浮：一层薄霜 + 毛玻璃胶囊按钮 */
 .portfolio-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;background:linear-gradient(180deg,rgba(8,10,18,.12),rgba(8,10,18,.55))}
 .portfolio-overlay span{color:#fff;font-weight:500;font-size:.8em;padding:8px 18px;border-radius:var(--radius-pill);letter-spacing:.02em;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
 .portfolio-item:hover .portfolio-overlay{opacity:1}
-.portfolio-info{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;min-width:0}
+.portfolio-info{display:flex;flex-direction:column;gap:8px;padding:11px 6px 3px;min-width:0}
 .portfolio-title{font-family:var(--font-display);font-size:.88em;font-weight:600;color:var(--wf-ink);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* 网址链接：毛玻璃小胶囊，与卡片同色系 */
-.portfolio-link{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;padding:4px 11px;border-radius:var(--radius-pill);font-size:.72em;line-height:1.5;color:var(--text-secondary);background:rgba(255,255,255,.07);border:1px solid var(--glass-border);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:color .2s,border-color .2s,background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.portfolio-item:hover .portfolio-link{color:var(--gold-bright);border-color:rgba(212,168,67,.42);background:rgba(212,168,67,.12)}
-.portfolio-link svg{flex:none;opacity:.85}
-[data-theme="light"] .portfolio-link{background:rgba(255,255,255,.6);border-color:rgba(0,0,0,.08)}
 [data-theme="light"] .portfolio-overlay{background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(20,24,36,.45))}
 [data-theme="light"] .portfolio-overlay span{background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.75);color:#20242e}
 
@@ -1615,7 +1613,7 @@ ADMIN_RENDER.works=function(){
                 :'<div style="width:64px;height:46px;border-radius:6px;border:1px dashed var(--surface-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.62em;flex:none">无图</div>')+
         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">'+
           '<input type="text" value="'+escHtml(it.url||'')+'" data-p-idx="'+i+'" data-p-field="url" placeholder="链接地址（可选）">'+
-          '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（留空则显示网址域名）">'+
+          '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（当前不在卡片上显示）">'+
           '<button class="admin-sbtn" type="button" onclick="uploadPortfolioImg('+i+')">'+AI.img+'上传图片</button>'+
         '</div>'+
       '</div></div>').join('')||'<p class="admin-help">还没有作品</p>')+
@@ -2344,12 +2342,28 @@ function scrollToSection(id){
   navigateTo(oldMap[id]||id);
 }
 
+// 作品没设图片时的占位图。
+// 原来是一块不透明的 #11162A 深色矩形 + 金色符号：8 张卡连着排就是一面深色方块墙，
+// 放在彩色视频壁纸 + 毛玻璃卡片的版面上非常突兀。现在改成透明底 + 一圈金色柔光，
+// 让底层的毛玻璃透上来，占位态也变成设计的一部分。
+// 放在模块作用域（原来在 renderMain 内部），这样图片 onerror 里的内联调用也能取到它。
+function portfolioFallback(i){
+  const seeds=['✦','✧','★','☆','❖','✵','⚜','✶'];
+  const ch=seeds[i%seeds.length];
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160">'
+    +'<defs><radialGradient id="g" cx="50%" cy="46%" r="62%">'
+    +'<stop offset="0%" stop-color="#D4A843" stop-opacity="0.24"/>'
+    +'<stop offset="55%" stop-color="#D4A843" stop-opacity="0.07"/>'
+    +'<stop offset="100%" stop-color="#D4A843" stop-opacity="0"/>'
+    +'</radialGradient></defs>'
+    +'<rect width="400" height="160" fill="url(#g)"/>'
+    +'<text x="200" y="103" text-anchor="middle" fill="#D4A843" fill-opacity="0.7" font-size="62" font-family="serif">'+ch+'</text>'
+    +'</svg>';
+  return 'data:image/svg+xml,'+encodeURIComponent(svg);
+}
+
 function renderMain(){
   const main=document.getElementById('main'),p=data.profile,c=data.content||{};
-  // 作品卡上的网址：填了显示名称就用它，没填就退回域名，保证「网址」始终可见
-  function portfolioHost(u){try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return '';}}
-  const PF_LINK_ICON='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
-  function portfolioFallback(i){const seeds=['✦','✧','★','☆','❖','✵','⚜','✶'];const ch=seeds[i%seeds.length];return 'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160"><rect fill="#11162A" width="400" height="160"/><text x="200" y="102" text-anchor="middle" fill="#D4A843" font-size="54" font-family="serif">'+ch+'</text></svg>');}
 
   main.innerHTML=`
     <!-- ============================================================
@@ -2490,7 +2504,6 @@ function renderMain(){
         ${(data.portfolio||[]).map((item,i)=>{
           const imgSrc=item.image||portfolioFallback(i);
           const hasUrl=item.url&&item.url.trim();
-          const linkText=hasUrl?(item.linkName||portfolioHost(item.url)):'';
           return`
           <div class="portfolio-item reveal reveal-d${Math.min(i+2,5)}" ${hasUrl?'onclick="leaveConfirm(\''+item.url.replace(/'/g,"\\'")+'\',true)"':''} role="${hasUrl?'link':'article'}" tabindex="0">
             <div class="portfolio-thumb">
@@ -2499,7 +2512,6 @@ function renderMain(){
             </div>
             <div class="portfolio-info">
               <div class="portfolio-title">${escHtml(item.title)}</div>
-              ${linkText?'<div class="portfolio-link">'+PF_LINK_ICON+escHtml(linkText)+'</div>':''}
             </div>
           </div>`;
         }).join('')}
@@ -3757,7 +3769,8 @@ setTimeout(async function(){
 <!-- 外链跳转确认弹窗 -->
 <script>
 (function(){
-  var GALLERY='https://map.231060101.xyz';
+  // 站主自己的域名：在这些站之间互跳一律放行，不弹「离开本站」确认（用户要求）
+  var OWN_HOSTS=['map.231060101.xyz','home.231060101.xyz','home.xiaoaijiang.cloud','map.xiaoaijiang.cloud'];
   var overlay=document.getElementById('leave-overlay');
   var box=document.getElementById('leave-box');
   var urlEl=document.getElementById('leave-url');
@@ -3765,7 +3778,8 @@ setTimeout(async function(){
   var cancelBtn=document.getElementById('leave-cancel');
   if(!overlay||!box)return;
   var pending=null,timer=null;
-  function isGallery(href){try{var u=new URL(href,location.href),g=new URL(GALLERY);return u.host===g.host;}catch(e){return false;}}
+  // 自己人：映像馆 + 主站的两个域名，任何一个都直接放行
+  function isOwnSite(href){try{return OWN_HOSTS.indexOf(new URL(href,location.href).host)>=0;}catch(e){return false;}}
   function isExternal(href){try{var u=new URL(href,location.href);return (u.protocol==='http:'||u.protocol==='https:')&&u.host!==location.host;}catch(e){return false;}}
   function close(){overlay.classList.remove('show');box.classList.remove('counting');overlay.setAttribute('aria-hidden','true');if(timer){clearTimeout(timer);timer=null;}pending=null;}
   function go(){var p=pending;close();if(!p)return;if(p.blank)window.open(p.href,'_blank','noopener');else location.href=p.href;}
@@ -3779,7 +3793,7 @@ setTimeout(async function(){
     timer=setTimeout(go,3000);
   }
   // 暴露给非 <a> 触发的外链跳转（如作品卡片 onclick）
-  window.leaveConfirm=function(href,blank){ if(isGallery(href)||!isExternal(href)){window.open(href,'_blank','noopener');return;} open(href,blank!==false); };
+  window.leaveConfirm=function(href,blank){ if(isOwnSite(href)||!isExternal(href)){window.open(href,'_blank','noopener');return;} open(href,blank!==false); };
   okBtn.addEventListener('click',go);
   cancelBtn.addEventListener('click',close);
   overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
@@ -3790,7 +3804,7 @@ setTimeout(async function(){
     if(!a)return;
     var href=a.getAttribute('href')||'';
     if(!href||href[0]==='#')return;
-    if(isGallery(href))return;              // 映像馆：放行（target=_blank 新标签，音乐不停）
+    if(isOwnSite(href))return;              // 自己的站（映像馆 / 主站两个域名）：放行，不弹确认
     if(!isExternal(href))return;            // 站内/相对链接：放行
     e.preventDefault();e.stopPropagation();
     var blank=(a.target==='_blank');
