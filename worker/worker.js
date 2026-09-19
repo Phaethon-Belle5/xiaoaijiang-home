@@ -1,5 +1,140 @@
+// ════════════════════ 全网热点：源定义与取数 ════════════════════
+// 架构参考 rebang.today 的做法（实测其 nginx + Next.js 前端把 /api/* 全部代理到
+// 自己的后端，前端从不在请求路径上打上游；数据在服务端按 x-nextjs-stale-time 缓存）。
+// 这里做成三级：
+//   ① 浏览器 → CF 边缘缓存（caches.default 命中即返回，连 KV 都不用读）
+//   ② 边缘未命中 → KV（由 cron 每 15 分钟预热，正常情况下永远新鲜）
+//   ③ 都未命中 → 回源上游，成功后写回 KV 与边缘缓存
+// 上游可达性实测（2026-09-18，从 CF 出口实测）：
+//   · GitHub 官方 API    → 200，允许数据中心 IP
+//   · 60s.viki.moe       → 403，拒绝 CF 出口 IP
+//   · r.jina.ai 反代      → 403（60s 同样拒它）
+//   · api.allorigins.win → 超时 / 500
+//   · api.codetabs.com   → 超时
+// 结论：60s 系源在服务端无路可走，只有浏览器直连（住宅 IP）能拿到。
+// 因此给每源标注 origin：worker=服务端取得到；browser=服务端取不到。
+// 用户请求路径上「绝不为取不到的源等上游」，直接秒回空列表，由前端直连兜底。
+// 代理通道不再挂进候选链——它们只会把一次 403 变成十几秒的超时。
+const HOT_SOURCES = {
+  github: { kind: 'github', label: 'GitHub' },
+  douyin: { kind: '60s', label: '抖音', path: 'douyin' },
+  weibo:  { kind: '60s', label: '微博', path: 'weibo' },
+  zhihu:  { kind: '60s', label: '知乎', path: 'zhihu' },
+};
+const HOT_ORIGIN = { github: 'worker', douyin: 'browser', weibo: 'browser', zhihu: 'browser' };
+const HOT_LIMIT = 30;
+const HOT_FAIL_TTL = 600;              // 取数失败后的静默期（秒）
+const HOT_FRESH_MS = 20 * 60 * 1000;   // KV 内视为新鲜的时间
+const HOT_EDGE_S = 1800;               // 边缘缓存秒数
+const HOT_CACHE_ORIGIN = 'https://home.xiaoaijiang.cloud';
+const HOT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+
+// 边缘缓存键：必须落在本域（同 zone），否则 cache.put 会被拒绝
+const hotCacheKey = (src) => new Request(HOT_CACHE_ORIGIN + '/__hot/' + src, { method: 'GET' });
+
+// 上游地址
+const hotUpstreams = (src) => {
+  if (HOT_SOURCES[src].kind === 'github') {
+    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    return [{
+      via: 'github',
+      url: 'https://api.github.com/search/repositories?q='
+        + encodeURIComponent('created:>' + since + ' stars:>50')
+        + '&sort=stars&order=desc&per_page=' + HOT_LIMIT,
+      headers: { 'User-Agent': 'xiaoaijiang-home-worker', 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    }];
+  }
+  return [{
+    via: 'direct',
+    url: 'https://60s.viki.moe/v2/' + HOT_SOURCES[src].path,
+    headers: { 'User-Agent': HOT_UA, 'Accept': 'application/json,text/plain,*/*' },
+  }];
+};
+
+// 代理可能把 JSON 包成文本/代码块，这里容错解析
+function hotParseJson(text) {
+  const t = String(text == null ? '' : text).trim()
+    .replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  try { return JSON.parse(t); } catch (e) { /* 继续尝试截取 */ }
+  for (const pair of [['{', '}'], ['[', ']']]) {
+    const i = t.indexOf(pair[0]), j = t.lastIndexOf(pair[1]);
+    if (i !== -1 && j > i) { try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { /* 下一个 */ } }
+  }
+  return null;
+}
+
+// 归一化：统一成 { rank, title, desc, link, hot, ... }
+function hotNormalize(src, obj) {
+  if (!obj) return null;
+  if (HOT_SOURCES[src].kind === 'github') {
+    const arr = Array.isArray(obj) ? obj : (Array.isArray(obj.items) ? obj.items : null);
+    if (!arr) return null;
+    return arr.slice(0, HOT_LIMIT).map((it, i) => ({
+      rank: i + 1,
+      title: String((it && it.full_name) || ''),
+      desc: String((it && it.description) || '').slice(0, 140),
+      link: String((it && it.html_url) || ''),
+      hot: (it && it.stargazers_count != null) ? it.stargazers_count : '',
+      star: true,
+      up: String((it && it.language) || ''),
+    })).filter(x => x.title);
+  }
+  const data = obj.data !== undefined ? obj.data : obj;
+  const arr = Array.isArray(data) ? data : (Array.isArray(data && data.list) ? data.list : null);
+  if (!arr) return null;
+  return arr.slice(0, HOT_LIMIT).map((it, i) => ({
+    rank: i + 1,
+    title: String(it && it.title != null ? it.title : ''),
+    desc: String((it && (it.detail || it.desc)) || '').slice(0, 140),
+    link: String((it && it.link) || ''),
+    hot: (it && (it.hot_value != null ? it.hot_value : it.hot_value_desc)) || '',
+  })).filter(x => x.title);
+}
+
+// 依次尝试各上游，返回第一个可用的
+async function hotFetchSource(src) {
+  const errors = [];
+  for (const t of hotUpstreams(src)) {
+    try {
+      const r = await fetch(t.url, { headers: t.headers, signal: AbortSignal.timeout(9000) });
+      if (!r.ok) { errors.push(t.via + ':' + r.status); continue; }
+      const items = hotNormalize(src, hotParseJson(await r.text()));
+      if (items && items.length) return { items, via: t.via, errors };
+      errors.push(t.via + ':empty');
+    } catch (e) {
+      errors.push(t.via + ':' + String((e && e.message) || e).slice(0, 40));
+    }
+  }
+  return { items: null, via: '', errors };
+}
+
+// 抓一次并写回 KV + 边缘缓存（cron 与按需刷新共用）
+async function hotRefresh(env, src) {
+  const cfg = HOT_SOURCES[src];
+  if (!cfg) return { ok: false, error: 'unknown_source' };
+  const r = await hotFetchSource(src);
+  if (!r.items || !r.items.length) {
+    // 失败静默期：写一个短命标记，避免每个请求都去撞同一个打不通的上游
+    try { await env.STORE.put('hotfail:' + src, String(Date.now()), { expirationTtl: HOT_FAIL_TTL }); } catch (e) { /* 忽略 */ }
+    return { ok: false, error: r.errors.join(' | ').slice(0, 160) };
+  }
+  try { await env.STORE.delete('hotfail:' + src); } catch (e) { /* 忽略 */ }
+  const payload = { source: src, label: cfg.label, items: r.items, updatedAt: Date.now(), via: r.via };
+  try { await env.STORE.put('hot:' + src, JSON.stringify(payload), { expirationTtl: 12 * 3600 }); } catch (e) { /* 写失败不影响本次返回 */ }
+  try {
+    await caches.default.put(hotCacheKey(src), new Response(JSON.stringify(payload), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=' + HOT_EDGE_S + ', stale-while-revalidate=600',
+      },
+    }));
+  } catch (e) { /* 边缘缓存不可用则退化为 KV */ }
+  return { ok: true, payload };
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '');
     // 兼容两种挂载：home.xiaoaijiang.cloud/api/data 与 api.xiaoaijiang.cloud/data
@@ -335,103 +470,52 @@ export default {
       return json({ ok: true });
     }
 
-    // ── GET /hot ── 全网热点（公开读取）──
-    // 架构说明（重要）：
-    //   60s.viki.moe / 抖音 / 微博 / 知乎 都会拒绝 Cloudflare 数据中心出口 IP（实测 403），
-    //   但允许普通浏览器直连。因此这些源由「前端浏览器直连」，Worker 仅作兜底与缓存。
-    //   GitHub 官方 API 允许数据中心访问，因此由 Worker 直接抓取并缓存（30 分钟，注意
-    //   未鉴权限额 60 次/小时）。
+    // ── GET /hot ── 全网热点（公开读取）
     if (p === '/hot' && method === 'GET') {
-      const HOT_SOURCES = {
-        github: { kind: 'github', label: 'GitHub' },
-        douyin: { url: 'https://60s.viki.moe/v2/douyin', kind: '60s', label: '抖音' },
-        weibo:  { url: 'https://60s.viki.moe/v2/weibo',  kind: '60s', label: '微博' },
-        zhihu:  { url: 'https://60s.viki.moe/v2/zhihu',  kind: '60s', label: '知乎' },
-      };
-      const HOT_TTL = 30 * 60 * 1000;   // KV 内视为新鲜的时间（榜单几分钟才变一次）
-      const HOT_EDGE = 1800;            // 边缘缓存秒数：尽量让请求停在 CF 边缘而不回源
-      const HOT_LIMIT = 30;
-      const HOT_DEFAULT = 'github';
-      const want = String(url.searchParams.get('src') || HOT_DEFAULT).toLowerCase();
-      const useSrc = HOT_SOURCES[want] ? want : HOT_DEFAULT;
+      const want = String(url.searchParams.get('src') || 'github').toLowerCase();
+      const useSrc = HOT_SOURCES[want] ? want : 'github';
       const cfgSrc = HOT_SOURCES[useSrc];
-      const key = 'hot:' + useSrc;
-      const fallback = { label: cfgSrc.label, items: [], updatedAt: 0 };
+      const ckey = hotCacheKey(useSrc);
+      const edgeHdr = { 'Cache-Control': 'public, max-age=' + HOT_EDGE_S + ', stale-while-revalidate=600' };
 
-      let cached = null;
-      try { const raw = await env.STORE.get(key); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
-      // 有点缓存就直接返回，哪怕已超过新鲜期：前端自己会用 localStorage 兜底，
-      // 这里优先保证"快"，避免为了刷新而让用户等一次上游往返。
-      if (cached && Array.isArray(cached.items) && cached.items.length && Date.now() - (cached.updatedAt || 0) < HOT_TTL) {
-        return json(cached, 200, { 'Cache-Control': 'public, max-age=' + HOT_EDGE + ', stale-while-revalidate=600' });
-      }
-
-      // 60s 系：{ title, detail/desc, link, hot_value|hot_value_desc }
-      const normalize60s = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
-        rank: i + 1,
-        title: String(it && it.title != null ? it.title : ''),
-        // 已抓到的热搜条目正文可能很长，截断以免把面板撑爆
-        desc: String((it && (it.detail || it.desc)) || '').slice(0, 140),
-        link: String((it && it.link) || ''),
-        hot: (it && (it.hot_value != null ? it.hot_value : it.hot_value_desc)) || '',
-      })).filter(x => x.title);
-
-      // GitHub：search/repositories 的 items[]
-      //   官方没有「trending」接口，这里用「近 30 天新建 且 star>50」+ 按 star 排序近似热榜，
-      //   既能反映当下最受关注的新项目，也不会像纯 stars 排序那样常年不变。
-      const normalizeGithub = (arr) => arr.slice(0, HOT_LIMIT).map((it, i) => ({
-        rank: i + 1,
-        title: String((it && it.full_name) || ''),
-        desc: String((it && it.description) || '').slice(0, 140),
-        link: String((it && it.html_url) || ''),
-        // 用 star 数作热度；前端会格式化成「54.8万」
-        hot: (it && it.stargazers_count != null) ? it.stargazers_count : '',
-        star: true,
-        // 语言作为补充信息展示
-        up: String((it && it.language) || ''),
-      })).filter(x => x.title);
-
-      let items = null, err = '';
+      // ① 边缘缓存（caches.default）：命中即返回，不读 KV、不打上游
       try {
-        let upUrl = cfgSrc.url;
-        const upHeaders = {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-          'Accept': 'application/json,text/plain,*/*',
-        };
-        if (cfgSrc.kind === 'github') {
-          // 近 30 天新建的高星项目（按 star 降序）
-          const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-          upUrl = 'https://api.github.com/search/repositories?q=' + encodeURIComponent('created:>' + since + ' stars:>50')
-            + '&sort=stars&order=desc&per_page=' + HOT_LIMIT;
-          upHeaders['Accept'] = 'application/vnd.github+json';
-          upHeaders['X-GitHub-Api-Version'] = '2022-11-28';
-          delete upHeaders['User-Agent'];
-          upHeaders['User-Agent'] = 'xiaoaijiang-home-worker';
+        const hit = await caches.default.match(ckey);
+        if (hit) {
+          const r = new Response(hit.body, hit);
+          r.headers.set('X-Hot-Cache', 'edge');
+          return r;
         }
-        const up = await fetch(upUrl, { headers: upHeaders, signal: AbortSignal.timeout(10000) });
-        if (!up.ok) throw new Error('upstream HTTP ' + up.status);
-        const uj = await up.json();
-        const data = uj && (uj.data !== undefined ? uj.data : uj);
-        const body = uj && uj.items ? uj.items : data;
-        const arr = Array.isArray(body) ? body : (body && Array.isArray(body.list) ? body.list : null);
-        if (arr) {
-          if (cfgSrc.kind === 'github') items = normalizeGithub(arr);
-          else items = normalize60s(arr);
+      } catch (e) { /* 边缘缓存不可用则继续往下走 */ }
+
+      // ② KV：由 cron 每 15 分钟预热，正常情况下永远是新鲜的
+      let cached = null;
+      try { const raw = await env.STORE.get('hot:' + useSrc); if (raw) cached = JSON.parse(raw); } catch (e) { cached = null; }
+      if (cached && Array.isArray(cached.items) && cached.items.length) {
+        const fresh = Date.now() - (cached.updatedAt || 0) < HOT_FRESH_MS;
+        if (!fresh && ctx && ctx.waitUntil) ctx.waitUntil(hotRefresh(env, useSrc).catch(() => {}));
+        if (fresh && ctx && ctx.waitUntil) {
+          const warm = new Response(JSON.stringify(cached), {
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', ...edgeHdr },
+          });
+          ctx.waitUntil(caches.default.put(ckey, warm).catch(() => {}));
         }
-        if (!items || !items.length) throw new Error('empty payload');
-      } catch (e) {
-        err = String((e && e.message) || e).slice(0, 120);
+        return json(cached, 200, { ...edgeHdr, 'X-Hot-Cache': 'kv' });
       }
 
-      if (items && items.length) {
-        const payload = { source: useSrc, label: cfgSrc.label, items, updatedAt: Date.now() };
-        try { await env.STORE.put(key, JSON.stringify(payload), { expirationTtl: 6 * 60 * 60 }); } catch (e) {}
-        return json(payload, 200, { 'Cache-Control': 'public, max-age=1800, stale-while-revalidate=600' });
+      // ③ KV 冷启动（首次部署 / cron 还没跑过）
+      //    只有「服务端确实取得到」的源才在这里等一次上游；取不到的源（60s 系）
+      //    立刻返回空列表，前端会用自己的浏览器直连兜底——绝不让用户等十几秒。
+      if (HOT_ORIGIN[useSrc] === 'worker') {
+        let inCooldown = false;
+        try { inCooldown = !!(await env.STORE.get('hotfail:' + useSrc)); } catch (e) { /* 读不到就当没冷却 */ }
+        if (!inCooldown) {
+          const r = await hotRefresh(env, useSrc);
+          if (r.ok) return json(r.payload, 200, { ...edgeHdr, 'X-Hot-Cache': 'upstream' });
+          return json({ source: useSrc, label: cfgSrc.label, items: [], updatedAt: 0, error: r.error }, 200, { 'Cache-Control': 'public, max-age=60', 'X-Hot-Cache': 'upstream-fail' });
+        }
       }
-      if (cached && Array.isArray(cached.items) && cached.items.length) {
-        return json(Object.assign({}, cached, { stale: true, error: err }), 200, { 'Cache-Control': 'public, max-age=60' });
-      }
-      return json(Object.assign({}, fallback, { source: useSrc, error: err || 'no_data' }), 200, { 'Cache-Control': 'public, max-age=60' });
+      return json({ source: useSrc, label: cfgSrc.label, items: [], updatedAt: 0, origin: HOT_ORIGIN[useSrc] }, 200, { 'Cache-Control': 'public, max-age=60', 'X-Hot-Cache': 'bypass' });
     }
 
     // ── GET /data ── 公开读取 ──
@@ -787,5 +871,19 @@ export default {
     }
 
     return json({ error: 'not_found' }, 404);
-  }
+  },
+
+  // ── Cron ── 定时预热热榜：用户请求因此永远命中 KV / 边缘缓存，
+  // 上游抓取只发生在后台，绝不占用用户的等待时间。
+  async scheduled(event, env, ctx) {
+    const jobs = Object.keys(HOT_SOURCES).map(function (s) {
+      return hotRefresh(env, s)
+        .then(function (r) {
+          console.log('hot cron ' + s + ' ' + (r.ok ? 'ok via ' + r.payload.via + ' items=' + r.payload.items.length : 'fail ' + r.error));
+        })
+        .catch(function (e) { console.log('hot cron ' + s + ' throw ' + String((e && e.message) || e)); });
+    });
+    if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all(jobs));
+    else await Promise.all(jobs);
+  },
 };

@@ -3585,6 +3585,23 @@ async function fetchHot(src){
   if(!list.length&&err)console.warn('hot '+src+' 取数失败:',err);
   return list;
 }
+// 后台预热其余榜单 —— 思路来自 rebang.today：它的代码里带 onPrefetchTab / onPrefetchSubTab，
+// 即用户还没点某个标签时就把数据先准备好。这里首屏渲染完成后错峰把其它三个源也拉一遍写进
+// localStorage，于是点别的标签是 0ms 直接出内容，而不是当场等 1~2s。
+function scheduleHotPrefetch(){
+  const order=Object.keys(HOT_SRC_LABEL).filter(s=>s!==_hotSrc);
+  let i=0;
+  const step=()=>{
+    if(i>=order.length)return;
+    if(document.hidden){setTimeout(step,3000);return;}   // 页面在后台就放缓，不抢带宽
+    const s=order[i++];
+    const c=hotCacheGet(s);
+    if(c&&c.fresh){setTimeout(step,600);return;}          // 本地已够新，不必再拉
+    fetchHot(s).then(list=>{ if(list&&list.length)hotCacheSet(s,list); })
+      .catch(()=>{}).then(()=>setTimeout(step,1200));     // 彼此错开，别和首屏请求抢
+  };
+  setTimeout(step,1800);   // 先让首屏数据、字体、音乐等跑完
+}
 function initHotTopics(){
   const tabs=document.getElementById('hot-tabs');
   if(!tabs)return;
@@ -3604,6 +3621,7 @@ function initHotTopics(){
     loadHot(_hotSrc,true);
   });
   loadHot(_hotSrc);
+  scheduleHotPrefetch();
 }
 
 setTimeout(async function(){
