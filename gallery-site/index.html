@@ -237,6 +237,9 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 #launch.hide{opacity:0;pointer-events:none}
 #launchStars,#launchGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
 #launchGlobe{z-index:2}
+/* 写实地球（ECharts-GL）：自绘粒子地球加载后立刻可见，这张图准备好再交叉淡入盖上去 */
+#launchGl{position:absolute;inset:0;z-index:2;opacity:0;transition:opacity 1s var(--ease-out);pointer-events:auto;cursor:grab}
+#launchGl.on{opacity:1}
 .launch-overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
 .launch-eyebrow{font-family:'InterVar',var(--font-body);font-size:13px;letter-spacing:4px;color:rgba(212,168,67,.75);text-transform:uppercase;margin-bottom:18px;opacity:0;animation:launchFade .9s .3s var(--ease-out) forwards;pointer-events:auto}
 .launch-eyebrow .vp-char{display:inline-block;font-variation-settings:'wght' 400;transition:none;will-change:font-variation-settings,color,filter}
@@ -272,10 +275,11 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 </head>
 <body>
 
-<!-- 3D 地球开屏（自绘 canvas，无外部依赖，China 可达） -->
+<!-- 3D 地球开屏：自绘粒子地球打底（无依赖、秒出），随后叠上 ECharts-GL 写实地球 -->
 <div id="launch">
   <canvas id="launchStars"></canvas>
   <canvas id="launchGlobe"></canvas>
+  <div id="launchGl"></div>
   <div class="launch-overlay">
     <p class="launch-eyebrow" id="launchEyebrow">PHOTO FOOTPRINTS · 光影足迹</p>
     <h1 class="launch-title" id="launchTitle"><canvas id="launchTitleCanvas" aria-label="映像馆"></canvas></h1>
@@ -1017,10 +1021,57 @@ addEventListener('keydown',e=>{
   addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-lastX;lastX=e.clientX;rot+=dx*0.006;vel=dx*0.0006||vel;});
   addEventListener('pointerup',()=>{dragging=false;gc.style.cursor='grab';if(Math.abs(vel)<0.001)vel=0.0038;});
 
+  /* ===== ECharts-GL 写实地球 =====
+     资源全部自托管在 assets/gl/ 下（earth.jpg / starfield.jpg / pisa.hdr / echarts*），
+     不从 echarts.apache.org 或 jsdelivr 拉——国内访问不稳，且少一个第三方依赖。
+     策略：自绘粒子地球先顶上，GL 就绪后交叉淡入并停掉 canvas 的动画循环；
+     任何一步失败都只是维持原样，绝不会让开屏黑屏。 */
+  const glHost=document.getElementById('launchGl');
+  function loadScript(src){
+    return new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src=src;s.async=true;
+      s.onload=()=>res();s.onerror=()=>rej(new Error('load fail: '+src));
+      document.head.appendChild(s);
+    });
+  }
+  function initRealisticGlobe(){
+    if(!glHost||typeof echarts==='undefined')return false;
+    const chart=echarts.init(glHost,null,{renderer:'canvas'});
+    chart.setOption({
+      backgroundColor:'#03050c',
+      globe:{
+        baseTexture:'assets/gl/earth.jpg',
+        heightTexture:'assets/gl/earth.jpg',
+        displacementScale:0.04,
+        shading:'realistic',
+        environment:'assets/gl/starfield.jpg',
+        realisticMaterial:{roughness:0.9},
+        postEffect:{enable:true},
+        light:{
+          main:{intensity:5,shadow:true},
+          ambientCubemap:{texture:'assets/gl/pisa.hdr',diffuseIntensity:0.2}
+        },
+        viewControl:{autoRotate:true,autoRotateSpeed:5,autoRotateAfterStill:2,distance:210,alpha:24,minDistance:130,maxDistance:340}
+      }
+    });
+    addEventListener('resize',()=>{try{chart.resize();}catch(e){}});
+    scr.__glChart=chart;
+    glHost.classList.add('on');
+    cancelAnimationFrame(raf);          // 写实地球已覆盖，停掉 canvas 版省电
+    return true;
+  }
+  if(!reduce){
+    loadScript('assets/gl/echarts.min.js')
+      .then(()=>loadScript('assets/gl/echarts-gl.min.js'))
+      .then(()=>{if(scr.isConnected&&!scr.classList.contains('hide'))initRealisticGlobe();})
+      .catch(e=>{console.warn('[launch] 写实地球未启用，保持粒子地球：',e.message);});
+  }
+
   function enter(){
     sessionStorage.setItem('mapgallery-launched','1');
     scr.classList.add('hide');
-    setTimeout(()=>{cancelAnimationFrame(raf);scr.remove();},1050);
+    setTimeout(()=>{cancelAnimationFrame(raf);try{scr.__glChart&&scr.__glChart.dispose();}catch(e){}scr.remove();},1050);
   }
   document.getElementById('launchEnter').addEventListener('click',enter);
   scr.__enter=enter;
