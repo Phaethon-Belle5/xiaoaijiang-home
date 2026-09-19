@@ -403,17 +403,26 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .bento-dark .card-text{color:var(--wf-body);white-space:pre-wrap}
 
 /* Portfolio grid — unified Webflow card style */
+/* ---- 个人精选：整体改为与说说/热点/音乐同一套毛玻璃语言 ---- */
 .portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-6);max-width:var(--container-max);margin:0 auto;padding:0 var(--container-padding)}
-.portfolio-item{position:relative;background:var(--wf-canvas);border:1px solid var(--wf-hairline);border-radius:var(--radius-md);overflow:hidden;transition:all 0.2s var(--ease-out);cursor:pointer;box-shadow:var(--shadow-card)}
-.portfolio-item:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover);border-color:var(--wf-mute-soft)}
-.portfolio-item img{width:100%;height:160px;object-fit:cover;transition:transform 0.4s ease}
-.portfolio-item:hover img{transform:scale(1.04)}
-.portfolio-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s}
-.portfolio-overlay span{color:#fff;font-weight:500;font-size:0.85em;padding:8px 20px;border:1px solid rgba(255,255,255,0.6);border-radius:4px;letter-spacing:-0.01em}
+.portfolio-item{position:relative;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);overflow:hidden;transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out),border-color .3s var(--ease-out);cursor:pointer;box-shadow:var(--shadow-card)}
+.portfolio-item:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover);border-color:rgba(212,168,67,.38)}
+.portfolio-thumb{position:relative;overflow:hidden;border-bottom:1px solid var(--glass-border)}
+.portfolio-item img{width:100%;height:158px;object-fit:cover;display:block;transition:transform .5s var(--ease-out),filter .5s ease}
+.portfolio-item:hover img{transform:scale(1.05)}
+/* 悬浮：一层薄霜 + 毛玻璃胶囊按钮 */
+.portfolio-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;background:linear-gradient(180deg,rgba(8,10,18,.12),rgba(8,10,18,.55))}
+.portfolio-overlay span{color:#fff;font-weight:500;font-size:.8em;padding:8px 18px;border-radius:var(--radius-pill);letter-spacing:.02em;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
 .portfolio-item:hover .portfolio-overlay{opacity:1}
-.portfolio-info{padding:12px 16px;background:var(--wf-canvas);border-top:1px solid var(--wf-hairline)}
-.portfolio-title{font-family:var(--font-display);font-size:0.88em;font-weight:600;color:var(--wf-ink);margin-bottom:4px;letter-spacing:-0.01em}
-.portfolio-link{font-size:0.78em;color:var(--wf-mute);word-break:break-all}
+.portfolio-info{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;min-width:0}
+.portfolio-title{font-family:var(--font-display);font-size:.88em;font-weight:600;color:var(--wf-ink);letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 网址链接：毛玻璃小胶囊，与卡片同色系 */
+.portfolio-link{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;padding:4px 11px;border-radius:var(--radius-pill);font-size:.72em;line-height:1.5;color:var(--text-secondary);background:rgba(255,255,255,.07);border:1px solid var(--glass-border);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:color .2s,border-color .2s,background .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.portfolio-item:hover .portfolio-link{color:var(--gold-bright);border-color:rgba(212,168,67,.42);background:rgba(212,168,67,.12)}
+.portfolio-link svg{flex:none;opacity:.85}
+[data-theme="light"] .portfolio-link{background:rgba(255,255,255,.6);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .portfolio-overlay{background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(20,24,36,.45))}
+[data-theme="light"] .portfolio-overlay span{background:rgba(255,255,255,.62);border-color:rgba(255,255,255,.75);color:#20242e}
 
 /* Portfolio sub-nav */
 /* ---- Photo Gallery (Masonry) ---- */
@@ -553,14 +562,17 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .music-card{display:flex;align-items:center;gap:var(--space-6);max-width:760px;margin:0 auto;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-6) var(--space-8);box-shadow:var(--shadow-card);justify-content:center}
 .music-card-section{padding-left:var(--space-6);padding-right:var(--space-6)}
 /* ---- 主页双卡布局：左=音乐竖卡，中=预留空位，右=全网热点 ---- */
-.home-pair{display:grid;grid-template-columns:minmax(210px,232px) minmax(120px,1.35fr) minmax(300px,360px);gap:var(--space-8);align-items:stretch;max-width:1180px;margin:0 auto}
+/* max-width 用 --container-max（1400）与页面其它区块对齐：此前写死 1180，比别的区块窄 220px，
+   于是左右两侧各空出一截。现在两张卡被推到区块两端，两侧不再空。
+   侧列也放宽了一点，多出来的宽度进卡片而不是全进中间空位。 */
+.home-pair{display:grid;grid-template-columns:minmax(210px,264px) minmax(120px,1.35fr) minmax(300px,412px);gap:var(--space-8);align-items:stretch;max-width:var(--container-max);margin:0 auto}
 /* 覆盖上方的居中样式：改名选择器优先级更高，原规则保持不动便于回退 */
 .music-card-section .home-pair .music-card{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;max-width:none;margin:0;padding:var(--space-6)}
-.home-pair .mc-disc{width:150px;height:150px;margin:0 auto}
+.home-pair .mc-disc{width:118px;height:118px;margin:0 auto}
 .home-pair .mc-info{max-width:none;flex:1 1 auto;display:flex;flex-direction:column;margin-top:var(--space-5);text-align:center;min-width:0}
 .home-pair .mc-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.98em;line-height:1.45}
-.home-pair .mc-stage{height:auto;min-height:96px;margin-bottom:var(--space-4)}
-.home-pair .mc-lyric{height:auto;min-height:96px;font-size:.83em;line-height:1.65}
+.home-pair .mc-stage{height:auto;min-height:72px;margin-bottom:var(--space-3)}
+.home-pair .mc-lyric{height:auto;min-height:72px;font-size:.83em;line-height:1.6}
 .home-pair .mc-progress{margin-bottom:var(--space-4)}
 .home-pair .mc-controls{gap:var(--space-3)}
 .home-pair .mc-list-btn{margin-top:var(--space-4);width:100%}
@@ -579,7 +591,8 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .hot-tab{padding:4px 12px;border-radius:var(--radius-pill);border:1px solid var(--glass-border);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:.73em;cursor:pointer;transition:all .2s}
 .hot-tab:hover{border-color:var(--gold);color:var(--gold)}
 .hot-tab.on{border-color:var(--gold);color:var(--gold-bright);background:rgba(212,168,67,.12);font-weight:600}
-.hot-list{flex:none;height:440px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;overscroll-behavior:contain}
+/* 高度 440 → 320：整行此前有 604px 高（约占 800px 屏高的 3/4），显得太长；现在约 460px */
+.hot-list{flex:none;height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;overscroll-behavior:contain}
 .hot-list::-webkit-scrollbar{width:4px}
 .hot-list::-webkit-scrollbar-thumb{background:rgba(212,168,67,.4);border-radius:2px}
 .hot-item{display:flex;align-items:center;gap:var(--space-3);padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:.82em;line-height:1.45;transition:background .15s,color .15s}
@@ -1602,7 +1615,7 @@ ADMIN_RENDER.works=function(){
                 :'<div style="width:64px;height:46px;border-radius:6px;border:1px dashed var(--surface-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.62em;flex:none">无图</div>')+
         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">'+
           '<input type="text" value="'+escHtml(it.url||'')+'" data-p-idx="'+i+'" data-p-field="url" placeholder="链接地址（可选）">'+
-          '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（不填则不显示网址）">'+
+          '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（留空则显示网址域名）">'+
           '<button class="admin-sbtn" type="button" onclick="uploadPortfolioImg('+i+')">'+AI.img+'上传图片</button>'+
         '</div>'+
       '</div></div>').join('')||'<p class="admin-help">还没有作品</p>')+
@@ -2333,6 +2346,9 @@ function scrollToSection(id){
 
 function renderMain(){
   const main=document.getElementById('main'),p=data.profile,c=data.content||{};
+  // 作品卡上的网址：填了显示名称就用它，没填就退回域名，保证「网址」始终可见
+  function portfolioHost(u){try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return '';}}
+  const PF_LINK_ICON='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
   function portfolioFallback(i){const seeds=['✦','✧','★','☆','❖','✵','⚜','✶'];const ch=seeds[i%seeds.length];return 'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160"><rect fill="#11162A" width="400" height="160"/><text x="200" y="102" text-anchor="middle" fill="#D4A843" font-size="54" font-family="serif">'+ch+'</text></svg>');}
 
   main.innerHTML=`
@@ -2474,13 +2490,17 @@ function renderMain(){
         ${(data.portfolio||[]).map((item,i)=>{
           const imgSrc=item.image||portfolioFallback(i);
           const hasUrl=item.url&&item.url.trim();
+          const linkText=hasUrl?(item.linkName||portfolioHost(item.url)):'';
           return`
           <div class="portfolio-item reveal reveal-d${Math.min(i+2,5)}" ${hasUrl?'onclick="leaveConfirm(\''+item.url.replace(/'/g,"\\'")+'\',true)"':''} role="${hasUrl?'link':'article'}" tabindex="0">
-            <div style="position:relative;overflow:hidden">
+            <div class="portfolio-thumb">
               <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src=portfolioFallback(${i})">
               ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
             </div>
-            <div class="portfolio-info"><div class="portfolio-title">${escHtml(item.title)}</div>${hasUrl&&item.linkName?'<div class="portfolio-link">'+escHtml(item.linkName)+'</div>':''}</div>
+            <div class="portfolio-info">
+              <div class="portfolio-title">${escHtml(item.title)}</div>
+              ${linkText?'<div class="portfolio-link">'+PF_LINK_ICON+escHtml(linkText)+'</div>':''}
+            </div>
           </div>`;
         }).join('')}
       </div>`:''}
