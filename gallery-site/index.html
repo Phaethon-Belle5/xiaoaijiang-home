@@ -271,9 +271,6 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 @property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
 @keyframes shinySpin{to{--ang:360deg}}
 @media(prefers-reduced-motion:reduce){.shiny-btn::before{animation:none}.launch-eyebrow .vp-char{transition:none}}
-/* 窄屏开屏：文字在顶部、按钮在底部，中间整段留给平面地图，避免标题压住地图 */
-#launch.text-top .launch-overlay{justify-content:flex-start;padding-top:max(28px,7vh)}
-#launch.text-top .shiny-btn{position:absolute;left:50%;bottom:max(34px,8vh);transform:translateX(-50%)}
 /* ===== 响应式 ===== */
 @media(max-width:768px){
   :root{--nav-h:52px;--container-padding:16px}
@@ -297,7 +294,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <div id="launchGl"></div>
   <!-- 常驻状态行：开屏地球走到哪一步。排查完会删掉。
        故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因之一。 -->
-  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r13 · 正在准备 3D 地球…</div>
+  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r14 · 正在准备 3D 地球…</div>
   <!-- 加 ?debug=1 会额外显示完整步骤 -->
   <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:56px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
@@ -1003,34 +1000,35 @@ addEventListener('keydown',e=>{
     const c=mapCv.getContext('2d');
     c.setTransform(dpr,0,0,dpr,0,0);
     c.clearRect(0,0,W,H);
-    const mh=Math.min(H*0.62,(W*0.94)/MAP_ASPECT);
+    // ── 铺满整屏：地图当背景 ──
+    // 先把整个画布填成深海（地图的"海洋"部分），再叠一层经纬网铺满画布，
+    // 这样屏幕上没有一块是空的，整屏读起来都是地图；标题直接压在上面。
+    const og=c.createRadialGradient(W/2,H*0.46,0,W/2,H*0.46,Math.max(W,H)*0.78);
+    og.addColorStop(0,'#08182c');og.addColorStop(.55,'#050d1a');og.addColorStop(1,'#02040a');
+    c.fillStyle=og;c.fillRect(0,0,W,H);
+    // 地图本体：至少铺满宽度（窄屏就横向出血），高度给个下限免得又变成一条细带
+    const mh=Math.max(H*0.34,W/MAP_ASPECT);
     const mw=mh*MAP_ASPECT;
-    // 文字列（眉题/「映像馆」/副标题/按钮）默认整体居中，而窄屏上世界地图按宽度算出来
-    // 只有一百多像素高，正好卡在标题后面 —— 看着就是「地图闪一下就被三个大字盖住」。
-    // 处理原则：**地图留在中间**（保持原构图），把文字让开：
-    //   · 窄屏且会撞上时，文字列挪到顶部、按钮挪到底部，中间整段留给地图
-    //   · 地图放在「文字块底」与「按钮顶」之间的空档正中
-    //   · 大屏（地图本来就大）不动，维持文字压在图上方的背景式构图
-    const ov=document.querySelector('.launch-overlay');
-    let cy=H*0.46;
-    if(ov&&ov.children.length>=2){
-      const n=ov.children.length;
-      const rect=i=>ov.children[i].getBoundingClientRect();
-      let head={top:rect(0).top,bottom:rect(n-2).bottom};   // 文字块（不含最后一个按钮）
-      let btn=rect(n-1);
-      // 只要「文字块」或「按钮」任一项压到地图，就把文字让开
-      const clashes=(head.bottom>cy-mh/2+6)||(btn.top<cy+mh/2-6);
-      if(mh<H*0.42 && clashes){          // 窄屏且会撞上 → 把文字让开
-        scr.classList.add('text-top');
-        head={top:rect(0).top,bottom:rect(n-2).bottom};
-        btn=rect(n-1);
-      }
-      const bandTop=head.bottom, bandBot=btn.top;
-      if(bandBot-bandTop>=mh+12) cy=bandTop+(bandBot-bandTop)/2;
-    }
-    const ox=(W-mw)/2, oy=cy-mh/2;
+    // 横向：能放下就居中；放不下就把视窗平移到亚洲一带（默认居中会看到非洲，中国被挤出屏外）
+    const VIEW_LNG=55;
+    let ox=W/2-(VIEW_LNG-LON0)/(LON1-LON0)*mw;
+    ox=Math.min(0,Math.max(W-mw,ox));
+    // 纵向：让中国所在的纬度带（北纬53°~18°）落在屏高中部偏下，避开标题；
+    // 底边一旦跑出屏幕就整体上移，免得下半屏只剩海洋
+    let oy=H*0.60-(LAT0-35)/(LAT0-LAT1)*mh;
+    if(oy+mh>H)oy=H-mh;
     const px=lng=>ox+(lng-LON0)/(LON1-LON0)*mw;
     const py=lat=>oy+(LAT0-lat)/(LAT0-LAT1)*mh;
+    // 经纬网铺满整个画布（超出地图范围就按同一投影外推）
+    c.strokeStyle='rgba(120,160,220,.06)';c.lineWidth=1;
+    for(let lng=LON0;lng<=LON1;lng+=20){
+      const x=px(lng);if(x<-2||x>W+2)continue;
+      c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke();
+    }
+    const latLine=y=>{if(y<-2||y>H+2)return;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();};
+    for(let lat=LAT0;lat>=LAT1;lat-=20)latLine(py(lat));
+    for(let lat=LAT0+20,i=0;py(lat)>0&&i<20;lat+=20,i++)latLine(py(lat));
+    for(let lat=LAT1-20,i=0;py(lat)<H&&i<20;lat-=20,i++)latLine(py(lat));
     const shapes=window.WORLD_GEO.shapes;
     const cnIdx=window.WORLD_GEO.names.indexOf('China');
     // 层级：shape → 多边形 → 环 → 点。少一层循环就会把「环」当成点用，
@@ -1116,7 +1114,7 @@ addEventListener('keydown',e=>{
   const glStatusEl=document.getElementById('glStatus');
   const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
   function glLog(m){
-    try{ if(glStatusEl) glStatusEl.textContent='开屏 r13 · '+m; }catch(e){}
+    try{ if(glStatusEl) glStatusEl.textContent='开屏 r14 · '+m; }catch(e){}
     try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
     console.log('[globe] '+m);
   }
