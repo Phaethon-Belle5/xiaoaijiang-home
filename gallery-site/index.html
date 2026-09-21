@@ -8,6 +8,20 @@
 <meta name="theme-color" content="#0B0E14">
 <meta name="color-scheme" content="dark light">
 <link rel="preconnect" href="https://home.xiaoaijiang.cloud">
+<!-- 开屏地球的资源提前并行拉取。只在开屏确实会显示时才预载（同一会话看过就不再下），
+     否则每次进站都白下 1.5MB。用内联脚本是为了在解析阶段就发出请求。 -->
+<script>
+(function(){
+  try{
+    if(sessionStorage.getItem('mapgallery-launched')==='1')return;
+    ['assets/gl/echarts.min.js','assets/gl/echarts-gl.min.js','assets/gl/earth-2048.jpg','assets/gl/starfield-2048.jpg'].forEach(function(u){
+      var l=document.createElement('link');
+      l.rel='preload';l.as=/\.js$/.test(u)?'script':'image';l.href=u;
+      document.head.appendChild(l);
+    });
+  }catch(e){}
+})();
+</script>
 <link rel="icon" id="favicon" href="https://cdn.231060101.xyz/%E8%AF%B4%E8%AF%B4%E5%9B%BE%E7%89%87/%E9%98%BF%E5%91%A6.webp">
 <style>
 /* Inter 可变字体（self-host，供 Variable Proximity 光影足迹 eyebrow 的 wght 轴，48KB Latin） */
@@ -1022,7 +1036,7 @@ addEventListener('keydown',e=>{
   addEventListener('pointerup',()=>{dragging=false;gc.style.cursor='grab';if(Math.abs(vel)<0.001)vel=0.0038;});
 
   /* ===== ECharts-GL 写实地球 =====
-     资源全部自托管在 assets/gl/ 下（earth.jpg / starfield.jpg / pisa.hdr / echarts*），
+     资源全部自托管在 assets/gl/ 下（earth-2048.jpg / starfield-2048.jpg / pisa.hdr / echarts*），
      不从 echarts.apache.org 或 jsdelivr 拉——国内访问不稳，且少一个第三方依赖。
      策略：自绘粒子地球先顶上，GL 就绪后交叉淡入并停掉 canvas 的动画循环；
      任何一步失败都只是维持原样，绝不会让开屏黑屏。 */
@@ -1035,37 +1049,51 @@ addEventListener('keydown',e=>{
       document.head.appendChild(s);
     });
   }
+  // 地球在屏幕上的直径只跟视口「高度」成正比，所以竖屏手机上会横向溢出被切掉。
+  // 实测（distance=210 时）：直径 ≈ 155 × 视口高 / distance。
+  // 因此按宽高比把相机拉远：横屏保持 210（实测桌面 48% 视口宽正好），
+  // 竖屏按 264 × 高/宽 放大，让直径收敛到约 0.62 × 视口宽。
+  function glDistance(){return Math.max(210,Math.round(264*(innerHeight/Math.max(1,innerWidth))));}
+  function hasWebGL(){try{const c=document.createElement('canvas');return !!(c.getContext('webgl')||c.getContext('experimental-webgl'));}catch(e){return false;}}
   function initRealisticGlobe(){
     if(!glHost||typeof echarts==='undefined')return false;
+    const TEX='assets/gl/';
     const chart=echarts.init(glHost,null,{renderer:'canvas'});
     chart.setOption({
       backgroundColor:'#03050c',
       globe:{
-        baseTexture:'assets/gl/earth.jpg',
-        heightTexture:'assets/gl/earth.jpg',
+        baseTexture:TEX+'earth-2048.jpg',
+        heightTexture:TEX+'earth-2048.jpg',
         displacementScale:0.04,
         shading:'realistic',
-        environment:'assets/gl/starfield.jpg',
+        environment:TEX+'starfield-2048.jpg',
         realisticMaterial:{roughness:0.9},
         postEffect:{enable:true},
         light:{
           main:{intensity:5,shadow:true},
-          ambientCubemap:{texture:'assets/gl/pisa.hdr',diffuseIntensity:0.2}
+          ambientCubemap:{texture:TEX+'pisa.hdr',diffuseIntensity:0.2}
         },
-        viewControl:{autoRotate:true,autoRotateSpeed:5,autoRotateAfterStill:2,distance:210,alpha:24,minDistance:130,maxDistance:340}
+        // 系统开了「减弱动态效果」时只关掉自转，地球照样换成写实的
+        // （原来是把整段加载都跳过了，于是手机上看到的还是旧的粒子地球）
+        // maxDistance 要够大，否则竖屏算出来的距离会被夹回 340，等于没拉远
+        viewControl:{autoRotate:!reduce,autoRotateSpeed:5,autoRotateAfterStill:2,distance:glDistance(),alpha:24,minDistance:150,maxDistance:900}
       }
     });
-    addEventListener('resize',()=>{try{chart.resize();}catch(e){}});
+    // 旋屏/改变窗口时重算相机距离，横竖屏切换不会切掉地球
+    addEventListener('resize',()=>{try{chart.setOption({globe:{viewControl:{distance:glDistance()}}});chart.resize();}catch(e){}});
     scr.__glChart=chart;
     glHost.classList.add('on');
     cancelAnimationFrame(raf);          // 写实地球已覆盖，停掉 canvas 版省电
     return true;
   }
-  if(!reduce){
+  // 只有真的不支持 WebGL 才不去下这 1.5MB；其余情况都应该换上新地球
+  if(hasWebGL()){
     loadScript('assets/gl/echarts.min.js')
       .then(()=>loadScript('assets/gl/echarts-gl.min.js'))
       .then(()=>{if(scr.isConnected&&!scr.classList.contains('hide'))initRealisticGlobe();})
       .catch(e=>{console.warn('[launch] 写实地球未启用，保持粒子地球：',e.message);});
+  }else{
+    console.warn('[launch] 本设备不支持 WebGL，保持粒子地球');
   }
 
   function enter(){
