@@ -294,7 +294,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <div id="launchGl"></div>
   <!-- 常驻状态行：开屏地球走到哪一步。排查完会删掉。
        故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因之一。 -->
-  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r11 · 正在准备 3D 地球…</div>
+  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r12 · 正在准备 3D 地球…</div>
   <!-- 加 ?debug=1 会额外显示完整步骤 -->
   <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:56px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
@@ -1002,7 +1002,22 @@ addEventListener('keydown',e=>{
     c.clearRect(0,0,W,H);
     const mh=Math.min(H*0.62,(W*0.94)/MAP_ASPECT);
     const mw=mh*MAP_ASPECT;
-    const ox=(W-mw)/2, oy=H*0.46-mh/2;
+    // 文字块（眉题/「映像馆」/副标题/按钮）是整体居中的。手机屏窄，世界地图按宽度算出来
+    // 只有一百多像素高，正好卡在标题后面 —— 看着就是「地图闪一下就被三个大字盖住了」。
+    // 所以先量一次文字块占掉的纵向区间，把地图放进上下空出来的那一边；
+    // 两边都放不下（桌面大屏，地图本来就大）就维持居中。
+    let cy=H*0.46;
+    const ov=document.querySelector('.launch-overlay');
+    if(ov&&ov.children.length){
+      const first=ov.children[0].getBoundingClientRect();
+      const last=ov.children[ov.children.length-1].getBoundingClientRect();
+      const above=Math.max(0,first.top), below=Math.max(0,H-last.bottom);
+      const pad=Math.max(18,H*0.035);
+      const canBelow=below>=mh+pad*2, canAbove=above>=mh+pad*2;
+      if(canBelow&&(!canAbove||below>=above)) cy=last.bottom+below/2;   // 放在文字块下方的空档正中
+      else if(canAbove) cy=above/2;                                      // 否则放在上方的空档正中
+    }
+    const ox=(W-mw)/2, oy=cy-mh/2;
     const px=lng=>ox+(lng-LON0)/(LON1-LON0)*mw;
     const py=lat=>oy+(LAT0-lat)/(LAT0-LAT1)*mh;
     const shapes=window.WORLD_GEO.shapes;
@@ -1090,7 +1105,7 @@ addEventListener('keydown',e=>{
   const glStatusEl=document.getElementById('glStatus');
   const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
   function glLog(m){
-    try{ if(glStatusEl) glStatusEl.textContent='开屏 r11 · '+m; }catch(e){}
+    try{ if(glStatusEl) glStatusEl.textContent='开屏 r12 · '+m; }catch(e){}
     try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
     console.log('[globe] '+m);
   }
