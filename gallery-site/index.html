@@ -294,8 +294,11 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <canvas id="launchStars"></canvas>
   <canvas id="launchGlobe"></canvas>
   <div id="launchGl"></div>
-  <!-- 加 ?debug=1 才会显示：开屏地球到底走到哪一步、设备是什么 GPU -->
-  <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:10px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
+  <!-- 常驻状态行：开屏地球走到哪一步。排查完会删掉。
+       故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因之一。 -->
+  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r9 · 正在准备 3D 地球…</div>
+  <!-- 加 ?debug=1 会额外显示完整步骤 -->
+  <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:56px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
     <p class="launch-eyebrow" id="launchEyebrow">PHOTO FOOTPRINTS · 光影足迹</p>
     <h1 class="launch-title" id="launchTitle"><canvas id="launchTitleCanvas" aria-label="映像馆"></canvas></h1>
@@ -1056,9 +1059,13 @@ addEventListener('keydown',e=>{
   // 因此按宽高比把相机拉远：横屏保持 210（实测桌面 48% 视口宽正好），
   // 竖屏按 264 × 高/宽 放大，让直径收敛到约 0.62 × 视口宽。
   function glDistance(){return Math.max(210,Math.round(264*(innerHeight/Math.max(1,innerWidth))));}
-  // 手机/平板上「还是旧地球」的排查入口：网址后加 ?debug=1，左下角会直接打印诊断
+  // 开屏地球的状态输出。
+  // #glStatus 常驻显示（排查用，故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因），
+  // #launchDebug 只在 ?debug=1 时显示完整步骤。
+  const glStatusEl=document.getElementById('glStatus');
   const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
   function glLog(m){
+    try{ if(glStatusEl) glStatusEl.textContent='开屏 r9 · '+m; }catch(e){}
     try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
     console.log('[globe] '+m);
   }
@@ -1137,8 +1144,9 @@ addEventListener('keydown',e=>{
   }
   // 不再用 hasWebGL() 预检：它会先占掉一个 WebGL 上下文，而且部分机型上会误报“不支持”。
   // 直接尝试，抛错或画面为空就逐档降级，最差仍回到粒子地球。
+  glLog('加载 echarts…');
   loadScript('assets/gl/echarts.min.js')
-    .then(()=>loadScript('assets/gl/echarts-gl.min.js'))
+    .then(()=>{glLog('加载 echarts-gl…');return loadScript('assets/gl/echarts-gl.min.js');})
     .then(()=>{if(scr.isConnected&&!scr.classList.contains('hide'))return initRealisticGlobe();glLog('已进入映像馆，跳过');return false;})
     .catch(e=>glLog('脚本加载失败：'+e.message));
 
