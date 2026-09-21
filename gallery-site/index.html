@@ -271,6 +271,9 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 @property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
 @keyframes shinySpin{to{--ang:360deg}}
 @media(prefers-reduced-motion:reduce){.shiny-btn::before{animation:none}.launch-eyebrow .vp-char{transition:none}}
+/* 窄屏开屏：文字在顶部、按钮在底部，中间整段留给平面地图，避免标题压住地图 */
+#launch.text-top .launch-overlay{justify-content:flex-start;padding-top:max(28px,7vh)}
+#launch.text-top .shiny-btn{position:absolute;left:50%;bottom:max(34px,8vh);transform:translateX(-50%)}
 /* ===== 响应式 ===== */
 @media(max-width:768px){
   :root{--nav-h:52px;--container-padding:16px}
@@ -294,7 +297,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <div id="launchGl"></div>
   <!-- 常驻状态行：开屏地球走到哪一步。排查完会删掉。
        故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因之一。 -->
-  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r12 · 正在准备 3D 地球…</div>
+  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r13 · 正在准备 3D 地球…</div>
   <!-- 加 ?debug=1 会额外显示完整步骤 -->
   <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:56px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
@@ -1002,20 +1005,28 @@ addEventListener('keydown',e=>{
     c.clearRect(0,0,W,H);
     const mh=Math.min(H*0.62,(W*0.94)/MAP_ASPECT);
     const mw=mh*MAP_ASPECT;
-    // 文字块（眉题/「映像馆」/副标题/按钮）是整体居中的。手机屏窄，世界地图按宽度算出来
-    // 只有一百多像素高，正好卡在标题后面 —— 看着就是「地图闪一下就被三个大字盖住了」。
-    // 所以先量一次文字块占掉的纵向区间，把地图放进上下空出来的那一边；
-    // 两边都放不下（桌面大屏，地图本来就大）就维持居中。
-    let cy=H*0.46;
+    // 文字列（眉题/「映像馆」/副标题/按钮）默认整体居中，而窄屏上世界地图按宽度算出来
+    // 只有一百多像素高，正好卡在标题后面 —— 看着就是「地图闪一下就被三个大字盖住」。
+    // 处理原则：**地图留在中间**（保持原构图），把文字让开：
+    //   · 窄屏且会撞上时，文字列挪到顶部、按钮挪到底部，中间整段留给地图
+    //   · 地图放在「文字块底」与「按钮顶」之间的空档正中
+    //   · 大屏（地图本来就大）不动，维持文字压在图上方的背景式构图
     const ov=document.querySelector('.launch-overlay');
-    if(ov&&ov.children.length){
-      const first=ov.children[0].getBoundingClientRect();
-      const last=ov.children[ov.children.length-1].getBoundingClientRect();
-      const above=Math.max(0,first.top), below=Math.max(0,H-last.bottom);
-      const pad=Math.max(18,H*0.035);
-      const canBelow=below>=mh+pad*2, canAbove=above>=mh+pad*2;
-      if(canBelow&&(!canAbove||below>=above)) cy=last.bottom+below/2;   // 放在文字块下方的空档正中
-      else if(canAbove) cy=above/2;                                      // 否则放在上方的空档正中
+    let cy=H*0.46;
+    if(ov&&ov.children.length>=2){
+      const n=ov.children.length;
+      const rect=i=>ov.children[i].getBoundingClientRect();
+      let head={top:rect(0).top,bottom:rect(n-2).bottom};   // 文字块（不含最后一个按钮）
+      let btn=rect(n-1);
+      // 只要「文字块」或「按钮」任一项压到地图，就把文字让开
+      const clashes=(head.bottom>cy-mh/2+6)||(btn.top<cy+mh/2-6);
+      if(mh<H*0.42 && clashes){          // 窄屏且会撞上 → 把文字让开
+        scr.classList.add('text-top');
+        head={top:rect(0).top,bottom:rect(n-2).bottom};
+        btn=rect(n-1);
+      }
+      const bandTop=head.bottom, bandBot=btn.top;
+      if(bandBot-bandTop>=mh+12) cy=bandTop+(bandBot-bandTop)/2;
     }
     const ox=(W-mw)/2, oy=cy-mh/2;
     const px=lng=>ox+(lng-LON0)/(LON1-LON0)*mw;
@@ -1105,7 +1116,7 @@ addEventListener('keydown',e=>{
   const glStatusEl=document.getElementById('glStatus');
   const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
   function glLog(m){
-    try{ if(glStatusEl) glStatusEl.textContent='开屏 r12 · '+m; }catch(e){}
+    try{ if(glStatusEl) glStatusEl.textContent='开屏 r13 · '+m; }catch(e){}
     try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
     console.log('[globe] '+m);
   }
