@@ -296,7 +296,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <div id="launchGl"></div>
   <!-- 常驻状态行：开屏地球走到哪一步。排查完会删掉。
        故意不依赖 ?debug=1——查询参数本身也可能是没生效的原因之一。 -->
-  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r9 · 正在准备 3D 地球…</div>
+  <div id="glStatus" style="position:absolute;left:8px;right:8px;bottom:14px;z-index:21;text-align:center;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:rgba(127,209,255,.9);text-shadow:0 1px 5px #000,0 0 3px #000;pointer-events:none">开屏 r10 · 正在准备 3D 地球…</div>
   <!-- 加 ?debug=1 会额外显示完整步骤 -->
   <div id="launchDebug" style="display:none;position:absolute;left:8px;right:8px;bottom:56px;z-index:20;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.82);border:1px solid rgba(127,209,255,.4);color:#7fd1ff;font:13px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
@@ -1065,7 +1065,7 @@ addEventListener('keydown',e=>{
   const glStatusEl=document.getElementById('glStatus');
   const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
   function glLog(m){
-    try{ if(glStatusEl) glStatusEl.textContent='开屏 r9 · '+m; }catch(e){}
+    try{ if(glStatusEl) glStatusEl.textContent='开屏 r10 · '+m; }catch(e){}
     try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
     console.log('[globe] '+m);
   }
@@ -1078,13 +1078,18 @@ addEventListener('keydown',e=>{
       return (gl.getParameter(gl.VERSION)||'?')+' / '+(d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):'未知 GPU');
     }catch(e){return '检测异常 '+e.message;}
   }
-  // 三档配置：高档不行就降级重试。
-  // 手机 GPU 差异很大，写实着色器 + 后处理在部分机型上会编译失败或干脆画不出东西，
-  // 只 try/catch 不够——还要验一下画面是不是真的画出来了。
+  // 降级阶梯：从最讲究的一档往下试，哪一档不抛错就用哪一档。
+  // 手机 GPU 差异很大，实测有一台设备在「写实+后处理」直接抛错、降到「蓝伯特」才好，
+  // 所以把写实档再拆细：后处理 → 地形(高度贴图) → 环境光 → 阴影，逐项摘掉再试，
+  // 尽量让手机也能停在写实档，而不是一步掉到蓝伯特。
   const GL_TIERS=[
-    {name:'写实+后处理', realistic:true,  disp:0.04, post:true,  ambient:true,  shadow:true },
-    {name:'蓝伯特+贴图', realistic:false, disp:0,    post:false, ambient:false, shadow:true },
-    {name:'基础贴图',    realistic:false, disp:0,    post:false, ambient:false, shadow:false},
+    {name:'写实+后处理+地形', realistic:true,  disp:0.04, post:true,  ambient:true,  shadow:true },
+    {name:'写实+地形',        realistic:true,  disp:0.04, post:false, ambient:true,  shadow:true },
+    {name:'写实(无地形)',      realistic:true,  disp:0,    post:false, ambient:true,  shadow:true },
+    {name:'写实(仅主光)',      realistic:true,  disp:0,    post:false, ambient:false, shadow:true },
+    {name:'写实(无阴影)',      realistic:true,  disp:0,    post:false, ambient:false, shadow:false},
+    {name:'蓝伯特+贴图',       realistic:false, disp:0,    post:false, ambient:false, shadow:true },
+    {name:'基础贴图',          realistic:false, disp:0,    post:false, ambient:false, shadow:false},
   ];
   const GL_TEX='assets/gl/';
   function glOption(t){
