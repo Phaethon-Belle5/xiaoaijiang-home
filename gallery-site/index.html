@@ -294,6 +294,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   <canvas id="launchStars"></canvas>
   <canvas id="launchGlobe"></canvas>
   <div id="launchGl"></div>
+  <!-- 加 ?debug=1 才会显示：开屏地球到底走到哪一步、设备是什么 GPU -->
+  <div id="launchDebug" style="display:none;position:absolute;left:10px;bottom:10px;z-index:20;max-width:88vw;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.75);border:1px solid rgba(127,209,255,.35);color:#7fd1ff;font:11px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;pointer-events:none"></div>
   <div class="launch-overlay">
     <p class="launch-eyebrow" id="launchEyebrow">PHOTO FOOTPRINTS · 光影足迹</p>
     <h1 class="launch-title" id="launchTitle"><canvas id="launchTitleCanvas" aria-label="映像馆"></canvas></h1>
@@ -1054,47 +1056,91 @@ addEventListener('keydown',e=>{
   // 因此按宽高比把相机拉远：横屏保持 210（实测桌面 48% 视口宽正好），
   // 竖屏按 264 × 高/宽 放大，让直径收敛到约 0.62 × 视口宽。
   function glDistance(){return Math.max(210,Math.round(264*(innerHeight/Math.max(1,innerWidth))));}
-  function hasWebGL(){try{const c=document.createElement('canvas');return !!(c.getContext('webgl')||c.getContext('experimental-webgl'));}catch(e){return false;}}
-  function initRealisticGlobe(){
-    if(!glHost||typeof echarts==='undefined')return false;
-    const TEX='assets/gl/';
-    const chart=echarts.init(glHost,null,{renderer:'canvas'});
-    chart.setOption({
-      backgroundColor:'#03050c',
-      globe:{
-        baseTexture:TEX+'earth-2048.jpg',
-        heightTexture:TEX+'earth-2048.jpg',
-        displacementScale:0.04,
-        shading:'realistic',
-        environment:TEX+'starfield-2048.jpg',
-        realisticMaterial:{roughness:0.9},
-        postEffect:{enable:true},
-        light:{
-          main:{intensity:5,shadow:true},
-          ambientCubemap:{texture:TEX+'pisa.hdr',diffuseIntensity:0.2}
-        },
-        // 系统开了「减弱动态效果」时只关掉自转，地球照样换成写实的
-        // （原来是把整段加载都跳过了，于是手机上看到的还是旧的粒子地球）
-        // maxDistance 要够大，否则竖屏算出来的距离会被夹回 340，等于没拉远
-        viewControl:{autoRotate:!reduce,autoRotateSpeed:5,autoRotateAfterStill:2,distance:glDistance(),alpha:24,minDistance:150,maxDistance:900}
-      }
+  // 手机/平板上「还是旧地球」的排查入口：网址后加 ?debug=1，左下角会直接打印诊断
+  const glDbgEl=/[?&]debug=1/.test(location.search)?document.getElementById('launchDebug'):null;
+  function glLog(m){
+    try{ if(glDbgEl){glDbgEl.style.display='block';glDbgEl.textContent+=(glDbgEl.textContent?'\n':'')+m;} }catch(e){}
+    console.log('[globe] '+m);
+  }
+  function glEnv(){
+    try{
+      const c=document.createElement('canvas');
+      const gl=c.getContext('webgl')||c.getContext('experimental-webgl');
+      if(!gl)return '无 WebGL';
+      const d=gl.getExtension('WEBGL_debug_renderer_info');
+      return (gl.getParameter(gl.VERSION)||'?')+' / '+(d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):'未知 GPU');
+    }catch(e){return '检测异常 '+e.message;}
+  }
+  // 三档配置：高档不行就降级重试。
+  // 手机 GPU 差异很大，写实着色器 + 后处理在部分机型上会编译失败或干脆画不出东西，
+  // 只 try/catch 不够——还要验一下画面是不是真的画出来了。
+  const GL_TIERS=[
+    {name:'写实+后处理', realistic:true,  disp:0.04, post:true,  ambient:true,  shadow:true },
+    {name:'蓝伯特+贴图', realistic:false, disp:0,    post:false, ambient:false, shadow:true },
+    {name:'基础贴图',    realistic:false, disp:0,    post:false, ambient:false, shadow:false},
+  ];
+  const GL_TEX='assets/gl/';
+  function glOption(t){
+    const light={main:{intensity:5,shadow:t.shadow}};
+    if(t.ambient)light.ambientCubemap={texture:GL_TEX+'pisa.hdr',diffuseIntensity:0.2};
+    const globe={
+      baseTexture:GL_TEX+'earth-2048.jpg',
+      environment:GL_TEX+'starfield-2048.jpg',
+      shading:t.realistic?'realistic':'lambert',
+      light:light,
+      // maxDistance 要够大，否则竖屏算出来的距离会被夹回 340，等于没拉远
+      viewControl:{autoRotate:!reduce,autoRotateSpeed:5,autoRotateAfterStill:2,distance:glDistance(),alpha:24,minDistance:150,maxDistance:900}
+    };
+    if(t.realistic)globe.realisticMaterial={roughness:0.9};
+    if(t.disp){globe.heightTexture=GL_TEX+'earth-2048.jpg';globe.displacementScale=t.disp;}
+    if(t.post)globe.postEffect={enable:true};
+    // 背景透明：星空环境贴图会盖满，正常看不出差别；
+    // 但万一某档静默画不出东西，底下的粒子地球能透出来，而不是变黑屏
+    return {backgroundColor:'transparent',globe:globe};
+  }
+  // 画面真的画出来了吗？
+  // 踩过的坑：WebGL 画布在不设 preserveDrawingBuffer 时，合成之后绘制缓冲就被清掉了，
+  // 所以「等一会儿再 getDataURL 看看是不是黑的」这种做法必然读到空画面——
+  // 它会把本来能用的一档误判成失败。改成：只靠 setOption 是否抛错来判档，
+  // 另外把 GL 画布背景设为透明：万一某档静默画不出东西，底下自绘的粒子地球会透出来，
+  // 不会变成一块黑屏。
+  function preloadImg(src){
+    return new Promise(function(res){
+      const i=new Image();
+      i.onload=function(){res(true);};
+      i.onerror=function(){res(false);};
+      i.src=src;
     });
-    // 旋屏/改变窗口时重算相机距离，横竖屏切换不会切掉地球
-    addEventListener('resize',()=>{try{chart.setOption({globe:{viewControl:{distance:glDistance()}}});chart.resize();}catch(e){}});
-    scr.__glChart=chart;
-    glHost.classList.add('on');
-    cancelAnimationFrame(raf);          // 写实地球已覆盖，停掉 canvas 版省电
-    return true;
   }
-  // 只有真的不支持 WebGL 才不去下这 1.5MB；其余情况都应该换上新地球
-  if(hasWebGL()){
-    loadScript('assets/gl/echarts.min.js')
-      .then(()=>loadScript('assets/gl/echarts-gl.min.js'))
-      .then(()=>{if(scr.isConnected&&!scr.classList.contains('hide'))initRealisticGlobe();})
-      .catch(e=>{console.warn('[launch] 写实地球未启用，保持粒子地球：',e.message);});
-  }else{
-    console.warn('[launch] 本设备不支持 WebGL，保持粒子地球');
+  async function initRealisticGlobe(){
+    if(!glHost||typeof echarts==='undefined'){glLog('echarts 未加载，保持粒子地球');return false;}
+    let chart;
+    try{chart=echarts.init(glHost,null,{renderer:'canvas'});}
+    catch(e){glLog('echarts.init 失败：'+e.message);return false;}
+    // 先把贴图灌进浏览器缓存，免得第一帧画出来是个没贴图的球
+    const texOk=await Promise.all([preloadImg(GL_TEX+'earth-2048.jpg'),preloadImg(GL_TEX+'starfield-2048.jpg')]);
+    glLog('贴图：地球'+(texOk[0]?'ok':'失败')+' 星空'+(texOk[1]?'ok':'失败')+' ｜ '+glEnv()+' ｜ '+innerWidth+'x'+innerHeight+' dpr'+devicePixelRatio);
+    for(const t of GL_TIERS){
+      let threw=null;
+      try{chart.setOption(glOption(t),true);}catch(e){threw=e;}
+      if(threw){glLog(t.name+'：setOption 抛错 → '+threw.message);continue;}
+      glLog('已启用：'+t.name);
+      addEventListener('resize',function(){try{chart.setOption({globe:{viewControl:{distance:glDistance()}}});chart.resize();}catch(e){}});
+      scr.__glChart=chart;
+      glHost.classList.add('on');
+      cancelAnimationFrame(raf);   // 写实地球已覆盖，停掉 canvas 版省电
+      return true;
+    }
+    try{chart.dispose();}catch(e){}
+    glLog('三档都抛错，保持粒子地球');
+    return false;
   }
+  // 不再用 hasWebGL() 预检：它会先占掉一个 WebGL 上下文，而且部分机型上会误报“不支持”。
+  // 直接尝试，抛错或画面为空就逐档降级，最差仍回到粒子地球。
+  loadScript('assets/gl/echarts.min.js')
+    .then(()=>loadScript('assets/gl/echarts-gl.min.js'))
+    .then(()=>{if(scr.isConnected&&!scr.classList.contains('hide'))return initRealisticGlobe();glLog('已进入映像馆，跳过');return false;})
+    .catch(e=>glLog('脚本加载失败：'+e.message));
 
   function enter(){
     sessionStorage.setItem('mapgallery-launched','1');
