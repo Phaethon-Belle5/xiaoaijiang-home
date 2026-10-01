@@ -554,7 +554,7 @@ export default {
 
     // ── GET /data ── 公开读取 ──
     if (p === '/data' && method === 'GET') {
-      const keys = ['profile','content','wallpaper','about','portfolio','gallery','modules','contact','navItems','accent','bgm','testimonials','memos','cloudMusicIds','petMessages','directUrls'];
+      const keys = ['profile','content','wallpaper','about','portfolio','gallery','modules','contact','navItems','accent','bgm','testimonials','memos','cloudMusicIds','petMessages','directUrls','changelog'];
       const result = {};
       for (const k of keys) {
         try {
@@ -579,7 +579,7 @@ export default {
       try {
         const body = await request.json();
         if (p === '/data') {
-          const keys = ['profile','content','wallpaper','about','portfolio','gallery','modules','contact','navItems','accent','bgm','testimonials','memos','cloudMusicIds','petMessages','directUrls'];
+          const keys = ['profile','content','wallpaper','about','portfolio','gallery','modules','contact','navItems','accent','bgm','testimonials','memos','cloudMusicIds','petMessages','directUrls','changelog'];
           let saved = 0;
           for (const k of keys) {
             if (body[k] !== undefined) { await env.STORE.put('site:' + k, JSON.stringify(body[k])); saved++; }

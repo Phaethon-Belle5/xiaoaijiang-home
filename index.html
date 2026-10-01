@@ -643,6 +643,34 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .hot-list{flex:none;height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;overscroll-behavior:contain}
 .hot-list::-webkit-scrollbar{width:4px}
 .hot-list::-webkit-scrollbar-thumb{background:rgba(212,168,67,.4);border-radius:2px}
+/* ---- 主页中列：更新日志卡（默认收起，点条目展开） ---- */
+.hp-slot{min-width:0;display:flex}
+.log-card{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-xl);padding:var(--space-6);box-shadow:var(--shadow-card)}
+.log-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:var(--space-4)}
+.log-eyebrow{font-family:var(--font-body);font-size:.68em;letter-spacing:2.5px;color:var(--gold-pale);text-transform:uppercase}
+.log-title{font-family:var(--font-display);font-size:1.02em;color:var(--wf-ink);margin-top:2px}
+.log-count{font-size:.68em;color:var(--text-muted);background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:999px;padding:2px 9px;white-space:nowrap;flex:none}
+.log-list{flex:1;min-height:0;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;overscroll-behavior:contain}
+.log-list::-webkit-scrollbar{width:4px}
+.log-list::-webkit-scrollbar-thumb{background:rgba(212,168,67,.4);border-radius:2px}
+.log-item{flex:none;border-radius:10px;transition:background .18s}
+.log-item:hover{background:rgba(255,255,255,.03)}
+.log-item.latest .log-date{color:var(--gold-bright)}
+.log-row{width:100%;display:flex;align-items:center;gap:8px;font:inherit;background:transparent;border:none;color:inherit;text-align:left;padding:7px 8px;cursor:pointer;border-radius:10px}
+.log-date{font-size:.72em;color:var(--text-muted);font-variant-numeric:tabular-nums;flex:none;width:36px}
+.log-tag{font-size:.64em;color:var(--gold-pale);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.28);border-radius:999px;padding:1px 7px;flex:none}
+.log-name{flex:1;min-width:0;font-size:.8em;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-chev{flex:none;color:var(--text-muted);transition:transform .22s var(--ease-out)}
+.log-item.open .log-chev{transform:rotate(90deg);color:var(--gold-bright)}
+.log-item.open .log-name{color:var(--text-primary)}
+.log-body{flex:none;max-height:0;overflow:hidden;transition:max-height .28s var(--ease-out)}
+.log-item.open .log-body{max-height:440px;overflow-y:auto}
+.log-body ul{margin:0;padding:2px 10px 10px 46px;display:flex;flex-direction:column;gap:5px}
+.log-body li{font-size:.76em;line-height:1.6;color:var(--text-secondary);position:relative}
+.log-body li::before{content:'';position:absolute;left:-12px;top:.62em;width:4px;height:4px;border-radius:50%;background:var(--gold-pale);opacity:.75}
+.log-foot{font-size:.66em;color:var(--text-muted);margin-top:8px;text-align:center}
+.log-hint{font-size:.76em;line-height:1.65;color:var(--text-muted)}
+@media(max-width:900px){.log-list{max-height:none}}
 .hot-item{display:flex;align-items:center;gap:var(--space-3);padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:.82em;line-height:1.45;transition:background .15s,color .15s}
 .hot-item:hover{background:rgba(255,255,255,.07);color:var(--text-primary)}
 .hot-rank{flex:none;width:22px;text-align:center;font-family:var(--font-mono);font-size:.85em;color:var(--text-muted)}
@@ -1147,6 +1175,7 @@ const ADMIN_SECTIONS=[
   {id:'profile',   label:'资料', group:'站点'},
   {id:'wallpaper', label:'壁纸', group:'站点'},
   {id:'content',   label:'内容分区', group:'内容'},
+  {id:'changelog', label:'更新日志', group:'内容'},
   {id:'memos',     label:'说说', group:'内容'},
   {id:'works',     label:'作品', group:'内容'},
   {id:'copy',      label:'文案', group:'内容'},
@@ -1159,6 +1188,7 @@ const ADMIN_DESC={
   profile:'头像、名字、标语、简介与主题色，显示在首页顶部。',
   wallpaper:'首页背景的图片轮播或背景视频。',
   content:'「内容分区」里的两块：关于我（关于段落的正文）与功能模块（个人成就、已爬的山这类自定义卡片）。',
+  changelog:'首页中列的「更新日志」卡片：每次大改动记一条，默认收起，访客点开看细节。',
   memos:'说说（便签）：可拖拽排序、批量删除、直接上传配图，可加标签。',
   works:'个人作品卡片：分组、说明与角标。',
   copy:'各分区的标题与按钮文案。',
@@ -1370,6 +1400,7 @@ const ADMIN={
     // 数组类：兜底再读一次，避免输入后未触发 change
     document.querySelectorAll('#admin-panel [data-m-idx]').forEach(el=>{const i=+el.dataset.mIdx;if(data.modules[i])data.modules[i][el.dataset.mField]=el.value;});
     document.querySelectorAll('#admin-panel [data-p-idx]').forEach(el=>{const i=+el.dataset.pIdx;if(data.portfolio[i])data.portfolio[i][el.dataset.pField]=(el.type==='checkbox')?el.checked:el.value;});
+    document.querySelectorAll('#admin-panel [data-l-idx]').forEach(el=>{const i=+el.dataset.lIdx;if(data.changelog&&data.changelog[i])data.changelog[i][el.dataset.lField]=el.value;});
     document.querySelectorAll('#admin-panel [data-v-dur]').forEach(el=>{const i=+el.dataset.vDur;if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   },
 
@@ -1704,6 +1735,50 @@ ADMIN_PREVIEW.works=function(){
     :'<div class="admin-empty">还没有作品</div>';
 };
 
+// ============ 更新日志（首页中列那张卡） ============
+ADMIN_RENDER.changelog=function(){
+  const list=data.changelog||[];
+  return '<div class="admin-group" data-adm-label="更新日志"><label>更新日志（'+list.length+' 条）</label>'+
+    '<p class="admin-help">显示在首页「音乐播放器」和「全网热点」中间那张卡上，<b>默认收起、点条目展开</b>。'+
+    '标题一句话，正文里<b>每行写一条</b>。新增的会加在最上面，首页按日期倒序显示。</p>'+
+    (list.map((it,i)=>
+      '<div class="admin-card">'+
+        '<div class="admin-card-head">'+
+          '<input type="text" value="'+escHtml(it.date||'')+'" data-l-idx="'+i+'" data-l-field="date" placeholder="日期 2026-10-01" style="width:132px">'+
+          '<input type="text" value="'+escHtml(it.tag||'')+'" data-l-idx="'+i+'" data-l-field="tag" placeholder="标签（功能/修复/优化…）" list="log-tag-list" style="width:118px">'+
+          '<button class="admin-sbtn icon danger" type="button" onclick="removeLogItem('+i+')" title="删除">'+AI.trash+'</button>'+
+        '</div>'+
+        '<input type="text" value="'+escHtml(it.title||'')+'" data-l-idx="'+i+'" data-l-field="title" placeholder="这次改了什么（一句话）" style="width:100%">'+
+        '<textarea data-l-idx="'+i+'" data-l-field="text" rows="4" placeholder="每行一条，例如：&#10;修好主页地图不点亮城市的问题&#10;地理数据压缩，加载从 10.7 秒降到 1.1 秒" style="width:100%;min-height:74px;resize:vertical;margin-top:6px">'+escHtml(it.text||'')+'</textarea>'+
+      '</div>').join('')||'<p class="admin-help">还没有记录，点下面的按钮添加第一条。</p>')+
+    '<datalist id="log-tag-list"><option value="功能"></option><option value="修复"></option><option value="优化"></option><option value="内容"></option><option value="设计"></option></datalist>'+
+    '<button class="admin-sbtn" type="button" onclick="addLogItem()">添加一条</button></div>';
+};
+ADMIN_PREVIEW.changelog=function(){
+  const list=(data.changelog||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  if(!list.length)return '<div class="admin-empty">还没有记录</div>';
+  return '<div style="display:flex;flex-direction:column;gap:8px">'+list.slice(0,5).map(it=>
+    '<div class="admin-card" style="margin:0">'+
+      '<div style="display:flex;align-items:center;gap:8px;font-size:.76em">'+
+        '<span style="color:var(--text-muted);font-variant-numeric:tabular-nums">'+escHtml(String(it.date||'').slice(5))+'</span>'+
+        (it.tag?'<span style="color:var(--gold-pale);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:0 6px;font-size:.9em">'+escHtml(it.tag)+'</span>':'')+
+        '<span style="color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.title||'')+'</span>'+
+      '</div>'+
+      '<div style="font-size:.72em;color:var(--text-muted);margin-top:4px">'+String(it.text||'').split('\n').filter(x=>x.trim()).length+' 条明细</div>'+
+    '</div>').join('')+
+    (list.length>5?'<div style="font-size:.72em;color:var(--text-muted)">…还有 '+(list.length-5)+' 条</div>':'')+'</div>';
+};
+function addLogItem(){
+  ADMIN.mutate('changelog','添加更新记录',()=>{
+    if(!Array.isArray(data.changelog))data.changelog=[];
+    data.changelog.unshift({date:new Date().toISOString().slice(0,10),tag:'功能',title:'',text:''});
+  });
+}
+function removeLogItem(i){
+  if(!confirm('删除这条更新记录？'))return;
+  ADMIN.mutate('changelog','删除更新记录',()=>{if(data.changelog)data.changelog.splice(i,1);});
+}
+
 // ============ 说说（重点优化） ============
 ADMIN_RENDER.memos=function(){
   const list=data.memos||[];
@@ -1974,6 +2049,7 @@ const DEFAULT_DATA={
   about:{text:"昵称：伶俜\n职业：学生\n所在地：武仙-北冕座长城，双鱼-鲸鱼座超星系团复合体，拉尼亚凯亚超星系团，室女座超星系团，本星系群，银河系次级团，银河系猎户臂，古尔德带，本地泡，本星际云，太阳系，内太阳系，地月系-地球\n                                            个人成就\n\n🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人"},
   testimonials:[],
   petMessages:['你好呀，我是蕾米埃尔~','欢迎来到伶俜的幻想之境','今天的风很温柔呢','去映像馆看看照片吧','点我一下，换套动作','月色真美，一起赏月吧','这个世界，像梦一样','要不要听首歌？设置音乐后我陪你听'],
+  changelog:[],
   memos:[{id:'memo_1',text:'今天在武仙-北冕座长城拍到了超新星。✨',date:'2026-08-01',pinned:true},{id:'memo_2',text:'写了一段新的幻想编年史，主角是只爱喝奶茶的龙。',date:'2026-08-02',pinned:false},{id:'memo_3',text:'想把星空装进相册里。🌌',date:'2026-07-28',pinned:false}],
   portfolio:[{image:"",title:"项目仓库",url:"https://github.com/Phaethon-Belle5/xiaoaijiang-home"},{image:"",title:"邪笑",url:"https://www.douyin.com/user/MS4wLjABAAAAa-5tKSb9mtI7TzjcMpM-kg_vhqZXZ8Y-McvZb7BO2Ph-vM0cRnN4mfeBitoAWE4g?from_tab_name=main&modal_id=7612571971741633798&vid=7612571971741633798"}],
   gallery:[{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250404_094608_103.jpg",caption:"IMG_20250404_094608_103",date:"2025-04-04"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250822_192558_096.jpg",caption:"IMG_20250822_192558_096",date:"2025-08-22"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_061313_457.jpg",caption:"IMG_20250824_061313_457",date:"2025-08-24"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_062354_469.jpg",caption:"IMG_20250824_062354_469",date:"2025-08-24"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_182440_530.jpg",caption:"IMG_20250824_182440_530",date:"2025-08-24"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20250824_184033_562.jpg",caption:"IMG_20250824_184033_562",date:"2025-08-24"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260211_143756_606.jpg",caption:"IMG_20260211_143756_606",date:"2026-02-11"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260211_191046_699.jpg",caption:"IMG_20260211_191046_699",date:"2026-02-11"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_153850_769.jpg",caption:"IMG_20260214_153850_769",date:"2026-02-14"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_170925_776.jpg",caption:"IMG_20260214_170925_776",date:"2026-02-14"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260214_183702_793.jpg",caption:"IMG_20260214_183702_793",date:"2026-02-14"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260403_185853_829.jpg",caption:"IMG_20260403_185853_829",date:"2026-04-03"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_135558_869.jpg",caption:"IMG_20260404_135558_869",date:"2026-04-04"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_163235_911.jpg",caption:"IMG_20260404_163235_911",date:"2026-04-04"},{image:"https://cdn.231060101.xyz/%E6%98%A0%E5%83%8F%E9%A6%86/IMG_20260404_220147_959.jpg",caption:"IMG_20260404_220147_959",date:"2026-04-04"}],
@@ -2056,6 +2132,7 @@ function mergeData(d,s){
   if(s.accent)d.accent=s.accent;
   if(s.testimonials?.length)d.testimonials=s.testimonials;
   if(Array.isArray(s.petMessages)&&s.petMessages.length)d.petMessages=s.petMessages;
+  if(Array.isArray(s.changelog))d.changelog=s.changelog;
   // memos 合并而非覆盖：保留本地新增的（id 云端没有的），避免云端旧数据吞掉刚添加的说说
   if(Array.isArray(s.memos)){
     const cloudIds=new Set(s.memos.map(m=>m&&m.id).filter(Boolean));
@@ -2093,7 +2170,7 @@ async function syncFromCloud(localResult){
       }
       if(vids.length)remote.wallpaper.videos=vids;
     }
-    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.gallery)!==JSON.stringify(data.gallery)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
+    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.gallery)!==JSON.stringify(data.gallery)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)||JSON.stringify(remote.changelog)!==JSON.stringify(data.changelog)){
       const preserveImages={};
       if(data.profile?.avatar?.startsWith('data:'))preserveImages.avatar=data.profile.avatar;
       if(data.content){
@@ -2125,7 +2202,7 @@ function saveData(showToast=true){
 
   // Sync changed keys only (smaller payload, faster sync)
   const hdrs=authHeaders();
-  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds','petMessages'];
+  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds','petMessages','changelog'];
   let synced=0,authFailed=false;
   const videos=(data.wallpaper?.videos||[]).filter(v=>v.src&&v.src.startsWith('data:'));
   Promise.all(keys.map(k=>{
@@ -2509,8 +2586,36 @@ function renderMain(){
           </div>
         </div>
 
-        <!-- 中：预留给后续内容卡片（当前为空占位，插入卡片时直接放进 #hp-slot） -->
-        <div class="hp-slot" id="hp-slot" aria-hidden="true"></div>
+        <!-- 中：更新日志（默认收起，点条目展开看这次改了什么） -->
+        <div class="hp-slot" id="hp-slot">
+          ${(data.changelog||[]).length?`
+          <div class="log-card">
+            <div class="log-head">
+              <div>
+                <p class="log-eyebrow">Changelog</p>
+                <h3 class="log-title">更新日志</h3>
+              </div>
+              <span class="log-count">${(data.changelog||[]).length} 次</span>
+            </div>
+            <div class="log-list">
+              ${(data.changelog||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map((it,i)=>`
+              <div class="log-item${i===0?' latest':''}">
+                <button class="log-row" type="button" onclick="toggleLog(this)" aria-expanded="false">
+                  <span class="log-date">${escHtml(String(it.date||'').slice(5)||'')}</span>
+                  ${it.tag?`<span class="log-tag">${escHtml(it.tag)}</span>`:''}
+                  <span class="log-name">${escHtml(it.title||'')}</span>
+                  <svg class="log-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+                <div class="log-body"><ul>${String(it.text||'').split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<li>${escHtml(s.replace(/^[-•·*]\s*/,''))}</li>`).join('')}</ul></div>
+              </div>`).join('')}
+            </div>
+            ${(data.changelog||[]).length>6?'<p class="log-foot">点击日期展开 · 共 '+data.changelog.length+' 次更新</p>':''}
+          </div>`:`
+          <div class="log-card log-empty">
+            <div class="log-head"><div><p class="log-eyebrow">Changelog</p><h3 class="log-title">更新日志</h3></div></div>
+            <p class="log-hint">还没有记录。在管理面板的「更新日志」里写下每次大改动，这里会按时间列出、点击展开。</p>
+          </div>`}
+        </div>
 
         <!-- 右：全网热点 -->
         <div class="hot-card" id="hot-card">
@@ -3579,6 +3684,16 @@ function linkMountains(text){
     }
   }
   return h;
+}
+
+// ============================================================
+// 主页「更新日志」：点条目展开/收起这次改了什么
+// ============================================================
+function toggleLog(btn){
+  const item=btn&&btn.closest?btn.closest('.log-item'):null;
+  if(!item)return;
+  const open=item.classList.toggle('open');
+  btn.setAttribute('aria-expanded',open?'true':'false');
 }
 
 // ============================================================
