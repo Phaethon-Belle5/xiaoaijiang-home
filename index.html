@@ -1120,7 +1120,7 @@ const ADMIN_REG=[
   ['e-name','profile.name'],['e-tagline','profile.tagline'],['e-bio','profile.bio'],
   ['e-avatar-url','__avatar'],['e-accent','accent'],
   ['e-wp-type','wallpaper.type'],['e-wp-int','wallpaper.interval'],
-  ['e-direct-urls','__lines:directUrls'],['e-music-ids','cloudMusicIds'],['e-bgm','bgm'],
+  ['e-music-ids','cloudMusicIds'],['e-bgm','bgm'],
   ['e-pet-msgs','__lines:petMessages'],['e-about','about.text'],
   ['e-email','contact.email'],['e-wechat','contact.wechat'],['e-other','contact.other'],
   ['e-s1-eyebrow','content.slide1Eyebrow'],['e-s1-cta','content.slide1Cta'],['e-s1-bg','content.slide1Bg'],
@@ -1500,13 +1500,12 @@ ADMIN_PREVIEW.wallpaper=function(){
 };
 
 ADMIN_RENDER.music=function(){
-  return admArea('自托管歌曲直链','e-direct-urls',(data.directUrls||[]).join('\n'),5)+
-    '<button class="admin-sbtn" type="button" onclick="document.getElementById(\'audio-upload\').click()">'+AI.music+'上传音乐文件到 R2</button>'+
-    '<p class="admin-help">上传后会自动把直链填到上面的输入框。每行一个 https:// 直链。</p>'+
+  return '<button class="admin-sbtn" type="button" onclick="document.getElementById(\'audio-upload\').click()">'+AI.music+'上传音乐文件到 R2</button>'+
+    '<p class="admin-help">上传即入库：播放列表由 Worker 实时读取 R2 的 <code>Music/</code> 目录生成，上传完刷新页面就能看到，<b>不需要再手工填直链</b>。同名 <code>.lrc</code> 会自动作为歌词。</p>'+
     admText('网易云歌曲 ID','e-music-ids',data.cloudMusicIds||'','例如 1901371647,1387090681')+
     admField('调整歌曲顺序','<div id="music-id-order"></div>','拖动或点箭头调整播放顺序，自动识别歌名。')+
     admText('背景音乐直链','e-bgm',data.bgm||'','音频直链（https://…）')+
-    '<p class="admin-help">播放优先级：自托管直链 → 网易云歌曲ID → 背景音乐直链。网易云接口可能被风控，建议用自托管。</p>';
+    '<p class="admin-help">播放优先级：R2 曲目目录（自动生成，主路径）→ 网易云歌曲ID → 背景音乐直链。目录接口失败会自动重试 3 次。</p>';
 };
 ADMIN_AFTER.music=function(){ if(window.renderMusicIdOrder)renderMusicIdOrder(); if(window.fetchMusicOrderNames)fetchMusicOrderNames(); };
 
@@ -1904,7 +1903,6 @@ const DEFAULT_DATA={
   modules:[{id:"mod_1781362237420",title:"个人成就",icon:"🏆",text:"🏆2006年美国《时代周刊》年度风云人物\n🏆2008年感动中国组委会特别大奖\n🏆2012年世界末日幸存者\n🏆2019年年度地球卫士奖\n🏆2019年COVID幸存者\n🏆2022年奥林匹克杯获得者\n🏆中国移动高级合伙人\n🏆共产主义接班人\n🏆蜜雪冰城大雪人\n🏆家里蹲大学优秀毕业生\n🏆国家绝密资料使用者\n🏆百亿项目合作者"},{id:"mod_1781448443500",title:"爱好",icon:"",text:"华山、恒山、衡山、泰山\n南宫山、岳麓山、武功山\n希望未来能看遍名川大山。"}],
   contact:{email:"2918762608@qq.com",wechat:"ZYH2918762608",other:""},
   bgm:"",
-  directUrls:[],
   cloudMusicIds:"1487502186,06347677,1461262038,2100334024,1492276419,1818031620,2755332551,3343287820,2666660479,2657833355,494642794,1356953795,1850955460,451319227,462686464,570340213,3357230091,1968316652,3379996850,3400251399,2734852695,2613943564,3383643163,2652410542,2652410536,2064366373,2639322684,3411999848,2155423467,2155423468,2756019200,2014336709,2729422409,1973296374,2071188549,1951702375,3400682250",
   navItems:[{id:"home",label:"首页"},{id:"content",label:"内容"},{id:"memos",label:"说说"},{id:"gallery",label:"映像馆"},{id:"contact",label:"联系"}],
   content:{
@@ -1991,7 +1989,6 @@ function mergeData(d,s){
   if(s.gallery?.length)d.gallery=s.gallery;
   if(s.modules?.length)d.modules=s.modules;
   if(s.bgm!==undefined)d.bgm=s.bgm;
-  if(Array.isArray(s.directUrls))d.directUrls=s.directUrls;
   if(s.cloudMusicIds!==undefined)d.cloudMusicIds=s.cloudMusicIds;
   if(s.content)d.content={...d.content,...s.content};
   d.navItems=VIEW_ITEMS.slice(); // 导航固定为常量，忽略云端旧值
@@ -2019,7 +2016,7 @@ async function syncFromCloud(localResult){
       }
       if(vids.length)remote.wallpaper.videos=vids;
     }
-    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.gallery)!==JSON.stringify(data.gallery)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.directUrls)!==JSON.stringify(data.directUrls)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
+    if(JSON.stringify(remote.profile)!==JSON.stringify(data.profile)||JSON.stringify(remote.content)!==JSON.stringify(data.content)||JSON.stringify(remote.gallery)!==JSON.stringify(data.gallery)||JSON.stringify(remote.memos)!==JSON.stringify(data.memos)||JSON.stringify(remote.cloudMusicIds)!==JSON.stringify(data.cloudMusicIds)||JSON.stringify(remote.bgm)!==JSON.stringify(data.bgm)||JSON.stringify(remote.petMessages)!==JSON.stringify(data.petMessages)){
       const preserveImages={};
       if(data.profile?.avatar?.startsWith('data:'))preserveImages.avatar=data.profile.avatar;
       if(data.content){
@@ -2051,7 +2048,7 @@ function saveData(showToast=true){
 
   // Sync changed keys only (smaller payload, faster sync)
   const hdrs=authHeaders();
-  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds','petMessages','directUrls'];
+  const keys=['profile','content','wallpaper','about','portfolio','gallery','modules','contact','accent','memos','bgm','cloudMusicIds','petMessages'];
   let synced=0,authFailed=false;
   const videos=(data.wallpaper?.videos||[]).filter(v=>v.src&&v.src.startsWith('data:'));
   Promise.all(keys.map(k=>{
@@ -2905,21 +2902,6 @@ function loadMetingPlaylist(pid){
       else toast('歌单加载失败，可在后台设置音频直链','info');
     });
 }
-// 播放器兜底：独立拉取云端直链列表（不依赖主同步链路）
-async function ensureDirectUrls(){
-  try{
-    const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),8000);
-    const r=await fetch(API_URL+'/data',{signal:ctrl.signal});clearTimeout(t);
-    if(!r.ok)return false;
-    const j=await r.json();
-    if(Array.isArray(j.directUrls)&&j.directUrls.length&&JSON.stringify(j.directUrls)!==JSON.stringify(data.directUrls)){
-      data.directUrls=j.directUrls;
-      try{dbSet(LS_KEY,data);}catch(e){}
-      return true;
-    }
-  }catch(e){}
-  return false;
-}
 // R2 直链 → Worker 代理（浏览器走 CF 边缘，比 r2.dev 直连更稳）
 function toMusicProxy(u){
   const prefix='https://cdn.231060101.xyz/';
@@ -2928,19 +2910,25 @@ function toMusicProxy(u){
   }
   return u;
 }
-async function loadMusicCatalog(){
-  try{
-    const r=await fetch(API_URL+'/music-catalog',{signal:AbortSignal.timeout(8000)});
-    if(!r.ok)return null;
-    const list=await r.json();
-    return Array.isArray(list)&&list.length?list:null;
-  }catch(e){return null;}
+// 曲目目录：Worker 实时列 R2 生成（worker.js 的 /music-catalog），永远不会过时。
+// 这是播放器唯一的数据源；失败就重试几次，不再依赖人工维护的直链列表。
+async function loadMusicCatalog(attempts=3){
+  for(let i=0;i<attempts;i++){
+    try{
+      const r=await fetch(API_URL+'/music-catalog',{signal:AbortSignal.timeout(8000)});
+      if(r.ok){
+        const list=await r.json();
+        if(Array.isArray(list)&&list.length)return list;
+        return null;   // 接口通了但 R2 里确实没歌，重试也没用
+      }
+    }catch(e){}
+    if(i<attempts-1)await new Promise(s=>setTimeout(s,400*(i+1)));   // 400ms → 800ms 退避
+  }
+  return null;
 }
 function syncMusicSource(catalog){
   const fab=document.getElementById('music-fab');
   if(!fab)return;
-  // 优先自托管直链列表（R2，永久稳定）
-  const direct=(data.directUrls||[]).map(s=>String(s).trim()).filter(Boolean);
   if(catalog&&catalog.length){
     fab.style.display='flex';
     _musicMode='direct';
@@ -2963,35 +2951,6 @@ function syncMusicSource(catalog){
     if(_playlist.length)playSong(_playlist[_plIdx]);
     return;
   }
-  if(!direct.length){
-    // 无直链时兜底拉取云端（主同步可能超时），成功后重建
-    ensureDirectUrls().then(ok=>{if(ok)syncMusicSource();});
-  }
-  if(direct.length){
-    fab.style.display='flex';
-    _musicMode='direct';
-    const a=getAudio();
-    if(a.dataset.mode==='direct'&&_playlist.length===direct.length)return; // 已加载同一列表，不重复打断
-    const R2P='https://cdn.231060101.xyz/';
-    _playlist=direct.map(u=>{
-      // 文件名（解码 + 去扩展名）作为歌名；同名 .lrc/.jpg 作为歌词/封面（不存在则静默）
-      const raw=u.split('/').pop()||'';
-      let fname=raw;
-      try{fname=decodeURIComponent(raw);}catch(e){}
-      const base=fname.replace(/\.[^.]+$/,'');
-      const enc=encodeURIComponent(base);
-      return {
-        name: base,
-        src: toMusicProxy(u),
-        cover: R2P+'Music/'+enc+'.jpg',
-        lrc: R2P+'Music/'+enc+'.lrc',
-      };
-    });
-    _plIdx=0;
-    a.dataset.mode='direct';
-    playSong(_playlist[0]);
-    return;
-  }
   const ids=String(data.cloudMusicIds||'').trim();
   if(ids){fab.style.display='flex';_musicMode='net';loadMetingSongs(ids);return;}
   const bgm=String(data.bgm||'').trim();
@@ -3000,6 +2959,9 @@ function syncMusicSource(catalog){
   const a=getAudio();
   if(/^netease:/.test(bgm)){loadMetingPlaylist(bgm.replace(/^netease:/,''));return;}
   if(/^\d+$/.test(bgm)){loadMetingPlaylist(bgm);return;}
+  // 网易云歌曲页链接（music.163.com/song?id=xxx）取出 id 交给 /meting —— 否则会把它当音频直链，必然放不出来
+  const neId=(bgm.match(/music\.163\.com\/(?:#\/)?song\?[^#\s]*\bid=(\d+)/)||[])[1];
+  if(neId){_musicMode='net';loadMetingSongs(neId);return;}
   // 直链：仅当当前 src 不同才更新
   if(a.src!==bgm&&(!_playlist.length||a.dataset.name!=='背景音乐')){_playlist=[{name:'背景音乐',src:bgm,cover:'',lrc:''}];_shuffleStart();playSong(_playlist[_plIdx]);}
 }
@@ -3055,15 +3017,6 @@ function renderPlaylist(){
   const floatingPlaylist=document.getElementById('music-playlist');
   if(floatingPlaylist)floatingPlaylist.setAttribute('aria-label','播放列表，共 '+_playlist.length+' 首');
 }
-async function loadDirectUrlsFromCloud(){
-  try{
-    const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),8000);
-    const r=await fetch(API_URL+'/data',{signal:ctrl.signal});clearTimeout(t);
-    if(!r.ok)return null;
-    const j=await r.json();
-    return (Array.isArray(j.directUrls)&&j.directUrls.length)?j.directUrls:null;
-  }catch(e){return null;}
-}
 function initMusicPlayer(){
   if(_musicInitDone){syncMusicSource();return;}
   _musicInitDone=true;
@@ -3105,19 +3058,9 @@ function initMusicPlayer(){
   prog.addEventListener('click',e=>{if(!a.duration)return;const r=prog.getBoundingClientRect();a.currentTime=(e.clientX-r.left)/r.width*a.duration;});
   volInp.addEventListener('input',()=>{a.volume=parseFloat(volInp.value);localStorage.setItem('xiaoaijiang-vol',volInp.value);});
   renderPlaylist();
-  // 无条件拉取云端直链（最可靠路径，不依赖主同步链路），然后确定音乐源
-  loadMusicCatalog().then(catalog=>{
-    if(catalog){syncMusicSource(catalog);return;}
-    loadDirectUrlsFromCloud().then(cloud=>{
-      if(cloud){
-        if(JSON.stringify(cloud)!==JSON.stringify(data.directUrls)){
-          data.directUrls=cloud;
-          try{dbSet(LS_KEY,data);}catch(e){}
-        }
-      }
-      syncMusicSource();
-    }).catch(()=>syncMusicSource());
-  }).catch(()=>syncMusicSource());
+  // 曲目目录是唯一数据源（Worker 实时列 R2，永不过时）。loadMusicCatalog 自带重试；
+  // 真的拿不到就交给 syncMusicSource() 里的网易云 / 背景音乐兜底，不再读人工维护的直链列表。
+  loadMusicCatalog().then(catalog=>syncMusicSource(catalog)).catch(()=>syncMusicSource());
 }
 
 // LIGHTBOX
@@ -3186,7 +3129,6 @@ function saveAdmin(){
   data.wallpaper.type=document.getElementById('e-wp-type').value;
   data.wallpaper.interval=parseInt(document.getElementById('e-wp-int').value)||8;
   data.bgm=(document.getElementById('e-bgm')?.value||'').trim();
-  data.directUrls=(document.getElementById('e-direct-urls')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
   data.cloudMusicIds=(document.getElementById('e-music-ids')?.value||'').trim();
   document.querySelectorAll('[data-v-dur]').forEach(el=>{const i=parseInt(el.dataset.vDur);if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   data.about.text=document.getElementById('e-about').value.trim();
@@ -3354,10 +3296,10 @@ function bindAudioUpload(){
       .then(r=>{if(r.status===401){handleAuthFail();throw new Error('auth');}return r.json();})
       .then(j=>{
         if(j&&j.url){
-          const ta=document.getElementById('e-direct-urls');
-          if(ta){ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+j.url;}
+          // 上传到 R2 即入库：播放列表由 /music-catalog 实时读取 R2 生成，无需再维护直链
           ADMIN.markDirty('music');
-          toast('上传成功，直链已填入（记得点「保存并同步」）','success');
+          if(window._musicInitDone)loadMusicCatalog().then(c=>{if(c)syncMusicSource(c);});
+          toast('上传成功，已加入 R2 曲库','success');
         }else{toast('上传失败：'+(j&&j.error||'未知错误'),'error');}
       }).catch(err=>{if(err.message!=='auth')toast('上传失败，请重试','error');});
     e.target.value='';
