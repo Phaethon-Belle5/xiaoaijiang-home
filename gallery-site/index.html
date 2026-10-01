@@ -6,6 +6,23 @@
 <title>伶俜 · 映像馆</title>
 <meta name="description" content="伶俜的映像馆 — 在中国地图上点亮走过的城市，看每一帧光影">
 <meta name="theme-color" content="#0B0E14">
+<!-- 分享预览卡。映像馆整页是 canvas 画的，HTML 里一个 <img> 都没有 ——
+     平台"找不到 og:image 就自己从页面挑一张图"的兜底在这里完全失效，所以必须显式给图。
+     封面＝站点头像做成圆形（金色描边＋光晕，与主页 .slide-avatar 同款），1200x630 JPEG。 -->
+<meta property="og:title" content="伶俜 · 映像馆">
+<meta property="og:description" content="在中国地图上点亮走过的城市，看每一帧光影">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://map.231060101.xyz">
+<meta property="og:site_name" content="伶俜 · 映像馆">
+<meta property="og:image" content="https://map.231060101.xyz/assets/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:alt" content="伶俜的头像">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://map.231060101.xyz/assets/og-cover.jpg">
+<meta name="twitter:image:alt" content="伶俜的头像">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta name="color-scheme" content="dark light">
 <link rel="preconnect" href="https://home.xiaoaijiang.cloud">
 <!-- 写实 3D 地球的资源提前并行拉取。只在开屏确实会显示时才预载，同一会话看过就不再下。 -->
