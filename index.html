@@ -437,8 +437,8 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .bento-dark .card-label{display:block;text-align:center;font-family:var(--font-display);font-size:1.08em;font-weight:600;letter-spacing:.04em;color:var(--wf-ink);background:linear-gradient(110deg,var(--grad-a) 30%,var(--grad-b) 48%,var(--grad-b) 52%,var(--grad-a) 70%);background-size:200% 100%;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
 .bento-dark .card-heading{color:var(--wf-ink);font-family:var(--font-display)}
 .bento-dark .card-text{color:var(--wf-body);white-space:pre-wrap}
-/* 模块里可点的山名：点了跳到映像馆对应城市的照片 */
-.mountain-link{color:var(--gold-bright);border-bottom:1px dashed rgba(212,168,67,.55);cursor:pointer;transition:color .2s,border-color .2s}
+/* 模块里可点的山名（真链接）：点了在新标签打开映像馆对应城市的详情 */
+.mountain-link{color:var(--gold-bright);text-decoration:none;border-bottom:1px dashed rgba(212,168,67,.55);cursor:pointer;transition:color .2s,border-color .2s}
 .mountain-link:hover{color:var(--gold);border-bottom-color:var(--gold);border-bottom-style:solid}
 .mountain-link:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px}
 /* 个人精选：分组标题 / 描述 / 角标 */
@@ -3567,24 +3567,18 @@ function renderMemoArchive(){
 // 山 → 地级市 的对应关系写死在这里（照片按城市归属，不单列景点）
 // ============================================================
 const MOUNTAIN_CITY={'华山':'渭南市','恒山':'大同市','衡山':'衡阳市','泰山':'泰安市','南宫山':'安康市','岳麓山':'长沙市','武功山':'萍乡市'};
+// 渲染成真正的 <a>：不会被弹窗拦截、支持中键/新标签、和顶部导航去的是同一个子站
 function linkMountains(text){
   let h=escHtml(text||'');
   for(const name of Object.keys(MOUNTAIN_CITY)){
     const i=h.indexOf(name);
     // 只替换第一次出现，避免同一座山冒出好几个链接
-    if(i>=0)h=h.slice(0,i)+'<span class="mountain-link" role="link" tabindex="0" onclick="jumpToMountain(\''+name+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();jumpToMountain(\''+name+'\')}" title="看这座山拍下的照片">'+name+'</span>'+h.slice(i+name.length);
+    if(i>=0){
+      const city=MOUNTAIN_CITY[name];
+      h=h.slice(0,i)+'<a class="mountain-link" href="'+GALLERY_URL+'/?city='+encodeURIComponent(city)+'" target="_blank" rel="noopener" title="看'+city+'拍下的照片">'+name+'</a>'+h.slice(i+name.length);
+    }
   }
   return h;
-}
-function jumpToMountain(name){
-  const city=MOUNTAIN_CITY[name];
-  if(!city){if(window.toast)toast('还没有「'+name+'」的对应城市','info');return;}
-  const list=(typeof mapCityPoints!=='undefined'&&mapCityPoints)||[];
-  const short=city.replace(/(市|自治州|地区)$/,'');
-  const target=list.find(c=>c.cityName===city)||list.find(c=>String(c.cityName).indexOf(short)===0);
-  if(!target){if(window.toast)toast('「'+city+'」还没有照片，去映像馆传几张吧','info');return;}
-  navigateTo('gallery');
-  setTimeout(()=>{if(typeof showCityPhotos==='function')showCityPhotos(target);},420);
 }
 
 // ============================================================

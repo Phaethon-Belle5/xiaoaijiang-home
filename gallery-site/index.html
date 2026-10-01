@@ -655,6 +655,23 @@ async function drawMap(){
   mapChart.off('georoam');mapChart.on('georoam',()=>{const o=mapChart.getOption();mapZoom=(o.geo&&o.geo[0]&&o.geo[0].zoom)||1.2;if(provCardsOn)renderProvCards(false);});
   bindMapClick();
   if(provCardsOn)renderProvCards(false);
+  openCityFromQuery();
+}
+// 深链：?city=渭南市 打开时直接进这座城市的详情
+// （主页「已爬的山」里的山名链接就是走这里，见主站 linkMountains()）
+let __cityDeepLinked=false;
+function openCityFromQuery(){
+  if(__cityDeepLinked)return;
+  let name='';
+  try{name=String(new URLSearchParams(location.search).get('city')||'').trim();}catch(e){}
+  if(!name)return;
+  __cityDeepLinked=true;
+  const short=name.replace(/(市|自治州|地区|盟|自治县)$/,'');
+  const c=mapCityPoints.find(x=>x.cityName===name)||mapCityPoints.find(x=>String(x.cityName).indexOf(short)===0);
+  if(!c){toast('映像馆里还没有「'+name+'」的照片');return;}
+  mapZoom=Math.max(mapZoom||1.2,3);
+  try{mapChart.setOption({geo:{center:c.coords,zoom:3}});}catch(e){}
+  setTimeout(()=>openCityDetail(c),340);
 }
 function syncViewTabs(){document.querySelectorAll('.view-tab[data-view]').forEach(t=>t.classList.toggle('on',t.dataset.view===mapView));}
 function setMapView(v){
