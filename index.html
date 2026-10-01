@@ -157,6 +157,30 @@
   flex:none;padding:0 var(--space-5) 13px 32px}
 .memo-date{display:none}
 .memo-card{cursor:pointer}
+/* 说说：筛选栏 / 标签 / 归档视图 */
+.memo-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:var(--container-max);margin:0 auto var(--space-5)}
+.memo-tabs{display:flex;gap:4px;background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:999px;padding:3px;flex:none}
+.memo-tab{font:inherit;font-size:.78em;color:var(--text-secondary);background:transparent;border:none;border-radius:999px;padding:5px 16px;cursor:pointer;transition:background .2s,color .2s}
+.memo-tab.active{background:var(--gold-glow);color:var(--gold-bright)}
+.memo-tagbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:24px}
+.memo-tag{font-size:.74em;color:var(--text-secondary);background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:999px;padding:3px 11px;cursor:pointer;transition:all .2s;user-select:none}
+.memo-tag:hover{border-color:var(--gold);color:var(--gold-bright)}
+.memo-tag.on{background:var(--gold-glow);border-color:var(--gold);color:var(--gold-bright)}
+.memo-tag i{font-style:normal;opacity:.6;margin-left:5px;font-size:.9em}
+.memo-tag-hint{font-size:.74em;color:var(--text-muted)}
+.memo-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 var(--space-5) 8px 32px}
+.memo-tag-chip{font-size:.68em;color:var(--gold-pale);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:1px 9px;cursor:pointer}
+.memo-tag-chip:hover{color:var(--gold-bright);border-color:var(--gold)}
+.memo-archive{max-width:var(--container-max);margin:0 auto;display:flex;flex-direction:column;gap:var(--space-6)}
+.memo-arch-month{display:flex;flex-direction:column;gap:2px}
+.memo-arch-label{font-family:var(--font-display);font-size:.92em;color:var(--wf-ink);padding-bottom:7px;margin-bottom:5px;border-bottom:1px solid var(--surface-border);display:flex;align-items:baseline;gap:10px}
+.memo-arch-label span{font-size:.72em;color:var(--text-muted);font-weight:400}
+.memo-arch-row{display:flex;align-items:baseline;gap:12px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .18s}
+.memo-arch-row:hover{background:var(--astral-elevated)}
+.memo-arch-date{font-size:.74em;color:var(--text-muted);flex:none;font-variant-numeric:tabular-nums;width:42px}
+.memo-arch-text{font-size:.84em;color:var(--text-secondary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.memo-arch-tags{font-size:.68em;color:var(--gold-pale);flex:none}
+@media(max-width:560px){.memo-arch-text{white-space:normal}.memo-arch-tags{display:none}}
 /* 配图按方向分两种排版（方向由 JS 加载后按 naturalWidth/Height 判定，先按横版渲染）：
    横版：拉满便签内容宽度、作为通栏照片置顶，正文在其下方
    竖版：整体靠左，正文紧接在右侧（float 让文字自动绕排） */
@@ -413,6 +437,20 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .bento-dark .card-label{display:block;text-align:center;font-family:var(--font-display);font-size:1.08em;font-weight:600;letter-spacing:.04em;color:var(--wf-ink);background:linear-gradient(110deg,var(--grad-a) 30%,var(--grad-b) 48%,var(--grad-b) 52%,var(--grad-a) 70%);background-size:200% 100%;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
 .bento-dark .card-heading{color:var(--wf-ink);font-family:var(--font-display)}
 .bento-dark .card-text{color:var(--wf-body);white-space:pre-wrap}
+/* 模块里可点的山名：点了跳到映像馆对应城市的照片 */
+.mountain-link{color:var(--gold-bright);border-bottom:1px dashed rgba(212,168,67,.55);cursor:pointer;transition:color .2s,border-color .2s}
+.mountain-link:hover{color:var(--gold);border-bottom-color:var(--gold);border-bottom-style:solid}
+.mountain-link:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px}
+/* 个人精选：分组标题 / 描述 / 角标 */
+.pf-group{margin-top:var(--space-8)}
+.pf-group-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 var(--space-4);padding-bottom:8px;border-bottom:1px solid var(--surface-border)}
+.pf-group-name{font-family:var(--font-display);font-size:1.05em;font-weight:600;color:var(--wf-ink)}
+.pf-group-count{font-size:.74em;color:var(--text-muted);background:var(--astral-elevated);border:1px solid var(--surface-border);border-radius:999px;padding:1px 8px}
+.pf-group-hint{font-size:.74em;color:var(--text-muted)}
+.portfolio-desc{font-size:.76em;line-height:1.55;color:var(--text-secondary);margin-top:2px}
+.pf-badge{position:absolute;top:8px;right:8px;z-index:2;font-size:.66em;padding:2px 7px;border-radius:999px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.pf-badge.warn{background:rgba(220,120,60,.22);border:1px solid rgba(220,120,60,.55);color:#f0b070}
+.pf-badge.promo{background:rgba(148,163,184,.18);border:1px solid rgba(148,163,184,.4);color:#c3ccd8}
 
 /* Portfolio grid — unified Webflow card style */
 /* ---- 个人精选：整体改为与说说/热点/音乐同一套毛玻璃语言 ---- */
@@ -1329,7 +1367,7 @@ const ADMIN={
     ADMIN_REG.forEach(([id,path])=>this.readOne(id,path));
     // 数组类：兜底再读一次，避免输入后未触发 change
     document.querySelectorAll('#admin-panel [data-m-idx]').forEach(el=>{const i=+el.dataset.mIdx;if(data.modules[i])data.modules[i][el.dataset.mField]=el.value;});
-    document.querySelectorAll('#admin-panel [data-p-idx]').forEach(el=>{const i=+el.dataset.pIdx;if(data.portfolio[i])data.portfolio[i][el.dataset.pField]=el.value;});
+    document.querySelectorAll('#admin-panel [data-p-idx]').forEach(el=>{const i=+el.dataset.pIdx;if(data.portfolio[i])data.portfolio[i][el.dataset.pField]=(el.type==='checkbox')?el.checked:el.value;});
     document.querySelectorAll('#admin-panel [data-v-dur]').forEach(el=>{const i=+el.dataset.vDur;if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   },
 
@@ -1614,6 +1652,7 @@ ADMIN_RENDER.comments=function(){
 ADMIN_RENDER.works=function(){
   const list=data.portfolio||[];
   return '<div class="admin-group" data-adm-label="个人作品列表"><label>作品（'+list.length+' 个）</label>'+
+    '<p class="admin-help">「分组」决定卡片归到哪一栏（我的项目 / 推荐工具 / 朋友的作品 / 整活 / 其他）；「说明」显示在卡片标题下面。勾「谨慎」会在卡片打 ⚠ 角标，勾「推广」打「推广」角标。</p>'+
     (list.map((it,i)=>
       '<div class="admin-card"><div class="admin-card-head">'+
         '<input type="text" value="'+escHtml(it.title)+'" data-p-idx="'+i+'" data-p-field="title" placeholder="作品名" style="flex:1">'+
@@ -1623,11 +1662,18 @@ ADMIN_RENDER.works=function(){
         (it.image?'<img src="'+escHtml(it.image)+'" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--surface-border);flex:none" onerror="this.style.opacity=.3">'
                 :'<div style="width:64px;height:46px;border-radius:6px;border:1px dashed var(--surface-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.62em;flex:none">无图</div>')+
         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">'+
+          '<input type="text" value="'+escHtml(it.group||'')+'" data-p-idx="'+i+'" data-p-field="group" placeholder="分组" list="pf-group-list">'+
           '<input type="text" value="'+escHtml(it.url||'')+'" data-p-idx="'+i+'" data-p-field="url" placeholder="链接地址（可选）">'+
+          '<textarea data-p-idx="'+i+'" data-p-field="desc" rows="2" placeholder="一句话说明这是什么（会显示在卡片上）" style="resize:vertical;min-height:46px">'+escHtml(it.desc||'')+'</textarea>'+
+          '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:.76em;color:var(--text-secondary)">'+
+            '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-p-idx="'+i+'" data-p-field="warn"'+(it.warn?' checked':'')+'> ⚠ 谨慎角标</label>'+
+            '<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" data-p-idx="'+i+'" data-p-field="promo"'+(it.promo?' checked':'')+'> 推广角标</label>'+
+          '</div>'+
           '<input type="text" value="'+escHtml(it.linkName||'')+'" data-p-idx="'+i+'" data-p-field="linkName" placeholder="链接显示名称（当前不在卡片上显示）">'+
           '<button class="admin-sbtn" type="button" onclick="uploadPortfolioImg('+i+')">'+AI.img+'上传图片</button>'+
         '</div>'+
       '</div></div>').join('')||'<p class="admin-help">还没有作品</p>')+
+    '<datalist id="pf-group-list"><option value="我的项目"></option><option value="推荐工具"></option><option value="朋友的作品"></option><option value="整活"></option><option value="其他"></option></datalist>'+
     '<button class="admin-sbtn" type="button" onclick="addPortfolio()">添加作品</button></div>';
 };
 ADMIN_PREVIEW.works=function(){
@@ -1669,6 +1715,7 @@ ADMIN.memoItem=function(m,i,total){
       '<input type="text" value="'+escHtml(m.image||'')+'" data-memo-idx="'+i+'" data-memo-field="image" placeholder="配图地址（也可点左侧缩略图直接上传）" aria-label="配图地址">'+
       '<div class="memo-meta">'+
         '<input type="text" value="'+escHtml(m.date||'')+'" data-memo-idx="'+i+'" data-memo-field="date" aria-label="日期" placeholder="日期">'+
+        '<input type="text" value="'+escHtml(Array.isArray(m.tags)?m.tags.join(', '):(m.tags||''))+'" data-memo-idx="'+i+'" data-memo-field="tags" aria-label="标签" placeholder="标签（逗号分隔，如：折腾, 随手记）" style="flex:1">'+
         '<label><input type="checkbox" data-batch-memo="'+i+'" onchange="ADMIN.memoSelChange()" aria-label="选择">选择</label>'+
         '<span class="memo-counter" id="memo-count-'+i+'">'+len+' 字</span>'+
       '</div>'+
@@ -2490,7 +2537,7 @@ function renderMain(){
         ${data.modules.length?data.modules.map((m,i)=>`
           <div class="bento-tile small bento-dark star-corners-4 reveal reveal-d${Math.min(i+2,5)}">
             <span class="card-label">${escHtml(m.icon||'')} ${escHtml(m.title)}</span>
-            <div class="card-text">${escHtml(m.text)}</div>
+            <div class="card-text">${linkMountains(m.text)}</div>
           </div>
         `).join(''):`
           <div class="bento-tile small bento-dark star-corners-4 reveal reveal-d2">
@@ -2509,8 +2556,15 @@ function renderMain(){
         <h2 class="header-headline" style="font-size:clamp(2rem,4vw,3rem);font-weight:600">${escHtml(c.portfolioHeadline||'个人精选')}</h2>
       </div>
       <div class="section-divider"></div>
-	      <div class="portfolio-grid">
-        ${(data.portfolio||[]).map((item,i)=>{
+      ${groupPortfolio(data.portfolio||[]).map(([gname,items])=>`
+      <div class="pf-group">
+        <div class="pf-group-head">
+          <span class="pf-group-name">${escHtml(gname)}</span>
+          <span class="pf-group-count">${items.length}</span>
+          ${PF_GROUP_HINT[gname]?`<span class="pf-group-hint">${escHtml(PF_GROUP_HINT[gname])}</span>`:''}
+        </div>
+        <div class="portfolio-grid">
+        ${items.map(({it:item,i})=>{
           const imgSrc=item.image||portfolioFallback(i);
           const hasUrl=item.url&&item.url.trim();
           return`
@@ -2518,12 +2572,17 @@ function renderMain(){
             <div class="portfolio-thumb">
               <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src=portfolioFallback(${i})">
               ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
+              ${item.warn?'<span class="pf-badge warn" title="点了会有意外结果">⚠ 谨慎</span>':''}
+              ${item.promo?'<span class="pf-badge promo" title="含推广参数">推广</span>':''}
             </div>
             <div class="portfolio-info">
               <div class="portfolio-title">${escHtml(item.title)}</div>
+              ${item.desc?`<div class="portfolio-desc">${escHtml(item.desc)}</div>`:''}
             </div>
           </div>`;
         }).join('')}
+        </div>
+      </div>`).join('')}
       </div>`:''}
     </section>
     </div><!-- /view-content -->
@@ -2539,20 +2598,29 @@ function renderMain(){
         <p class="header-desc">随手记下的碎片与心情。</p>
       </div>
       <div class="section-divider"></div>
+      <div class="memo-toolbar reveal">
+        <div class="memo-tabs" role="tablist">
+          <button class="memo-tab active" type="button" data-memo-mode="card" onclick="setMemoMode('card')" role="tab">卡片</button>
+          <button class="memo-tab" type="button" data-memo-mode="archive" onclick="setMemoMode('archive')" role="tab">归档</button>
+        </div>
+        <div class="memo-tagbar" id="memo-tagbar"></div>
+      </div>
       <div class="memo-wall" id="memo-wall">
         ${(data.memos||[]).length?(data.memos||[]).slice().sort((a,b)=>(b.pinned-a.pinned)||(b.date||'').localeCompare(a.date||'')).map((m,i)=>`
-          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}${m.image?' has-img':''}" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
+          <div class="memo-card reveal reveal-d${Math.min(i+1,5)}${m.pinned?' pinned':''}${m.image?' has-img':''}" data-tags="${escHtml(memoTags(m).join('|'))}" onclick="openMemoDetail('${escHtml(m.id)}')" role="button" tabindex="0">
             <div class="memo-head">${escHtml(m.date||'')}</div>
             <div class="memo-lined${m.image?' has-img img-land':''}">
               ${m.image?`<img class="memo-card-img" src="${escHtml(m.image)}" alt="" loading="lazy" onload="memoImgOrient(this)" onerror="this.style.display='none'">`:''}
               <p class="memo-text">${escHtml(m.text||'')}</p>
             </div>
+            ${memoTags(m).length?`<div class="memo-tags">${memoTags(m).map(t=>`<span class="memo-tag-chip" onclick="event.stopPropagation();setMemoFilter('${escHtml(t).replace(/'/g,"\\'")}')">${escHtml(t)}</span>`).join('')}</div>`:''}
             <div class="memo-foot">
               <span class="memo-cmt-count">${ICON_COMMENT_SVG}评论</span>
             </div>
           </div>`).join(''):`
           <p class="empty-text" style="text-align:center;color:var(--text-muted)">还没有说说，去管理面板添加吧。</p>`}
       </div>
+      <div class="memo-archive" id="memo-archive" hidden></div>
     </section>
     </div><!-- /view-memos -->
 
@@ -3078,11 +3146,16 @@ function initMusicPlayer(){
 // LIGHTBOX
 // ============================================================
 let lbIndex=0;
+// 照片说明：日期 · 地点 · 标题（缺哪个跳过哪个）
+function photoCaption(item){
+  if(!item)return '';
+  return [item.date,item.location,item.caption].map(s=>String(s==null?'':s).trim()).filter(Boolean).join(' · ');
+}
 function openLightbox(i){
   lbIndex=i;const items=data.gallery||[];if(!items.length)return;
   const item=items[lbIndex];
   const img=document.getElementById('lightbox-img');if(img){img.src=item.image||'';img.alt=item.caption||item.location||'照片';}
-  const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=item.caption||'';
+  const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=photoCaption(item);
   document.getElementById('lightbox')?.classList.add('show');
 }
 function closeLightbox(){document.getElementById('lightbox')?.classList.remove('show')}
@@ -3091,7 +3164,7 @@ function lightboxNav(dir){
   lbIndex=(lbIndex+dir+items.length)%items.length;
   const item=items[lbIndex];
   const img=document.getElementById('lightbox-img');if(img){img.src=item.image||'';img.alt=item.caption||item.location||'照片';}
-  const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=item.caption||'';
+  const cap=document.getElementById('lightbox-caption');if(cap)cap.textContent=photoCaption(item);
 }
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('lightbox')?.classList.contains('show'))return;
@@ -3180,7 +3253,7 @@ function saveAdmin(){
 }
 function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});}
 function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
-function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:''});});}
+function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});}
 function deleteSelectedMemos(){ ADMIN.memoBatchDel(); }
 function removeMemo(i){ADMIN.memoDel(i);}
 
@@ -3411,6 +3484,108 @@ function memoImgOrient(img){
 function profileAvatarUrlForInput(url){const v=String(url||'').trim();return v.startsWith('data:')?'':v;}
 function isProfileImageUrl(url){return /^(https?:\/\/|assets\/|data:image\/)/i.test(String(url||'').trim());}
 function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ============================================================
+// 说说：标签 + 归档视图
+// tags 允许是数组或「逗号/顿号/空格」分隔的字符串
+// ============================================================
+function memoTags(m){
+  if(!m)return [];
+  const t=m.tags;
+  if(Array.isArray(t))return t.map(x=>String(x).trim()).filter(Boolean);
+  return String(t||'').split(/[,，、\s]+/).map(x=>x.trim()).filter(Boolean);
+}
+function allMemoTags(){
+  const s=new Map();
+  (data.memos||[]).forEach(m=>memoTags(m).forEach(t=>s.set(t,(s.get(t)||0)+1)));
+  return [...s.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'zh'));
+}
+let memoFilter='',memoMode='card';
+function setMemoFilter(tag){memoFilter=tag||'';applyMemoMode();}
+function setMemoMode(mode){memoMode=(mode==='archive')?'archive':'card';applyMemoMode();}
+function applyMemoMode(){
+  const wall=document.getElementById('memo-wall'),arch=document.getElementById('memo-archive');
+  const isArch=memoMode==='archive';
+  if(wall){wall.hidden=isArch;
+    wall.querySelectorAll('.memo-card').forEach(el=>{
+      const tags=String(el.dataset.tags||'');
+      el.hidden=memoFilter?tags.split('|').indexOf(memoFilter)<0:false;
+    });
+  }
+  if(arch)arch.hidden=!isArch;
+  if(isArch)renderMemoArchive();
+  document.querySelectorAll('.memo-tab').forEach(b=>b.classList.toggle('active',b.dataset.memoMode===memoMode));
+  renderMemoTagbar();
+}
+function renderMemoTagbar(){
+  const bar=document.getElementById('memo-tagbar');
+  if(!bar)return;
+  const tags=allMemoTags();
+  if(!tags.length){bar.innerHTML='<span class="memo-tag-hint">给说说加标签后，这里可以按标签筛选（在管理面板的说说里填「标签」）</span>';return;}
+  bar.innerHTML='<span class="memo-tag'+(memoFilter?'':' on')+'" onclick="setMemoFilter(\'\')" role="button" tabindex="0">全部</span>'+
+    tags.map(([t,n])=>'<span class="memo-tag'+(memoFilter===t?' on':'')+'" onclick="setMemoFilter(\''+escHtml(t).replace(/'/g,"\\'")+'\')" role="button" tabindex="0">'+escHtml(t)+'<i>'+n+'</i></span>').join('');
+}
+function renderMemoArchive(){
+  const box=document.getElementById('memo-archive');
+  if(!box)return;
+  const list=(data.memos||[]).slice()
+    .filter(m=>!memoFilter||memoTags(m).indexOf(memoFilter)>=0)
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  if(!list.length){box.innerHTML='<p class="empty-text" style="text-align:center;color:var(--text-muted)">没有符合条件的说说。</p>';return;}
+  const byMonth=new Map();
+  list.forEach(m=>{const k=String(m.date||'').slice(0,7)||'未标日期';if(!byMonth.has(k))byMonth.set(k,[]);byMonth.get(k).push(m);});
+  box.innerHTML=[...byMonth.entries()].map(([k,arr])=>
+    '<div class="memo-arch-month"><div class="memo-arch-label">'+escHtml(k)+'<span>'+arr.length+' 条</span></div>'+
+    arr.map(m=>'<div class="memo-arch-row" onclick="openMemoDetail(\''+escHtml(m.id)+'\')" role="button" tabindex="0">'+
+        '<span class="memo-arch-date">'+escHtml(String(m.date||'').slice(5)||'--')+'</span>'+
+        '<span class="memo-arch-text">'+escHtml(String(m.text||'').replace(/\s+/g,' ').slice(0,72))+'</span>'+
+        (memoTags(m).length?'<span class="memo-arch-tags">'+memoTags(m).map(t=>escHtml(t)).join(' · ')+'</span>':'')+
+      '</div>').join('')+
+    '</div>').join('');
+}
+
+// ============================================================
+// 自定义模块里的「山名」自动变成可点的链接，点了跳到映像馆对应城市的照片
+// 山 → 地级市 的对应关系写死在这里（照片按城市归属，不单列景点）
+// ============================================================
+const MOUNTAIN_CITY={'华山':'渭南市','恒山':'大同市','衡山':'衡阳市','泰山':'泰安市','南宫山':'安康市','岳麓山':'长沙市','武功山':'萍乡市'};
+function linkMountains(text){
+  let h=escHtml(text||'');
+  for(const name of Object.keys(MOUNTAIN_CITY)){
+    const i=h.indexOf(name);
+    // 只替换第一次出现，避免同一座山冒出好几个链接
+    if(i>=0)h=h.slice(0,i)+'<span class="mountain-link" role="link" tabindex="0" onclick="jumpToMountain(\''+name+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();jumpToMountain(\''+name+'\')}" title="看这座山拍下的照片">'+name+'</span>'+h.slice(i+name.length);
+  }
+  return h;
+}
+function jumpToMountain(name){
+  const city=MOUNTAIN_CITY[name];
+  if(!city){if(window.toast)toast('还没有「'+name+'」的对应城市','info');return;}
+  const list=(typeof mapCityPoints!=='undefined'&&mapCityPoints)||[];
+  const short=city.replace(/(市|自治州|地区)$/,'');
+  const target=list.find(c=>c.cityName===city)||list.find(c=>String(c.cityName).indexOf(short)===0);
+  if(!target){if(window.toast)toast('「'+city+'」还没有照片，去映像馆传几张吧','info');return;}
+  navigateTo('gallery');
+  setTimeout(()=>{if(typeof showCityPhotos==='function')showCityPhotos(target);},420);
+}
+
+// ============================================================
+// 个人精选：按 group 分组展示（同组排一起），组名顺序固定
+// ============================================================
+const PF_GROUP_ORDER=['我的项目','推荐工具','朋友的作品','整活','其他'];
+const PF_GROUP_HINT={'推荐工具':'不是我的作品，是我觉得好用的','整活':'点之前想清楚'};
+function groupPortfolio(list){
+  const m=new Map();
+  (list||[]).forEach((it,i)=>{
+    const g=String((it&&it.group)||'').trim()||'其他';
+    if(!m.has(g))m.set(g,[]);
+    m.get(g).push({it,i});
+  });
+  return [...m.entries()].sort((a,b)=>{
+    const ia=PF_GROUP_ORDER.indexOf(a[0]),ib=PF_GROUP_ORDER.indexOf(b[0]);
+    return (ia<0?99:ia)-(ib<0?99:ib)||a[0].localeCompare(b[0],'zh');
+  });
+}
 
 // ============================================================
 // INIT

@@ -317,12 +317,46 @@ export default {
       }
     }
 
-    // 映像馆列表：以 KV（site:gallery）为准直接返回。
-    // 图片已迁至图床 img.231060101.xyz，KV 里保存的是含 caption/date/location 的完整条目，
-    // 不再需要按 R2 的 映像馆/webp/ 列举来拼装（那样在迁移后会与 KV 条目重复成两份）。
+    // 映像馆列表：以 KV（site:gallery）为准，再用 D1 的「照片→城市」关联补上 location。
+    // 图片已迁至图床 img.231060101.xyz，KV 里保存的是含 caption/date/location 的完整条目。
+    //
+    // 为什么要补 location：主站地图靠 item.location 把照片分配到城市
+    // （buildMapData 里 loc=CITIES_GEO[normalizeCity(item.location)]，匹配不上就进「未标注地点」）。
+    // KV 里 66 条的 location 全是空的，导致主页地图一个城市都点不亮、66 张全被塞进折叠的「未标注」。
+    // D1 的 photos.city_key 是齐的（66/66），所以在这里补上，前端一行都不用改。
+    const photoCityCache = { at: 0, map: null };
+    async function photoCityMap() {
+      if (!env.DB) return null;
+      if (photoCityCache.map && Date.now() - photoCityCache.at < 60000) return photoCityCache.map;
+      const { results } = await env.DB.prepare('SELECT url, city_key FROM photos').all();
+      const m = new Map();
+      for (const r of results || []) {
+        if (!r || !r.url || !r.city_key) continue;
+        m.set(String(r.url), r.city_key);
+        // 兼容 r2_key / 文件名对不上 URL 前缀的情况，再按解码后的文件名兜一层
+        try { m.set('bn:' + decodeURIComponent(String(r.url).split('/').pop() || ''), r.city_key); } catch (e) {}
+      }
+      photoCityCache.map = m; photoCityCache.at = Date.now();
+      return m;
+    }
     async function getGallery() {
       const raw = await env.STORE.get('site:gallery');
-      try { const g = raw ? JSON.parse(raw) : []; return Array.isArray(g) ? g : []; } catch (e) { return []; }
+      let g = [];
+      try { g = raw ? JSON.parse(raw) : []; } catch (e) { g = []; }
+      if (!Array.isArray(g)) g = [];
+      try {
+        const cityOf = await photoCityMap();
+        if (cityOf) {
+          for (const it of g) {
+            if (!it || !it.image) continue;
+            if (String(it.location || '').trim()) continue;   // KV 里手填的优先，不覆盖
+            let c = cityOf.get(String(it.image));
+            if (!c) { try { c = cityOf.get('bn:' + decodeURIComponent(String(it.image).split('/').pop() || '')); } catch (e) {} }
+            if (c) it.location = c;
+          }
+        }
+      } catch (e) { /* D1 不可用时保持原样，不影响主流程 */ }
+      return g;
     }
 
     // 旧实现（R2 枚举 + KV 覆盖）保留备查，当前未被调用。
