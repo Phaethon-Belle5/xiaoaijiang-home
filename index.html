@@ -1146,6 +1146,7 @@ const MAX_VIDEO_MB=100;
 const ADMIN_SECTIONS=[
   {id:'profile',   label:'资料', group:'站点'},
   {id:'wallpaper', label:'壁纸', group:'站点'},
+  {id:'content',   label:'内容分区', group:'内容'},
   {id:'memos',     label:'说说', group:'内容'},
   {id:'works',     label:'作品', group:'内容'},
   {id:'copy',      label:'文案', group:'内容'},
@@ -1157,10 +1158,11 @@ const ADMIN_SECTIONS=[
 const ADMIN_DESC={
   profile:'头像、名字、标语、简介与主题色，显示在首页顶部。',
   wallpaper:'首页背景的图片轮播或背景视频。',
-  memos:'说说（便签）：可拖拽排序、批量删除、直接上传配图。',
-  works:'个人作品卡片。',
+  content:'「内容分区」里的两块：关于我（关于段落的正文）与功能模块（个人成就、已爬的山这类自定义卡片）。',
+  memos:'说说（便签）：可拖拽排序、批量删除、直接上传配图，可加标签。',
+  works:'个人作品卡片：分组、说明与角标。',
   copy:'各分区的标题与按钮文案。',
-  music:'音乐播放器的曲目来源。自托管直链最稳定。',
+  music:'音乐播放器的曲目来源。曲目由 R2 的 Music/ 目录自动生成，上传即入库。',
   pet:'点击桌宠时随机显示的气泡消息。',
   contact:'页脚的联系方式。',
   comments:'访客在各条说说下的评论，可单独删除。',
@@ -1583,6 +1585,22 @@ ADMIN_RENDER.content=function(){
         '</div>'+
         '<textarea data-m-idx="'+i+'" data-m-field="text" style="width:100%;min-height:64px" aria-label="模块内容">'+escHtml(m.text)+'</textarea></div>').join('')+
       '<button class="admin-sbtn" type="button" onclick="addModule()">添加模块</button>'+
+    '</div>';
+};
+ADMIN_PREVIEW.content=function(){
+  const mods=data.modules||[];
+  const ab=String((data.about&&data.about.text)||'');
+  return '<div style="display:flex;flex-direction:column;gap:10px">'+
+    '<div class="admin-card" style="margin:0">'+
+      '<div style="font-size:.72em;color:var(--text-muted);margin-bottom:5px">关于我（'+ab.length+' 字）</div>'+
+      '<div style="font-size:.8em;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;max-height:120px;overflow:hidden">'+(escHtml(ab.slice(0,180))||'（还没写）')+'</div>'+
+    '</div>'+
+    mods.slice(0,4).map(m=>
+      '<div class="admin-card" style="margin:0">'+
+        '<div style="font-size:.8em;color:var(--text-primary);margin-bottom:3px">'+escHtml(m.icon||'')+' '+escHtml(String(m.title||'').trim())+'</div>'+
+        '<div style="font-size:.74em;color:var(--text-muted);white-space:pre-wrap;line-height:1.55;max-height:72px;overflow:hidden">'+escHtml(String(m.text||'').slice(0,140))+'</div>'+
+      '</div>').join('')+
+    (mods.length>4?'<div style="font-size:.72em;color:var(--text-muted)">…还有 '+(mods.length-4)+' 个模块</div>':'')+
     '</div>';
 };
 
