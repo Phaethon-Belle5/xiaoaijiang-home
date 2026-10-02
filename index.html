@@ -2809,6 +2809,8 @@ function renderMain(){
   try{document.documentElement.setAttribute('data-build',BUILD);const fb=document.getElementById('footBuild');if(fb)fb.textContent='构建 '+BUILD;}catch(e){}
   // 说说：一进页面就把标签栏填好（以前要点一下「归档」才出现，容易被当成"没做分类"）
   try{if(typeof renderMemoTagbar==='function')renderMemoTagbar();}catch(e){}
+  // ?diag=1 显示诊断条：用来确认"浏览器里这份到底是哪个版本、功能在不在"
+  showDiagBar();
 
   // Rebuild carousel dots
   buildCarouselDots();
@@ -3732,6 +3734,43 @@ function linkMountains(text){
     }
   }
   return h;
+}
+
+// ============================================================
+// ?diag=1 诊断条：把「浏览器里这份是什么版本、功能在不在」直接打在页面上
+// 排查"更新没上线"这类问题时用 —— 打开 域名/?diag=1 截图即可
+// ============================================================
+function showDiagBar(){
+  try{
+    if(!/[?&]diag=1/.test(location.search))return;
+    const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const d=document.createElement('div');
+    d.id='diag-bar';
+    d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99999;background:#0b0e14;color:#e8e2d9;font:12px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;padding:12px 16px;max-height:70vh;overflow:auto;border-bottom:2px solid #D4A843;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+    const render=()=>{
+      const live=[
+        ['构建', (typeof BUILD!=='undefined'?BUILD:'（没有 BUILD 常量 → 这是旧版页面）')],
+        ['地址', location.href],
+        ['说说总数', (data.memos||[]).length+' 条'],
+        ['说说带标签', (data.memos||[]).filter(m=>memoTags(m).length).length+' 条'],
+        ['更新日志数据', (data.changelog||[]).length+' 条'],
+        ['日志卡 DOM', document.querySelectorAll('.log-item').length+' 个'],
+        ['日志卡父层', (function(){var e=document.querySelector('.hp-slot');return e?('display='+getComputedStyle(e).display):'没有 .hp-slot'})()],
+        ['归档分组器', document.getElementById('memo-grouping')?'有':'无'],
+        ['标签栏 DOM', document.querySelectorAll('#memo-tagbar .memo-tag').length+' 个'],
+        ['云同步', (data.memos||[]).length>DEFAULT_DATA.memos.length?'已到位':'还在用默认数据（没同步上）'],
+        ['视口', innerWidth+'x'+innerHeight],
+        ['UA', navigator.userAgent.slice(0,72)],
+      ];
+      d.innerHTML='<div style="font-weight:700;color:#E8C456;margin-bottom:7px">诊断信息 · 实时刷新 · 打开时带了 ?diag=1</div>'+
+        live.map(([k,v])=>'<div><span style="color:#8A8070">'+esc(k)+'</span>：'+esc(v)+'</div>').join('')+
+        '<div style="color:#8A8070;margin-top:6px">（每秒自动刷新；如果「云同步」一直显示没同步上，说明这台设备连不上 /api/data）</div>'+
+        '<button type="button" style="margin-top:9px;font:inherit;background:#1a2030;color:#e8e2d9;border:1px solid #3a4356;border-radius:6px;padding:3px 12px;cursor:pointer" onclick="clearInterval(window.__diagT);this.parentNode.remove()">关闭</button>';
+    };
+    render();
+    document.body.appendChild(d);
+    window.__diagT=setInterval(()=>{try{render();}catch(e){}},1000);
+  }catch(e){}
 }
 
 // ============================================================
