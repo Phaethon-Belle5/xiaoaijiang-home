@@ -2578,6 +2578,15 @@ function initReveal(){
   if(revealObserver)revealObserver.disconnect();
   revealObserver=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{rootMargin:'0px 0px -40px 0px',threshold:0.1});
   document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+  // 兜底：入场动画只是锦上添花，绝不能成为"内容看不见"的原因。
+  // 曾出现的情况：.reveal 默认 opacity:0，只由 IntersectionObserver 触发；
+  // 视口 746 高时「音乐 + 更新日志 + 热点」那一整块正好从 y=746 开始（首屏外），
+  // 不往下滚就永远是透明的 —— 看起来就像"新功能没做/没上线"。
+  // 现在 2.2 秒后无条件显示所有还没播到动画的元素，动画依旧照常，但不会再藏内容。
+  clearTimeout(window.__revealFallback);
+  window.__revealFallback=setTimeout(function(){
+    try{document.querySelectorAll('.reveal:not(.visible)').forEach(function(el){el.classList.add('visible');});}catch(e){}
+  },2200);
   // Lazy image blur-up
   document.querySelectorAll('.gallery-item img, .portfolio-item img').forEach(img=>{
     if(img.complete)img.classList.add('loaded');
