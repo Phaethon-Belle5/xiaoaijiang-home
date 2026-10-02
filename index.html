@@ -168,6 +168,14 @@
 .memo-tag.on{background:var(--gold-glow);border-color:var(--gold);color:var(--gold-bright)}
 .memo-tag i{font-style:normal;opacity:.6;margin-left:5px;font-size:.9em}
 .memo-tag-hint{font-size:.74em;color:var(--text-muted)}
+/* 归档：分组方式切换（按时间 / 按标签） */
+.memo-grouping{display:flex;align-items:center;gap:6px;flex:none}
+.memo-grouping-label{font-size:.72em;color:var(--text-muted)}
+.memo-gbtn{font:inherit;font-size:.72em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:3px 11px;cursor:pointer;transition:all .2s}
+.memo-gbtn:hover{color:var(--text-secondary);border-color:var(--gold-pale)}
+.memo-gbtn.on{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
+.memo-arch-taggroup .memo-arch-label{color:var(--gold-bright)}
+.memo-arch-taggroup .memo-arch-label::before{content:'#';opacity:.55;margin-right:1px}
 .memo-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 var(--space-5) 8px 32px}
 .memo-tag-chip{font-size:.68em;color:var(--gold-pale);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:1px 9px;cursor:pointer}
 .memo-tag-chip:hover{color:var(--gold-bright);border-color:var(--gold)}
@@ -2726,6 +2734,11 @@ function renderMain(){
           <button class="memo-tab active" type="button" data-memo-mode="card" onclick="setMemoMode('card')" role="tab">卡片</button>
           <button class="memo-tab" type="button" data-memo-mode="archive" onclick="setMemoMode('archive')" role="tab">归档</button>
         </div>
+        <div class="memo-grouping" id="memo-grouping" hidden>
+          <span class="memo-grouping-label">分组</span>
+          <button class="memo-gbtn on" type="button" data-memo-group="month" onclick="setMemoGroup('month')">按时间</button>
+          <button class="memo-gbtn" type="button" data-memo-group="tag" onclick="setMemoGroup('tag')">按标签</button>
+        </div>
         <div class="memo-tagbar" id="memo-tagbar"></div>
       </div>
       <div class="memo-wall" id="memo-wall">
@@ -3623,9 +3636,10 @@ function allMemoTags(){
   (data.memos||[]).forEach(m=>memoTags(m).forEach(t=>s.set(t,(s.get(t)||0)+1)));
   return [...s.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'zh'));
 }
-let memoFilter='',memoMode='card';
+let memoFilter='',memoMode='card',memoGroup='month';
 function setMemoFilter(tag){memoFilter=tag||'';applyMemoMode();}
 function setMemoMode(mode){memoMode=(mode==='archive')?'archive':'card';applyMemoMode();}
+function setMemoGroup(g){memoGroup=(g==='tag')?'tag':'month';applyMemoMode();}
 function applyMemoMode(){
   const wall=document.getElementById('memo-wall'),arch=document.getElementById('memo-archive');
   const isArch=memoMode==='archive';
@@ -3636,8 +3650,11 @@ function applyMemoMode(){
     });
   }
   if(arch)arch.hidden=!isArch;
-  if(isArch)renderMemoArchive();
+  const grp=document.getElementById('memo-grouping');
+  if(grp)grp.hidden=!isArch;                       // 分组方式只在归档模式下有意义
   document.querySelectorAll('.memo-tab').forEach(b=>b.classList.toggle('active',b.dataset.memoMode===memoMode));
+  document.querySelectorAll('.memo-gbtn').forEach(b=>b.classList.toggle('on',b.dataset.memoGroup===memoGroup));
+  if(isArch)renderMemoArchive();
   renderMemoTagbar();
 }
 function renderMemoTagbar(){
@@ -3655,15 +3672,34 @@ function renderMemoArchive(){
     .filter(m=>!memoFilter||memoTags(m).indexOf(memoFilter)>=0)
     .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
   if(!list.length){box.innerHTML='<p class="empty-text" style="text-align:center;color:var(--text-muted)">没有符合条件的说说。</p>';return;}
-  const byMonth=new Map();
-  list.forEach(m=>{const k=String(m.date||'').slice(0,7)||'未标日期';if(!byMonth.has(k))byMonth.set(k,[]);byMonth.get(k).push(m);});
-  box.innerHTML=[...byMonth.entries()].map(([k,arr])=>
-    '<div class="memo-arch-month"><div class="memo-arch-label">'+escHtml(k)+'<span>'+arr.length+' 条</span></div>'+
-    arr.map(m=>'<div class="memo-arch-row" onclick="openMemoDetail(\''+escHtml(m.id)+'\')" role="button" tabindex="0">'+
-        '<span class="memo-arch-date">'+escHtml(String(m.date||'').slice(5)||'--')+'</span>'+
-        '<span class="memo-arch-text">'+escHtml(String(m.text||'').replace(/\s+/g,' ').slice(0,72))+'</span>'+
-        (memoTags(m).length?'<span class="memo-arch-tags">'+memoTags(m).map(t=>escHtml(t)).join(' · ')+'</span>':'')+
-      '</div>').join('')+
+
+  const row=m=>'<div class="memo-arch-row" onclick="openMemoDetail(\''+escHtml(m.id)+'\')" role="button" tabindex="0">'+
+      '<span class="memo-arch-date">'+escHtml(String(m.date||'').slice(5)||'--')+'</span>'+
+      '<span class="memo-arch-text">'+escHtml(String(m.text||'').replace(/\s+/g,' ').slice(0,72))+'</span>'+
+      (memoTags(m).length?'<span class="memo-arch-tags">'+memoTags(m).map(t=>escHtml(t)).join(' · ')+'</span>':'')+
+    '</div>';
+
+  // 用统一的结构渲染，切换分组方式时只是"分桶"的依据不同
+  let buckets;
+  if(memoGroup==='tag'){
+    buckets=new Map();
+    list.forEach(m=>{
+      const tags=memoTags(m);
+      if(!tags.length){ if(!buckets.has('未分类'))buckets.set('未分类',[]); buckets.get('未分类').push(m); return; }
+      tags.forEach(t=>{ if(!buckets.has(t))buckets.set(t,[]); buckets.get(t).push(m); });
+    });
+    // 标签按条数降序，「未分类」永远排最后
+    buckets=new Map([...buckets.entries()].sort((a,b)=>
+      (a[0]==='未分类'?1:0)-(b[0]==='未分类'?1:0) || b[1].length-a[1].length || a[0].localeCompare(b[0],'zh')));
+  }else{
+    buckets=new Map();
+    list.forEach(m=>{const k=String(m.date||'').slice(0,7)||'未标日期';if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(m);});
+  }
+
+  box.innerHTML=[...buckets.entries()].map(([k,arr])=>
+    '<div class="memo-arch-month'+(memoGroup==='tag'?' memo-arch-taggroup':'')+'">'+
+      '<div class="memo-arch-label">'+escHtml(k)+'<span>'+arr.length+' 条</span></div>'+
+      arr.map(row).join('')+
     '</div>').join('');
 }
 
