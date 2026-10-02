@@ -261,6 +261,12 @@
 .map-empty{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:.9em}
 /* ---- Reset ---- */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* hidden 属性必须真的能隐藏。
+   浏览器默认的 [hidden]{display:none} 优先级极低，会被 .memo-card{display:flex}
+   这类组件规则覆盖 —— 结果 el.hidden=true 后元素照样显示。
+   「点分类标签筛选卡片」失效就是这个原因（状态变了、卡片没消失）。
+   这条规则放在所有组件规则之前，用 !important 兜住全站。 */
+[hidden]{display:none !important}
 html{scroll-behavior:smooth;overflow-x:hidden}
 body{font-family:var(--font-body);color:var(--wf-body);background:var(--wf-canvas);min-height:100vh;line-height:1.75;font-size:16px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 /* ---- Splash Screen ---- */
