@@ -695,7 +695,12 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 [data-theme="light"] .hot-item:hover{background:rgba(0,0,0,.05)}
 @media (max-width:1080px){
   .home-pair{grid-template-columns:minmax(200px,1fr) minmax(280px,1.5fr);gap:var(--space-6)}
-  .hp-slot{display:none}
+  /* 中列以前是空占位、窄屏被 display:none 藏掉；现在它装着「更新日志」，
+     不能再无条件隐藏（否则手机/窄窗口永远看不到日志卡）。改成只有真的空着才隐藏。 */
+  .hp-slot{display:flex}
+  .hp-slot:empty{display:none}
+  /* 窄屏两列排不下三张卡：音乐 | 更新日志 一行，热点整行放下面 */
+  .home-pair .hot-card{grid-column:1 / -1}
 }
 @media (max-width:768px){
   .home-pair{grid-template-columns:1fr;gap:var(--space-6)}
@@ -2802,6 +2807,8 @@ function renderMain(){
   document.getElementById('avatar-upload').onchange=function(e){if(!isAdmin)return;const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{data.profile.avatar=ev.target.result;saveData();applyAll();toast('头像已更新','success');};r.readAsDataURL(f);};
   // 页脚打上构建标记（在浏览器控制台或页脚一眼可辨版本）
   try{document.documentElement.setAttribute('data-build',BUILD);const fb=document.getElementById('footBuild');if(fb)fb.textContent='构建 '+BUILD;}catch(e){}
+  // 说说：一进页面就把标签栏填好（以前要点一下「归档」才出现，容易被当成"没做分类"）
+  try{if(typeof renderMemoTagbar==='function')renderMemoTagbar();}catch(e){}
 
   // Rebuild carousel dots
   buildCarouselDots();
