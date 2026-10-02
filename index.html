@@ -2206,14 +2206,23 @@ function showSyncError(reason){
     d.innerHTML='<span>⚠ 云端数据没能加载（<b id="sync-err-reason">'+escHtml(reason||'未知原因')+'</b>）—— 当前显示的是内置的默认内容，'+
       '所以「更新日志」和「说说」的标签可能是空的。这不是功能没做，是数据没取到。</span>'+
       '<button type="button" id="sync-err-retry" style="font:inherit;background:#4a2024;color:#ffdcdc;border:1px solid #8a4a4a;border-radius:7px;padding:4px 16px;cursor:pointer;flex:none">重试</button>'+
+      '<button type="button" id="sync-err-reset" style="font:inherit;background:#4a2024;color:#ffdcdc;border:1px solid #8a4a4a;border-radius:7px;padding:4px 16px;cursor:pointer;flex:none">清缓存重载</button>'+
       '<button type="button" id="sync-err-close" style="font:inherit;background:transparent;color:#c99;border:1px solid #6a3a3a;border-radius:7px;padding:4px 12px;cursor:pointer;flex:none">关闭</button>';
     document.body.appendChild(d);
     const btn=document.getElementById('sync-err-retry');
     if(btn)btn.onclick=async()=>{
       btn.disabled=true;btn.textContent='重试中…';
       const r=await fetchCloudData(3);
-      if(r){ d.remove(); if(typeof syncFromCloud==='function'){ /* 数据已拿到，走正常合并 */ } location.reload(); }
+      if(r){ location.reload(); }
       else{ btn.disabled=false;btn.textContent='重试';const e=document.getElementById('sync-err-reason');if(e)e.textContent=lastSyncError||'仍然失败'; }
+    };
+    // 本地缓存结构过旧时，合并会出错 —— 给一个一键清掉本地缓存并重载的出口
+    const rs=document.getElementById('sync-err-reset');
+    if(rs)rs.onclick=async()=>{
+      rs.disabled=true;rs.textContent='清理中…';
+      try{ await dbDel(LS_KEY); }catch(e){}
+      try{ localStorage.removeItem('xiaoaijiang-vol'); }catch(e){}
+      location.reload();
     };
     const cl=document.getElementById('sync-err-close');
     if(cl)cl.onclick=()=>d.remove();
@@ -2255,7 +2264,12 @@ async function syncFromCloud(localResult){
       await dbSet(LS_KEY,data);
       applyAll();
     }
-  }catch(e){console.warn('Bg sync skipped:',e.message)}
+  }catch(e){
+    // 以前这里只 console.warn，合并/渲染一旦出错就彻底静默：
+    // 数据其实取到了，但页面停在默认内容，用户看到的现象和"功能没上线"一模一样。
+    console.warn('[云同步] 合并/渲染出错：',e && e.message);
+    showSyncError('本地数据合并出错：'+((e&&e.message)||'未知')+'（多半是本地缓存结构过旧，清一下就好）');
+  }
 }
 
 function saveData(showToast=true){
