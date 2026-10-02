@@ -2166,8 +2166,10 @@ function mergeData(d,s){
 }
 
 // 带重试地拉云端数据（/api/data）。失败不抛错，返回 null 让调用方保持现状。
+let lastSyncError='';
 async function fetchCloudData(tries){
   tries=tries||3;
+  lastSyncError='';
   for(let i=0;i<tries;i++){
     try{
       const ctrl=new AbortController();
@@ -2177,14 +2179,45 @@ async function fetchCloudData(tries){
       if(r.ok){
         const j=await r.json();
         if(j&&j.profile)return j;
+        lastSyncError='返回数据不完整';
         console.warn('[云同步] 返回数据不完整（第 '+(i+1)+' 次）');
-      }else console.warn('[云同步] HTTP '+r.status+'（第 '+(i+1)+' 次）');
-    }catch(e){ console.warn('[云同步] 第 '+(i+1)+' 次失败：'+e.message); }
+      }else{
+        lastSyncError='HTTP '+r.status;
+        console.warn('[云同步] HTTP '+r.status+'（第 '+(i+1)+' 次）');
+      }
+    }catch(e){
+      lastSyncError=(e&&e.name==='AbortError')?'请求超时（12 秒）':(e&&e.message||'网络错误');
+      console.warn('[云同步] 第 '+(i+1)+' 次失败：'+lastSyncError);
+    }
     if(i<tries-1)await new Promise(s=>setTimeout(s,600*(i+1)));
   }
-  console.warn('[云同步] 重试 '+tries+' 次仍未成功 —— 页面将继续使用本地/默认数据。'+
-    '可在网址后加 ?diag=1 打开诊断条查看。');
+  console.warn('[云同步] 重试 '+tries+' 次仍未成功 —— 页面将继续使用本地/默认数据。');
   return null;
+}
+
+// 云数据没加载上时，在页面底部显示一条可重试的提示条。
+// 以前是彻底静默：网络不通时页面照常显示默认内容，用户以为"新功能没上线"。
+function showSyncError(reason){
+  try{
+    if(document.getElementById('sync-err')){const e=document.getElementById('sync-err-reason');if(e)e.textContent=reason;return;}
+    const d=document.createElement('div');
+    d.id='sync-err';
+    d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#2a1416;color:#ffdcdc;font-size:13px;line-height:1.6;padding:11px 16px;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;border-top:2px solid #d46a6a;box-shadow:0 -6px 20px rgba(0,0,0,.45);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif';
+    d.innerHTML='<span>⚠ 云端数据没能加载（<b id="sync-err-reason">'+escHtml(reason||'未知原因')+'</b>）—— 当前显示的是内置的默认内容，'+
+      '所以「更新日志」和「说说」的标签可能是空的。这不是功能没做，是数据没取到。</span>'+
+      '<button type="button" id="sync-err-retry" style="font:inherit;background:#4a2024;color:#ffdcdc;border:1px solid #8a4a4a;border-radius:7px;padding:4px 16px;cursor:pointer;flex:none">重试</button>'+
+      '<button type="button" id="sync-err-close" style="font:inherit;background:transparent;color:#c99;border:1px solid #6a3a3a;border-radius:7px;padding:4px 12px;cursor:pointer;flex:none">关闭</button>';
+    document.body.appendChild(d);
+    const btn=document.getElementById('sync-err-retry');
+    if(btn)btn.onclick=async()=>{
+      btn.disabled=true;btn.textContent='重试中…';
+      const r=await fetchCloudData(3);
+      if(r){ d.remove(); if(typeof syncFromCloud==='function'){ /* 数据已拿到，走正常合并 */ } location.reload(); }
+      else{ btn.disabled=false;btn.textContent='重试';const e=document.getElementById('sync-err-reason');if(e)e.textContent=lastSyncError||'仍然失败'; }
+    };
+    const cl=document.getElementById('sync-err-close');
+    if(cl)cl.onclick=()=>d.remove();
+  }catch(e){}
 }
 
 async function syncFromCloud(localResult){
@@ -2193,13 +2226,15 @@ async function syncFromCloud(localResult){
     // 网络一抖页面就永远停在默认数据（3 条默认说说、0 条更新日志），
     // 新功能看起来就像"没上线"。现在重试 3 次、超时放宽到 12 秒，并打日志。
     const remote=await fetchCloudData(3);
-    if(!remote)return;
+    if(!remote){ showSyncError(lastSyncError); return; }
     const _cloudVids=remote.wallpaper?.videos||[];
     if(remote.wallpaper&&(!_cloudVids.length||_cloudVids.every(v=>!v.src))){
       var vids=[];
+      const vctrl=new AbortController();
+      const vt=setTimeout(()=>vctrl.abort(),12000);
       for(var i=0;i<20;i++){
         try{
-          var vr=await fetch(API_URL+'/data/wp-v-'+i,{signal:ctrl.signal});
+          var vr=await fetch(API_URL+'/data/wp-v-'+i,{signal:vctrl.signal});
           if(vr.ok){var vd=await vr.json();if(vd&&vd.src)vids.push(vd);else break;}
           else break;
         }catch(e){break;}
