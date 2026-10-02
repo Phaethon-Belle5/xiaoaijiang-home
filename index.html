@@ -2131,6 +2131,33 @@ function rewriteR2(o){
   return o;
 }
 // ============================================================
+// 状态回传：把"这台设备实际跑的是什么版本、拿到了多少数据、有没有渲染错误"
+// 发回服务端，维护者可直接从 KV 读取 —— 不需要用户会看控制台或描述现象。
+// 每次加载只发一次；用户无感，不发任何个人内容。
+// ============================================================
+function sendBeacon(){
+  try{
+    setTimeout(async()=>{
+      try{
+        const payload={
+          build:(typeof BUILD!=='undefined'?BUILD:''),
+          page:location.href.slice(0,300),
+          viewport:innerWidth+'x'+innerHeight,
+          memos:(typeof data!=='undefined'&&data.memos)?data.memos.length:null,
+          tagged:(typeof data!=='undefined'&&data.memos)?data.memos.filter(m=>{try{return memoTags(m).length>0}catch(e){return false}}).length:null,
+          changelog:(typeof data!=='undefined'&&data.changelog)?data.changelog.length:null,
+          logItems:document.querySelectorAll('.log-item').length,
+          chips:document.querySelectorAll('#memo-tagbar .memo-tag').length,
+          synced:(typeof data!=='undefined'&&data.memos&&typeof DEFAULT_DATA!=='undefined')?(data.memos.length>DEFAULT_DATA.memos.length?'已到位':'停在默认数据'):'未知',
+          errors:(typeof RENDER_ERRORS!=='undefined')?RENDER_ERRORS.slice(0,8):[],
+        };
+        await fetch(API_URL+'/beacon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      }catch(e){}
+    }, 9000);   // 等云同步稳定后再报
+  }catch(e){}
+}
+
+// ============================================================
 // 数据净化：把各字段强制成期望的类型再交给渲染
 // 起因：本地缓存里若某个字段结构不对（例如 modules 存成了字符串），
 // 渲染模板里 data.modules.map(...) 会抛 TypeError，整个渲染中断 ——
@@ -2571,16 +2598,46 @@ function applyAccent(color){
   s.setProperty('--gold-glow','color-mix(in srgb,'+base+' 30%,transparent)');
 }
 function applyAll(){
-  try{applyFavicon();}catch(e){console.warn(e);}
-  try{applyAccent(data.accent);}catch(e){console.warn(e);}
-  try{renderNav();}catch(e){console.warn(e);}
-  try{renderMain();}catch(e){console.warn(e);}
-  try{initWallpapers();}catch(e){console.warn(e);}
-  try{renderFooterLinks();}catch(e){console.warn(e);}
-  try{renderFooterTagline();}catch(e){console.warn(e);}
-  try{initReveal();}catch(e){console.warn(e);}
-  try{bindMusicCard();}catch(e){console.warn(e);}
-  try{renderViewState();}catch(e){console.warn(e);}
+  // 注意：以前这里每个 try 的 catch 只打 console.warn —— 渲染一崩，错误就被静默吞掉，
+  // 页面出现部分空白、用户完全无从判断（"更新日志和标签栏没渲染出来"就是这样被藏了很久）。
+  // 现在任何一步崩了都会在页面上显示出来。
+  reportStep('图标',()=>applyFavicon());
+  reportStep('主题色',()=>applyAccent(data.accent));
+  reportStep('导航',()=>renderNav());
+  reportStep('主内容',()=>renderMain());
+  reportStep('背景',()=>initWallpapers());
+  reportStep('页脚链接',()=>renderFooterLinks());
+  reportStep('页脚标语',()=>renderFooterTagline());
+  reportStep('入场动画',()=>initReveal());
+  reportStep('音乐卡',()=>bindMusicCard());
+  reportStep('视图状态',()=>renderViewState());
+}
+
+// 渲染分步执行：崩了不仅打日志，还在页面上留一条可见的红色提示
+const RENDER_ERRORS=[];
+function reportStep(name,fn){
+  try{ fn(); }
+  catch(e){
+    const msg=(e&&e.message)||String(e);
+    RENDER_ERRORS.push(name+'：'+msg);
+    console.error('[渲染失败] '+name,e);
+    showRenderError();
+  }
+}
+function showRenderError(){
+  try{
+    let d=document.getElementById('render-err');
+    if(!d){
+      d=document.createElement('div');
+      d.id='render-err';
+      d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:100000;background:#2a1416;color:#ffdcdc;font:12.5px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;padding:11px 16px;border-bottom:2px solid #d46a6a;box-shadow:0 6px 20px rgba(0,0,0,.45);max-height:60vh;overflow:auto';
+      document.body.appendChild(d);
+    }
+    d.innerHTML='<div style="font-weight:700;color:#ff9a9a;margin-bottom:5px">⚠ 页面部分内容渲染失败（把这段文字发给我就能定位）</div>'+
+      '<div>构建：'+escHtml(typeof BUILD!=='undefined'?BUILD:'(无)')+'　视口：'+innerWidth+'x'+innerHeight+'</div>'+
+      RENDER_ERRORS.map(x=>'<div>· '+escHtml(x)+'</div>').join('')+
+      '<button type="button" style="margin-top:8px;font:inherit;background:#4a2024;color:#ffdcdc;border:1px solid #8a4a4a;border-radius:7px;padding:3px 14px;cursor:pointer" onclick="this.parentNode.remove()">关闭</button>';
+  }catch(e){}
 }
 function renderFooterTagline(){
   const el=document.querySelector('.footer-tagline');
@@ -2916,6 +2973,8 @@ function renderMain(){
   try{document.documentElement.setAttribute('data-build',BUILD);const fb=document.getElementById('footBuild');if(fb)fb.textContent='构建 '+BUILD;}catch(e){}
   // 说说：一进页面就把标签栏填好（以前要点一下「归档」才出现，容易被当成"没做分类"）
   try{if(typeof renderMemoTagbar==='function')renderMemoTagbar();}catch(e){}
+  // 状态回传（只发一次，用于远程排查"看不到新功能"这类问题）
+  sendBeacon();
   // ?diag=1 显示诊断条：用来确认"浏览器里这份到底是哪个版本、功能在不在"
   showDiagBar();
 

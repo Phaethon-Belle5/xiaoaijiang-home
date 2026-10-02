@@ -667,6 +667,38 @@ export default {
       return json({ ok: true, total, today });
     }
 
+    // ── POST /beacon ── 客户端状态回传
+    // 用途：排查"我这边看不到新功能"这类问题 —— 页面把构建号、视口、渲染错误、
+    // 实际拿到的数据条数回传，服务端存进 KV，维护者直接读取即可，
+    // 既不需要用户会看控制台，也不需要用户描述现象。
+    if (p === '/beacon' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const ts = new Date().toISOString();
+        const key = 'beacon:' + ts + ':' + Math.random().toString(36).slice(2, 7);
+        await env.STORE.put(key, JSON.stringify({
+          ts,
+          构建: String(body.build || '').slice(0, 140),
+          页面: String(body.page || '').slice(0, 300),
+          视口: String(body.viewport || '').slice(0, 40),
+          说说条数: body.memos,
+          带标签: body.tagged,
+          更新日志条数: body.changelog,
+          日志卡条目: body.logItems,
+          标签chip数: body.chips,
+          云同步: body.synced,
+          渲染错误: Array.isArray(body.errors) ? body.errors.slice(0, 8).map(x => String(x).slice(0, 200)) : [],
+          UA: (request.headers.get('User-Agent') || '').slice(0, 220),
+          referer: (request.headers.get('Referer') || '').slice(0, 220),
+          IP: request.headers.get('CF-Connecting-IP') || '?',
+          国家: request.headers.get('CF-IPCountry') || '?',
+        }), { expirationTtl: 604800 });   // 保留 7 天
+        return json({ ok: true });
+      } catch (e) {
+        return json({ ok: false, error: String(e).slice(0, 150) }, 400);
+      }
+    }
+
     // ── GET /rss.xml ── 说说 RSS（公开） ──
     if (p === '/rss.xml' && method === 'GET') {
       const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
