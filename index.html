@@ -1025,7 +1025,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
   <div class="footer-stats">
     <div class="footer-run">本站已经运行 <b id="footRun">…</b></div>
     <div class="footer-visits">总访问量（PV）：<b id="footPv">…</b><span class="sep">|</span>总访客数（UV）：<b id="footUv">…</b></div>
-    <div class="footer-meta">2026-2026 · 作者：伶俜 <span class="sep">|</span> 新站：<a href="https://home.231060101.xyz" target="_blank" rel="noopener">home.231060101.xyz</a></div>
+    <div class="footer-meta">2026-2026 · 作者：伶俜 <span class="sep">|</span> 新站：<a href="https://home.231060101.xyz" target="_blank" rel="noopener">home.231060101.xyz</a><span class="sep">|</span><span class="footer-build" id="footBuild">构建 …</span></div>
     <div class="footer-beian"><a href="https://beian.miit.gov.cn" target="_blank" rel="noopener">陕ICP备2026022295号-1</a><span class="sep">|</span><a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener">&copy; 萌ICP备20260854号</a></div>
     <div class="footer-contact">
       <a href="mailto:2918762608@qq.com" title="QQ邮箱：2918762608@qq.com" aria-label="QQ邮箱：2918762608@qq.com">
@@ -1163,6 +1163,9 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 // DATA
 // ============================================================
 const API_URL='https://home.xiaoaijiang.cloud/api';
+// 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
+// 每次部署新功能时改这里（日期 + 一句话）
+const BUILD='2026-10-02 · 说说归档支持按标签分组';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -2797,6 +2800,8 @@ function renderMain(){
   `;
 
   document.getElementById('avatar-upload').onchange=function(e){if(!isAdmin)return;const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{data.profile.avatar=ev.target.result;saveData();applyAll();toast('头像已更新','success');};r.readAsDataURL(f);};
+  // 页脚打上构建标记（在浏览器控制台或页脚一眼可辨版本）
+  try{document.documentElement.setAttribute('data-build',BUILD);const fb=document.getElementById('footBuild');if(fb)fb.textContent='构建 '+BUILD;}catch(e){}
 
   // Rebuild carousel dots
   buildCarouselDots();
