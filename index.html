@@ -2130,11 +2130,49 @@ function rewriteR2(o){
   if(typeof o==='object'){for(const k in o)o[k]=rewriteR2(o[k]);return o;}
   return o;
 }
+// ============================================================
+// 数据净化：把各字段强制成期望的类型再交给渲染
+// 起因：本地缓存里若某个字段结构不对（例如 modules 存成了字符串），
+// 渲染模板里 data.modules.map(...) 会抛 TypeError，整个渲染中断 ——
+// 排在后面的「更新日志卡」「说说标签栏」就永远渲染不出来，
+// 用户看到的现象是"新功能没上线"（实测可复现：modules 是字符串时 日志卡 0 条、标签 chip 0 个）。
+// 与其在每处渲染各自防御，不如合并后统一净化一次。
+// ============================================================
+function sanitizeData(d){
+  if(!d||typeof d!=='object')d={};
+  const arr=v=>Array.isArray(v)?v:[];
+  const obj=v=>(v&&typeof v==='object'&&!Array.isArray(v))?v:{};
+  const objs=v=>arr(v).filter(x=>x&&typeof x==='object');
+  d.profile=obj(d.profile);
+  d.content=obj(d.content);
+  d.wallpaper=obj(d.wallpaper);
+  d.about=obj(d.about);
+  d.contact=obj(d.contact);
+  d.wallpaper.images=arr(d.wallpaper.images);
+  d.wallpaper.videos=objs(d.wallpaper.videos);
+  d.modules=objs(d.modules);
+  d.memos=objs(d.memos);
+  d.portfolio=objs(d.portfolio);
+  d.gallery=objs(d.gallery);
+  d.changelog=objs(d.changelog);
+  d.testimonials=objs(d.testimonials);
+  d.petMessages=arr(d.petMessages);
+  d.cloudMusicIds=arr(d.cloudMusicIds);
+  if(d.accent!=null&&typeof d.accent!=='string')d.accent=String(d.accent);
+  if(typeof d.bgm!=='string')d.bgm=d.bgm==null?'':String(d.bgm);
+  // 画廊项缺失关键字段时补上，免得渲染/地图取属性时报错
+  d.gallery.forEach(g=>{if(g.tags&&!Array.isArray(g.tags))g.tags=[];});
+  d.memos.forEach(m=>{if(m&&typeof m.text!=='string')m.text=m&&m.text!=null?String(m.text):'';});
+  d.changelog.forEach(c=>{if(c&&typeof c.text!=='string')c.text=c&&c.text!=null?String(c.text):'';});
+  return d;
+}
+
 async function loadData(){
   const def=JSON.parse(JSON.stringify(DEFAULT_DATA));
   let result=def;
   // 1. 立即从本地加载（毫秒级，不阻塞渲染）
   try{const saved=await dbGet(LS_KEY);if(saved)result=mergeData(JSON.parse(JSON.stringify(def)),saved);}catch(e){console.warn('DB load:',e.message)}
+  result=sanitizeData(result);   // 本地缓存结构可能是旧版的，净化后再渲染，避免渲染中途抛错
   rewriteR2(result);
   // 2. 后台静默从云端同步（不阻塞页面渲染）
   syncFromCloud(result);
@@ -2256,7 +2294,7 @@ async function syncFromCloud(localResult){
       if(data.content){
         ['slide1Bg','slide2Bg','slide3Bg'].forEach(k=>{if(data.content[k]?.startsWith('data:'))preserveImages[k]=data.content[k];});
       }
-      data=mergeData(data,remote);
+      data=sanitizeData(mergeData(data,remote));   // 云端数据也净化一次（服务端可能存了旧结构）
       if(preserveImages.avatar&&data.profile)data.profile.avatar=preserveImages.avatar;
       if(data.content)Object.keys(preserveImages).forEach(k=>{if(k!=='avatar')data.content[k]=preserveImages[k];});
       rewriteR2(data);
