@@ -2165,15 +2165,35 @@ function mergeData(d,s){
   return d;
 }
 
+// 带重试地拉云端数据（/api/data）。失败不抛错，返回 null 让调用方保持现状。
+async function fetchCloudData(tries){
+  tries=tries||3;
+  for(let i=0;i<tries;i++){
+    try{
+      const ctrl=new AbortController();
+      const t=setTimeout(()=>ctrl.abort(),12000);
+      const r=await fetch(API_URL+'/data',{signal:ctrl.signal});
+      clearTimeout(t);
+      if(r.ok){
+        const j=await r.json();
+        if(j&&j.profile)return j;
+        console.warn('[云同步] 返回数据不完整（第 '+(i+1)+' 次）');
+      }else console.warn('[云同步] HTTP '+r.status+'（第 '+(i+1)+' 次）');
+    }catch(e){ console.warn('[云同步] 第 '+(i+1)+' 次失败：'+e.message); }
+    if(i<tries-1)await new Promise(s=>setTimeout(s,600*(i+1)));
+  }
+  console.warn('[云同步] 重试 '+tries+' 次仍未成功 —— 页面将继续使用本地/默认数据。'+
+    '可在网址后加 ?diag=1 打开诊断条查看。');
+  return null;
+}
+
 async function syncFromCloud(localResult){
   try{
-    const ctrl=new AbortController();
-    const t=setTimeout(()=>ctrl.abort(),8000);
-    const r=await fetch(API_URL+'/data',{signal:ctrl.signal});
-    clearTimeout(t);
-    if(!r.ok)return;
-    const remote=await r.json();
-    if(!remote?.profile)return;
+    // 带重试地拉云端数据：以前是 8 秒超时 + 失败一次就永久放弃 + 完全静默，
+    // 网络一抖页面就永远停在默认数据（3 条默认说说、0 条更新日志），
+    // 新功能看起来就像"没上线"。现在重试 3 次、超时放宽到 12 秒，并打日志。
+    const remote=await fetchCloudData(3);
+    if(!remote)return;
     const _cloudVids=remote.wallpaper?.videos||[];
     if(remote.wallpaper&&(!_cloudVids.length||_cloudVids.every(v=>!v.src))){
       var vids=[];
