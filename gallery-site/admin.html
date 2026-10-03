@@ -257,30 +257,37 @@ function renderProvList(){
   if(!provs.length){host.innerHTML='<p style="color:var(--text-muted)">还没有城市</p>';return;}
   host.innerHTML=provs.map(p=>{
     const cov=PROV_COVERS[p]||'';
-    const first=(PROV_CITIES[p][0]&&PROV_CITIES[p][0].first_photo)||'';
+    const first=(PROV_CITIES[p][0]&&PROV_CITIES[p][0].cover)||'';
     const show=cov||first;
+    const n=provPhotoCount(p);
     return '<div class="prov-row">'+
       '<div class="prov-thumb">'+(show?'<img src="'+esc(show)+'" alt="">':'<span>无图</span>')+'</div>'+
-      '<div class="prov-info"><b>'+esc(p)+'</b><small>'+PROV_CITIES[p].length+' 座城市 · '+(cov?'已选封面':'用第一张照片')+'</small></div>'+
+      '<div class="prov-info"><b>'+esc(p)+'</b><small>'+PROV_CITIES[p].length+' 座城市 · '+n+' 张照片 · '+(cov?'已选封面':'按第一张照片显示')+'</small></div>'+
       '<button class="btn sm" onclick="openProvPicker(\''+esc(p).replace(/'/g,'&#39;')+'\')">选封面</button>'+
       '</div>';
   }).join('');
 }
+/* 该省自己的照片（只含该省城市，别把全站照片混进来）*/
+function provPhotos(prov){
+  // 注意：接口返回的是驼峰 cityKey（不是 city_key），早先写错导致过滤失效、把全站照片都算了进来
+  const keys=new Set((PROV_CITIES[prov]||[]).map(c=>c.cityKey));
+  const out=[];
+  (PROV_CITIES[prov]||[]).forEach(c=>{ if(c.cover)out.push(c.cover); });
+  (ALL_PHOTOS||[]).forEach(ph=>{ if(ph&&keys.has(ph.cityKey)&&ph.url)out.push(ph.url); });
+  return [...new Set(out)];
+}
+function provPhotoCount(prov){return provPhotos(prov).length;}
 function openProvPicker(prov){
   provPicking=prov;
   document.getElementById('provPicker').style.display='';
-  document.getElementById('provPickTitle').textContent=prov+' · 挑一张照片当封面';
+  document.getElementById('provPickTitle').textContent=prov+' · 从该省的 '+provPhotoCount(prov)+' 张照片里挑一张';
   document.getElementById('provUrlInput').value=PROV_COVERS[prov]||'';
   const grid=document.getElementById('provGrid');
-  const cityKeys=new Set((PROV_CITIES[prov]||[]).map(c=>c.city_key));
-  const photos=[];
-  (PROV_CITIES[prov]||[]).forEach(c=>{ if(c.first_photo)photos.push(c.first_photo); });
-  (ALL_PHOTOS||[]).forEach(ph=>{ if(cityKeys.has(ph.city_key))photos.push(ph.url); });
-  const uniq=[...new Set(photos)].slice(0,48);
+  const uniq=provPhotos(prov).slice(0,60);
   grid.innerHTML=uniq.length?uniq.map(u=>
     '<button class="prov-pick'+(PROV_COVERS[prov]===u?' on':'')+'" type="button" onclick="saveProvinceCover(\''+esc(u).replace(/'/g,'&#39;')+'\')">'+
     '<img loading="lazy" src="'+esc(u)+'" alt=""></button>').join('')
-    :'<p style="color:var(--text-muted);font-size:.85em">这个省份还没有照片 —— 先在左侧给城市上传照片，或直接粘贴一个图片地址。</p>';
+    :'<p style="color:var(--text-muted);font-size:.85em">这个省份还没有照片 —— 先在左侧给该省的城市上传照片。</p>';
   document.getElementById('provPicker').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function closeProvPicker(){document.getElementById('provPicker').style.display='none';provPicking='';}
