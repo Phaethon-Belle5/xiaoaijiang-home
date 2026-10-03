@@ -170,12 +170,34 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 .stat-item{text-align:center}
 .stat-item .num{font-family:var(--font-display);font-size:1.6em;color:var(--gold);font-weight:700}
 .stat-item .lbl{font-size:.78em;color:var(--text-muted);letter-spacing:.05em}
-/* ===== 记忆区（旅行统计 / 时间足迹 / 记忆书架 / 照片流）===== */
-.mem-zone{max-width:var(--container-max);margin:var(--space-16) auto 0;padding:0 var(--container-padding)}
-.mem-tabs{display:flex;gap:var(--space-2);flex-wrap:wrap;justify-content:center;margin-bottom:var(--space-8)}
-.mem-tab{font:inherit;font-size:.86em;color:var(--text-secondary);background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-pill);padding:8px 20px;cursor:pointer;transition:all .22s var(--ease-out);backdrop-filter:blur(8px)}
-.mem-tab:hover{color:var(--text-primary);border-color:var(--gold-glow)}
-.mem-tab.on{color:#1a1200;background:var(--gold);border-color:var(--gold);box-shadow:0 4px 20px var(--gold-glow)}
+/* ===== 记忆入口（地图上方）===== */
+.mem-launch{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:var(--space-8) auto var(--space-5);
+  max-width:var(--container-max);padding:0 var(--container-padding)}
+.ml-btn{font:inherit;font-size:.88em;color:var(--text-secondary);background:var(--glass-bg);
+  border:1px solid var(--glass-border);border-radius:var(--radius-pill);padding:9px 22px;cursor:pointer;
+  transition:all .24s var(--ease-out);backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:7px}
+.ml-btn:hover{color:var(--gold-bright);border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 18px var(--gold-glow)}
+.ml-ic{color:var(--gold);font-size:1.05em}
+/* ===== 记忆弹出层 ===== */
+.mem-pop{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;padding:3vh 2vw}
+.mem-pop.show{display:flex}
+.mp-scrim{position:absolute;inset:0;background:rgba(4,6,14,.82);backdrop-filter:blur(7px)}
+.mp-box{position:relative;z-index:2;width:min(1180px,96vw);height:min(88vh,880px);display:flex;flex-direction:column;
+  background:linear-gradient(170deg,rgba(20,26,46,.98),rgba(11,14,22,.99));border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 0 1px rgba(212,168,67,.08);overflow:hidden}
+.mp-bar{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-5);
+  border-bottom:1px solid var(--glass-border);flex:none}
+.mp-tabs{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.mp-tab{font:inherit;font-size:.86em;color:var(--text-secondary);background:transparent;border:1px solid var(--glass-border);
+  border-radius:var(--radius-pill);padding:6px 18px;cursor:pointer;transition:all .22s var(--ease-out)}
+.mp-tab:hover{color:var(--text-primary);border-color:var(--gold-glow)}
+.mp-tab.on{color:#1a1200;background:var(--gold);border-color:var(--gold)}
+.mp-close{font:inherit;font-size:1.6em;line-height:1;color:var(--text-secondary);background:transparent;border:0;
+  cursor:pointer;padding:0 4px;flex:none}
+.mp-close:hover{color:var(--gold-bright)}
+.mp-body{flex:1;overflow-y:auto;padding:var(--space-6) var(--space-8)}
+.mp-body::-webkit-scrollbar{width:7px}
+.mp-body::-webkit-scrollbar-thumb{background:var(--gold-glow);border-radius:9px}
 .mem-panel{min-height:200px}
 .mem-loading{text-align:center;color:var(--text-muted);padding:var(--space-10) 0}
 .mem-sub{font-size:.8em;color:var(--text-muted);text-align:center;margin-top:6px}
@@ -374,21 +396,52 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 @media (max-width:760px){#tripPanel{width:calc(100% - 32px);max-height:44%}}
 /* ===== 记忆书架 ===== */
 .shelf-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:var(--space-5);margin-bottom:var(--space-4)}
+/* 书封：上半省份名，下半封面图 */
 .shelf-book{position:relative;aspect-ratio:5/6.4;border-radius:var(--radius-md);cursor:pointer;overflow:hidden;
-  background:linear-gradient(160deg,rgba(212,168,67,.16),rgba(17,22,42,.9));
-  border:1px solid var(--glass-border);box-shadow:var(--shadow-card);transition:all .3s var(--ease-out);
-  display:flex;flex-direction:column;justify-content:flex-end}
-.shelf-book::after{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--gold),rgba(212,168,67,.25))}
+  background:#0d1220;border:1px solid var(--glass-border);box-shadow:var(--shadow-card);
+  display:flex;flex-direction:column;transition:all .3s var(--ease-out)}
+.shelf-book::after{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--gold),rgba(212,168,67,.22));z-index:3}
 .shelf-book:hover{transform:translateY(-6px) rotate(-.6deg);border-color:var(--gold);box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 26px var(--gold-glow)}
-.sb-face{position:absolute;inset:0;opacity:.5;transition:opacity .3s}
-.sb-face img{width:100%;height:100%;object-fit:cover;display:block}
-.shelf-book:hover .sb-face{opacity:.72}
-.sb-badge{position:absolute;right:9px;top:9px;background:rgba(0,0,0,.6);color:var(--gold-bright);font-size:.7em;
-  padding:2px 8px;border-radius:99px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px)}
-.sb-spine{position:relative;z-index:2;padding:14px 14px 16px 18px;background:linear-gradient(transparent,rgba(6,9,18,.92) 42%)}
-.sb-title{display:block;font-family:var(--font-display);font-size:1.02em;color:var(--text-primary);font-weight:600;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-meta{display:block;font-size:.72em;color:var(--text-muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.sb-top{height:32%;flex:none;display:flex;align-items:center;justify-content:center;padding:10px 14px 10px 20px;
+  background:linear-gradient(160deg,rgba(212,168,67,.2),rgba(212,168,67,.06));border-bottom:1px solid var(--gold-glow)}
+.sb-prov{font-family:var(--font-display);font-size:1.14em;font-weight:700;color:var(--gold-bright);
+  letter-spacing:.05em;text-align:center;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sb-bottom{position:relative;flex:1;overflow:hidden;background:rgba(255,255,255,.03)}
+.sb-bottom img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92;transition:transform .4s var(--ease-out)}
+.shelf-book:hover .sb-bottom img{transform:scale(1.05)}
+.sb-badge{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.62);color:var(--gold-bright);font-size:.7em;
+  padding:2px 9px;border-radius:99px;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px)}
+/* 书封页（书里的第 1 页） */
+.bp-prov{display:flex;flex-direction:column;background:#0d1220;height:100%}
+.bp-prov-top{height:34%;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:linear-gradient(160deg,rgba(212,168,67,.22),rgba(212,168,67,.07));border-bottom:1px solid var(--gold-glow);padding:12px}
+.bp-prov-name{font-family:var(--font-display);font-size:1.7em;font-weight:700;color:var(--gold-bright);letter-spacing:.06em}
+.bp-prov-sub{font-size:.74em;color:var(--text-muted)}
+.bp-prov-img{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#070a12}
+.bp-prov-img img{width:100%;height:100%;object-fit:cover;display:block}
+.bp-noimg{font-size:.82em;color:var(--text-muted);text-align:center;line-height:1.9}
+.bp-noimg small{opacity:.72;font-size:.9em}
+/* 目录页 */
+.bp-toc .bp-inner{justify-content:flex-start;padding-top:var(--space-8)}
+.toc-list{width:100%;max-width:420px;margin:14px auto 0;display:flex;flex-direction:column;gap:6px;
+  max-height:62%;overflow-y:auto;padding-right:4px}
+.toc-list::-webkit-scrollbar{width:5px}
+.toc-list::-webkit-scrollbar-thumb{background:var(--gold-glow);border-radius:9px}
+.toc-row{font:inherit;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+  background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:9px;
+  padding:9px 14px;cursor:pointer;transition:all .22s var(--ease-out);text-align:left}
+.toc-row:hover{background:var(--gold-glow);border-color:var(--gold);transform:translateX(4px)}
+.toc-n{color:var(--text-primary);font-size:.92em}
+.toc-m{color:var(--text-muted);font-size:.78em;flex:none}
+/* 城市评价页 */
+.bp-review .bp-inner{justify-content:center;gap:5px}
+.bp-review .bp-city{font-family:var(--font-display);font-size:1.8em;color:var(--gold-bright);margin:4px 0 2px}
+.bp-stars{color:var(--gold);font-size:1.05em;letter-spacing:2px}
+.bp-review .bp-desc{font-size:.92em;color:var(--text-secondary);line-height:1.95;max-width:84%;margin-top:10px;
+  text-align:left;white-space:pre-wrap}
+.bp-nod{opacity:.66;font-style:normal;text-align:center}
+.bk-page{font-size:.8em;color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:64px;text-align:center}
 /* 翻页相册弹层 */
 .book-layer{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center}
 .book-layer.show{display:flex}
@@ -534,6 +587,14 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
     <p>点击地图上发光的城市，解锁定格于此的每帧光影。</p>
   </section>
 
+  <!-- ===== 记忆入口（地图上方，点击弹出）===== -->
+  <div class="mem-launch" id="memLaunch">
+    <button class="ml-btn" type="button" data-mem="stats"  onclick="openMemPop('stats')"><span class="ml-ic">◲</span>旅行统计</button>
+    <button class="ml-btn" type="button" data-mem="time"   onclick="openMemPop('time')"><span class="ml-ic">◷</span>时间足迹</button>
+    <button class="ml-btn" type="button" data-mem="shelf"  onclick="openMemPop('shelf')"><span class="ml-ic">▤</span>记忆书架</button>
+    <button class="ml-btn" type="button" data-mem="stream" onclick="openMemPop('stream')"><span class="ml-ic">✦</span>照片流</button>
+  </div>
+
   <div class="map-toolbar">
     <div class="view-tabs" role="tablist">
       <button class="view-tab on" data-view="city" onclick="setMapView('city')">城市视图</button>
@@ -558,16 +619,22 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 
   <div class="stat-row" id="statRow"></div>
 
-  <!-- ===== 记忆区：旅行统计 / 时间足迹 / 记忆书架 / 照片流 ===== -->
-  <section class="mem-zone" id="memZone">
-    <div class="mem-tabs" role="tablist" aria-label="记忆区">
-      <button class="mem-tab on" type="button" data-mem="stats"  onclick="setMemTab('stats')"  role="tab">旅行统计</button>
-      <button class="mem-tab"    type="button" data-mem="time"   onclick="setMemTab('time')"   role="tab">时间足迹</button>
-      <button class="mem-tab"    type="button" data-mem="shelf"  onclick="setMemTab('shelf')"  role="tab">记忆书架</button>
-      <button class="mem-tab"    type="button" data-mem="stream" onclick="setMemTab('stream')" role="tab">照片流</button>
+  <!-- ===== 记忆弹出层 ===== -->
+  <div class="mem-pop" id="memPop" aria-hidden="true">
+    <div class="mp-scrim" onclick="closeMemPop()"></div>
+    <div class="mp-box">
+      <div class="mp-bar">
+        <div class="mp-tabs" role="tablist">
+          <button class="mp-tab on" type="button" data-mem="stats"  onclick="setMemTab('stats')"  role="tab">旅行统计</button>
+          <button class="mp-tab"    type="button" data-mem="time"   onclick="setMemTab('time')"   role="tab">时间足迹</button>
+          <button class="mp-tab"    type="button" data-mem="shelf"  onclick="setMemTab('shelf')"  role="tab">记忆书架</button>
+          <button class="mp-tab"    type="button" data-mem="stream" onclick="setMemTab('stream')" role="tab">照片流</button>
+        </div>
+        <button class="mp-close" type="button" onclick="closeMemPop()" aria-label="关闭">&times;</button>
+      </div>
+      <div class="mp-body" id="memPanel"><div class="mem-loading">正在整理记忆…</div></div>
     </div>
-    <div class="mem-panel" id="memPanel"><div class="mem-loading">正在整理记忆…</div></div>
-  </section>
+  </div>
 
   <div class="unlocated" id="unlocated"></div>
 </main>
@@ -1062,14 +1129,46 @@ function renderStats(){
 }
 /* ============================================================
    记忆区：旅行统计 / 时间足迹 / 记忆书架 / 照片流
+   入口在地图上方，内容在弹出层里。
    ============================================================ */
 let memTab='stats';
+function openMemPop(tab){
+  if(tab)memTab=tab;
+  const pop=document.getElementById('memPop');
+  if(!pop)return;
+  pop.classList.add('show');pop.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  syncMemTabs();
+  renderMemZone();
+  if(!__provCoversLoaded)loadProvinceCovers().then(()=>{if(memTab==='shelf')renderMemZone();});
+}
+function closeMemPop(){
+  const pop=document.getElementById('memPop');
+  if(!pop)return;
+  pop.classList.remove('show');pop.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+  if(typeof memStreamUnmount==='function')memStreamUnmount();   // 关掉就释放 WebGL
+}
+function syncMemTabs(){
+  document.querySelectorAll('.mp-tab[data-mem]').forEach(b=>b.classList.toggle('on',b.dataset.mem===memTab));
+}
 function setMemTab(t){
-  if(memTab==='stream'&&t!=='stream'&&typeof memStreamUnmount==='function')memStreamUnmount();  // 离开时释放 WebGL
+  if(memTab==='stream'&&t!=='stream'&&typeof memStreamUnmount==='function')memStreamUnmount();
   memTab=t;
-  document.querySelectorAll('.mem-tab[data-mem]').forEach(b=>b.classList.toggle('on',b.dataset.mem===t));
+  syncMemTabs();
   renderMemZone();
 }
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const p=document.getElementById('memPop');if(p&&p.classList.contains('show')&&!document.getElementById('bookLayer').classList.contains('show'))closeMemPop();}});
+/* 省份封面（管理员在控制面板选定；取不到就用该省第一张照片兜底）*/
+let PROV_COVERS={},__provCoversLoaded=false;
+async function loadProvinceCovers(){
+  try{
+    const r=await fetch(API+'/province-covers');
+    if(r.ok)PROV_COVERS=await r.json();
+  }catch(e){PROV_COVERS={};}
+  __provCoversLoaded=true;
+}
+function provCoverOf(prov){return PROV_COVERS[prov]||'';}
 function renderMemZone(){
   const box=document.getElementById('memPanel');
   if(!box)return;
@@ -1169,27 +1268,35 @@ function openMemMonth(key,fromId){                 // 打开某个月的照片�
   }
   openPhotos(list,idx,{title:key==='未标日期'?'未标日期':key.replace('-',' 年 ')+' 月'});
 }
-/* --- ③ 记忆书架：每座城市一本书，点开翻页相册 --- */
+/* --- ③ 记忆书架：按省份分册 ---
+   书脊正面：上半是省份名，下半是控制面板选定的封面图。
+   翻开后：第 1 页 = 书封、第 2 页 = 该省去过的城市目录（可点击跳转），
+   之后每个城市：第一页是该城市的评价（简介），再往后是这个城市的照片。 */
+function memProvinceGroups(){
+  const by=new Map();
+  mapCityPoints.forEach(c=>{
+    const prov=(c.name||'未归类').trim()||'未归类';
+    if(!by.has(prov))by.set(prov,{prov:prov,cities:[],photos:0});
+    const g=by.get(prov);g.cities.push(c);g.photos+=c.photos.length;
+  });
+  return [...by.values()].map(g=>{
+    g.cities.sort((a,b)=>b.photos.length-a.photos.length);
+    g.cover=provCoverOf(g.prov)||(g.cities[0]&&g.cities[0].photos[0]?g.cities[0].photos[0].image:'');
+    return g;
+  }).sort((a,b)=>b.photos-a.photos);
+}
 function memShelfHTML(){
-  const books=mapCityPoints.slice().sort((a,b)=>b.photos.length-a.photos.length);
-  if(!books.length)return '<div class="mem-loading">还没有可以装订的城市记忆。</div>';
+  const provs=memProvinceGroups();
+  if(!provs.length)return '<div class="mem-loading">还没有可以装订的省份记忆。</div>';
   return '<div class="shelf-wrap">'+
-    books.map((c,i)=>{
-      const months=[...new Set((c.photos||[]).map(memPhotoMonth).filter(Boolean))].sort();
-      const span=months.length?(months[0].replace('-','.')+(months.length>1?' – '+months[months.length-1].replace('-','.'):'')):'—';
-      return '<div class="shelf-book" onclick="openBook('+JSON.stringify(c.cityKey).replace(/"/g,'&quot;')+')" role="button" tabindex="0" title="翻开 '+escHtml(c.cityName)+' 的记忆">'+
-          '<div class="sb-spine">'+
-            '<span class="sb-title">'+escHtml(c.cityName)+'</span>'+
-            '<span class="sb-meta">'+c.photos.length+' 张 · '+escHtml(span)+'</span>'+
-          '</div>'+
-          '<div class="sb-face">'+
-            (c.photos[0]?'<img loading="lazy" src="'+escHtml(thumbUrl(c.photos[0].image))+'" alt="">':'')+
-            '<span class="sb-badge">'+c.photos.length+'</span>'+
-          '</div>'+
-        '</div>';
-    }).join('')+
+    provs.map(g=>
+      '<div class="shelf-book" onclick="openBook('+JSON.stringify(g.prov).replace(/"/g,'&quot;')+')" role="button" tabindex="0" title="翻开 '+escHtml(g.prov)+' 的记忆">'+
+        '<div class="sb-top"><span class="sb-prov">'+escHtml(g.prov)+'</span></div>'+
+        '<div class="sb-bottom">'+(g.cover?'<img loading="lazy" src="'+escHtml(thumbUrl(g.cover))+'" alt="">':'')+
+          '<span class="sb-badge">'+g.cities.length+' 城 · '+g.photos+' 张</span></div>'+
+      '</div>').join('')+
   '</div>'+
-  '<p class="mem-sub">共 '+books.length+' 本 · 点一本书翻开它的照片</p>'+
+  '<p class="mem-sub">共 '+provs.length+' 个省份 · 点一本书翻开它</p>'+
   '<div class="book-layer" id="bookLayer" aria-hidden="true">'+
     '<div class="bk-scrim" onclick="closeBook()"></div>'+
     '<div class="bk-wrap">'+
@@ -1202,38 +1309,55 @@ function memShelfHTML(){
     '</div>'+
   '</div>';
 }
-let __book=null,__bookCity=null,__bookPages=0,__bookIdx=0,__flip=null;
-async function openBook(cityKey){
-  const city=mapCityPoints.find(c=>c.cityKey===cityKey);
-  if(!city)return;
-  __bookCity=city;
+let __book=null,__bookPages=0,__bookIdx=0,__flip=null,__bookCityPage={};
+async function openBook(prov){
+  const g=memProvinceGroups().find(x=>x.prov===prov);
+  if(!g)return;
   const layer=document.getElementById('bookLayer');
   const title=document.getElementById('bkTitle');
   const book=document.getElementById('bkBook');
   if(!layer||!book)return;
-  title.textContent=city.cityName+' · 记忆相册';
-  // 建页：城市简介做封面页，之后每页 1 张照片
-  const months=[...new Set((city.photos||[]).map(memPhotoMonth).filter(Boolean))].sort();
+  title.textContent=prov+' · 记忆相册';
   const pages=[];
-  pages.push('<div class="book-page bp-cover"><div class="bp-inner">'+
-    '<p class="bp-eyebrow">'+escHtml(city.name||'')+'</p>'+
-    '<h3 class="bp-city">'+escHtml(city.cityName)+'</h3>'+
-    (city.description?'<p class="bp-desc">'+escHtml(String(city.description).slice(0,120))+'</p>':'')+
-    '<p class="bp-stat">'+city.photos.length+' 张照片 · '+(months.length||0)+' 个月份</p>'+
-    '<p class="bp-hint">← → 或拖拽翻页</p></div></div>');
-  (city.photos||[]).forEach(p=>{
-    const d=String(p.date||'').slice(0,10);
-    pages.push('<div class="book-page"><div class="bp-inner bp-photo">'+
-      '<img src="'+escHtml(viewUrl(p.image))+'" alt="">'+
-      '<div class="bp-cap">'+escHtml(p.caption||'')+(d?'<span class="bp-date">'+escHtml(d.replace(/-/g,'.'))+'</span>':'')+'</div>'+
+  __bookCityPage={};
+  // 第 1 页：书封（上：省份名，下：封面图）
+  pages.push('<div class="book-page bp-prov">'+
+    '<div class="bp-prov-top"><span class="bp-prov-name">'+escHtml(prov)+'</span>'+
+      '<span class="bp-prov-sub">'+g.cities.length+' 座城市 · '+g.photos+' 张照片</span></div>'+
+    '<div class="bp-prov-img">'+(g.cover?'<img src="'+escHtml(viewUrl(g.cover))+'" alt="">':'<span class="bp-noimg">还没有选封面<br><small>在管理后台「省份封面」里挑一张</small></span>')+'</div>'+
+  '</div>');
+  // 第 2 页：该省去过的城市目录（可点击跳转）
+  pages.push('<div class="book-page bp-toc">'+
+    '<div class="bp-inner"><p class="bp-eyebrow">目录</p><h3 class="bp-city">我去过的城市</h3>'+
+      '<div class="toc-list">'+g.cities.map(c=>
+        '<button class="toc-row" type="button" onclick="bookGotoCity(\''+escHtml(c.cityKey).replace(/'/g,'&#39;')+'\')">'+
+          '<span class="toc-n">'+escHtml(c.cityName)+'</span>'+
+          '<span class="toc-m">'+c.photos.length+' 张'+(c.rating?' · '+'★'.repeat(Math.max(0,Math.min(5,c.rating))):'')+'</span>'+
+        '</button>').join('')+'</div>'+
+      '<p class="bp-hint">点城市名直接翻到它那一页</p>'+
     '</div></div>');
+  // 之后每个城市：第一页是城市评价，随后是照片
+  g.cities.forEach(c=>{
+    __bookCityPage[c.cityKey]=pages.length;
+    pages.push('<div class="book-page bp-review"><div class="bp-inner">'+
+      '<p class="bp-eyebrow">'+(c.description?'城市评价':'还没有写评价')+'</p>'+
+      '<h3 class="bp-city">'+escHtml(c.cityName)+'</h3>'+
+      (c.rating?'<p class="bp-stars">'+'★'.repeat(Math.max(0,Math.min(5,c.rating)))+'</p>':'')+
+      (c.description?'<p class="bp-desc">'+escHtml(c.description)+'</p>':'<p class="bp-desc bp-nod">在管理后台给这座城市写点评价，这里就会显示。</p>')+
+      '<p class="bp-stat">'+c.photos.length+' 张照片'+(c.visitMonths&&c.visitMonths.length?' · '+escHtml(fmtVisitMonths(c.visitMonths)):'')+'</p>'+
+    '</div></div>');
+    (c.photos||[]).forEach(p=>{
+      const d=String(p.date||'').slice(0,10);
+      pages.push('<div class="book-page"><div class="bp-inner bp-photo">'+
+        '<img src="'+escHtml(viewUrl(p.image))+'" alt="">'+
+        '<div class="bp-cap">'+escHtml(p.caption||'')+(d?'<span class="bp-date">'+escHtml(d.replace(/-/g,'.'))+'</span>':'')+'</div>'+
+      '</div></div>');
+    });
   });
   book.innerHTML=pages.join('');
   layer.classList.add('show');layer.setAttribute('aria-hidden','false');
-  document.body.style.overflow='hidden';
   __bookPages=pages.length;__bookIdx=0;
   updateBookFoot();
-  // 加载翻页库（首次），失败则退化为可滚动的竖向相册
   try{
     if(!window.St||!window.St.PageFlip)await loadScript('assets/vendor/page-flip.browser.js');
     if(window.St&&window.St.PageFlip){
@@ -1241,15 +1365,21 @@ async function openBook(cityKey){
       book.classList.remove('bk-fallback');
       __flip=new St.PageFlip(book,{width:400,height:540,size:'stretch',minWidth:260,maxWidth:420,minHeight:350,maxHeight:560,
         maxShadowOpacity:.35,showCover:true,mobileScrollSupport:true,usePortrait:true});
-      // 这个库没有 onFlip 选项，事件要用 .on('flip') 注册（源码里 trigger 的事件名就是 flip）
       __flip.on('flip',()=>{try{__bookIdx=__flip.getCurrentPageIndex();}catch(e){}updateBookFoot();});
       __flip.loadFromHTML(book.querySelectorAll('.book-page'));
-      if(__flip.update)__flip.update();              // 尺寸 stretch 后必须 update 才会正确分页/响应翻页
+      if(__flip.update)__flip.update();
     }else throw new Error('翻页库未就绪');
   }catch(e){
-    book.classList.add('bk-fallback');            // 退化：竖向滚动也能看
+    book.classList.add('bk-fallback');
     console.warn('[记忆书架] 翻页库加载失败，改为滚动模式',e.message);
   }
+}
+function bookGotoCity(cityKey){                      // 目录里点城市 → 翻到它的评价页
+  const idx=__bookCityPage[cityKey];
+  if(idx==null)return;
+  if(__flip&&__flip.turnToPage){try{__flip.turnToPage(idx);__bookIdx=idx;updateBookFoot();return;}catch(e){}}
+  const el=document.querySelectorAll('#bkBook .book-page')[idx];
+  if(el&&el.scrollIntoView)el.scrollIntoView({block:'start',behavior:'smooth'});
 }
 function closeBook(){
   const layer=document.getElementById('bookLayer');

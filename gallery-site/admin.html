@@ -92,6 +92,19 @@ a{color:var(--gold);text-decoration:none}
 .up-drop{border:1.5px dashed var(--glass-border);border-radius:var(--radius);padding:26px;text-align:center;color:var(--text-muted);font-size:.86em;transition:border-color .2s,background .2s;cursor:pointer;margin-bottom:18px}
 .up-drop.drag{border-color:var(--gold);background:rgba(212,168,67,.06)}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+/* 省份封面 */
+.prov-row{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--glass-border);margin-bottom:10px}
+.prov-thumb{width:64px;height:76px;flex:none;border-radius:9px;overflow:hidden;background:#0d1220;display:flex;align-items:center;justify-content:center}
+.prov-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prov-thumb span{font-size:.7em;color:var(--text-muted)}
+.prov-info{flex:1;min-width:0}
+.prov-info b{display:block;color:var(--text-primary);font-size:1em}
+.prov-info small{color:var(--text-muted);font-size:.8em}
+.prov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;max-height:42vh;overflow-y:auto;padding-right:4px}
+.prov-pick{padding:0;border:1px solid var(--glass-border);border-radius:9px;overflow:hidden;cursor:pointer;background:var(--panel-2);aspect-ratio:4/3;transition:all .2s}
+.prov-pick img{width:100%;height:100%;object-fit:cover;display:block}
+.prov-pick:hover{border-color:var(--gold);transform:translateY(-2px)}
+.prov-pick.on{outline:2px solid var(--gold);outline-offset:1px}
 .pcard{background:var(--panel-2);border:1px solid var(--glass-border);border-radius:10px;overflow:hidden;position:relative}
 .pcard.cover{outline:2px solid var(--gold)}
 .pcard.dragging{opacity:.4}
@@ -144,6 +157,9 @@ a{color:var(--gold);text-decoration:none}
       <button class="btn sm primary" onclick="openAddCity()">+ 新增城市</button>
       <a class="btn sm" href="/" target="_blank" style="flex:1;text-align:center">看前台 ↗</a>
     </div>
+    <div class="side-tools" style="margin-top:6px">
+      <button class="btn sm" style="flex:1" onclick="openProvinceCovers()">📚 省份封面</button>
+    </div>
     <div class="sec-label">城市（<span id="cityCount">0</span>）</div>
     <div class="city-list" id="cityList"></div>
   </aside>
@@ -151,6 +167,31 @@ a{color:var(--gold);text-decoration:none}
   <main class="main" id="main">
     <div class="main-empty">← 从左侧选择一个城市开始编辑，或「+ 新增城市」</div>
   </main>
+</div>
+
+<!-- 省份封面 modal：记忆书架里每本书的封面图 -->
+<div class="modal" id="provModal">
+  <div class="card" style="width:min(880px,94vw);max-height:88vh;overflow:auto">
+    <span class="x" onclick="closeProvinceCovers()">&times;</span>
+    <h3>省份封面 · 记忆书架的书皮</h3>
+    <p style="color:var(--text-muted);font-size:.85em;line-height:1.8;margin:6px 0 16px">
+      书封上半是省份名，下半是你在这里选的图片。留空则该省第一张照片自动顶上。
+    </p>
+    <div id="provList"></div>
+    <div id="provPicker" style="display:none;margin-top:18px;border-top:1px solid var(--glass-border);padding-top:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <b id="provPickTitle" style="color:var(--gold)"></b>
+        <button class="btn sm" style="margin-left:auto" onclick="clearProvinceCover()">清除封面</button>
+        <button class="btn sm" onclick="closeProvPicker()">收起</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="provUrlInput" placeholder="也可以直接粘贴图片地址…"
+          style="flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--glass-border);background:var(--panel-2);color:var(--text-primary);outline:none">
+        <button class="btn sm primary" onclick="saveProvinceCoverFromInput()">用这个地址</button>
+      </div>
+      <div class="prov-grid" id="provGrid"></div>
+    </div>
+  </div>
 </div>
 
 <!-- 新增城市 modal -->
@@ -191,6 +232,69 @@ async function api(path,opts){
 function handleUnauth(){sessionStorage.removeItem(TOKEN_KEY);document.getElementById('app').classList.remove('on');document.getElementById('login').style.display='';toast('登录已过期，请重新登录','err');}
 
 /* ===== 登录 ===== */
+/* ===== 省份封面 ===== */
+let PROV_COVERS={},PROV_CITIES={},provPicking='';
+const PROV_NAME_BY_ADCODE={'110000':'北京市','120000':'天津市','130000':'河北省','140000':'山西省','150000':'内蒙古自治区','210000':'辽宁省','220000':'吉林省','230000':'黑龙江省','310000':'上海市','320000':'江苏省','330000':'浙江省','340000':'安徽省','350000':'福建省','360000':'江西省','370000':'山东省','410000':'河南省','420000':'湖北省','430000':'湖南省','440000':'广东省','450000':'广西壮族自治区','460000':'海南省','500000':'重庆市','510000':'四川省','520000':'贵州省','530000':'云南省','540000':'西藏自治区','610000':'陕西省','620000':'甘肃省','630000':'青海省','640000':'宁夏回族自治区','650000':'新疆维吾尔自治区','710000':'台湾省','810000':'香港特别行政区','820000':'澳门特别行政区'};
+function provOf(c){return PROV_NAME_BY_ADCODE[String(c.adcode||'')]||'未归类';}
+async function openProvinceCovers(){
+  document.getElementById('provModal').classList.add('show');
+  document.getElementById('provList').innerHTML='<p style="color:var(--text-muted)">加载中…</p>';
+  try{ PROV_COVERS=await api('/province-covers'); }catch(e){ PROV_COVERS={}; }
+  if(!Array.isArray(PROV_COVERS)&&typeof PROV_COVERS!=='object')PROV_COVERS={};
+  if(!CITIES.length){try{await loadCities();}catch(e){}}
+  // 取全部照片，供挑封面用
+  if(!ALL_PHOTOS.length){ try{ ALL_PHOTOS=await api('/photos'); }catch(e){ ALL_PHOTOS=[]; } }
+  // 按省份归拢城市
+  PROV_CITIES={};
+  for(const c of CITIES){ const p=provOf(c); (PROV_CITIES[p]=PROV_CITIES[p]||[]).push(c); }
+  renderProvList();
+}
+let ALL_PHOTOS=[];
+function closeProvinceCovers(){document.getElementById('provModal').classList.remove('show');closeProvPicker();}
+function renderProvList(){
+  const host=document.getElementById('provList');
+  const provs=Object.keys(PROV_CITIES).sort((a,b)=>PROV_CITIES[b].length-PROV_CITIES[a].length||a.localeCompare(b,'zh'));
+  if(!provs.length){host.innerHTML='<p style="color:var(--text-muted)">还没有城市</p>';return;}
+  host.innerHTML=provs.map(p=>{
+    const cov=PROV_COVERS[p]||'';
+    const first=(PROV_CITIES[p][0]&&PROV_CITIES[p][0].first_photo)||'';
+    const show=cov||first;
+    return '<div class="prov-row">'+
+      '<div class="prov-thumb">'+(show?'<img src="'+esc(show)+'" alt="">':'<span>无图</span>')+'</div>'+
+      '<div class="prov-info"><b>'+esc(p)+'</b><small>'+PROV_CITIES[p].length+' 座城市 · '+(cov?'已选封面':'用第一张照片')+'</small></div>'+
+      '<button class="btn sm" onclick="openProvPicker(\''+esc(p).replace(/'/g,'&#39;')+'\')">选封面</button>'+
+      '</div>';
+  }).join('');
+}
+function openProvPicker(prov){
+  provPicking=prov;
+  document.getElementById('provPicker').style.display='';
+  document.getElementById('provPickTitle').textContent=prov+' · 挑一张照片当封面';
+  document.getElementById('provUrlInput').value=PROV_COVERS[prov]||'';
+  const grid=document.getElementById('provGrid');
+  const cityKeys=new Set((PROV_CITIES[prov]||[]).map(c=>c.city_key));
+  const photos=[];
+  (PROV_CITIES[prov]||[]).forEach(c=>{ if(c.first_photo)photos.push(c.first_photo); });
+  (ALL_PHOTOS||[]).forEach(ph=>{ if(cityKeys.has(ph.city_key))photos.push(ph.url); });
+  const uniq=[...new Set(photos)].slice(0,48);
+  grid.innerHTML=uniq.length?uniq.map(u=>
+    '<button class="prov-pick'+(PROV_COVERS[prov]===u?' on':'')+'" type="button" onclick="saveProvinceCover(\''+esc(u).replace(/'/g,'&#39;')+'\')">'+
+    '<img loading="lazy" src="'+esc(u)+'" alt=""></button>').join('')
+    :'<p style="color:var(--text-muted);font-size:.85em">这个省份还没有照片 —— 先在左侧给城市上传照片，或直接粘贴一个图片地址。</p>';
+  document.getElementById('provPicker').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function closeProvPicker(){document.getElementById('provPicker').style.display='none';provPicking='';}
+async function saveProvinceCover(url){
+  if(!provPicking)return;
+  try{
+    await api('/province-cover',{method:'POST',body:JSON.stringify({province:provPicking,url:url})});
+    PROV_COVERS[provPicking]=url;
+    toast('封面已保存','ok');
+    renderProvList();openProvPicker(provPicking);
+  }catch(e){toast('保存失败：'+e.message,'err');}
+}
+function saveProvinceCoverFromInput(){saveProvinceCover(document.getElementById('provUrlInput').value.trim());}
+function clearProvinceCover(){saveProvinceCover('');}
 async function doLogin(){
   const pw=document.getElementById('pw').value;const msg=document.getElementById('loginMsg');
   if(!pw){msg.className='msg err';msg.textContent='请输入密码';return;}

@@ -127,6 +127,25 @@ export default {
            GROUP BY c.city_key`).all();
         return json((results || []).map(rowCity));
       }
+      // ── 省份封面：记忆书架里每本书的封面图（管理员在控制面板选定）──
+      // 复用 site_stats 的 key/val 存，键名 pc:<省份名>，不必新增表
+      if (p === '/province-covers' && method === 'GET') {
+        const { results } = await env.DB.prepare("SELECT key,val FROM site_stats WHERE key LIKE 'pc:%'").all();
+        const out = {};
+        (results || []).forEach(r => { if (r && r.key) out[String(r.key).slice(3)] = r.val; });
+        return json(out);
+      }
+      if (p === '/province-cover' && method === 'POST') {
+        const auth = await needAuth(); if (auth) return auth;
+        let b; try { b = await request.json(); } catch (e) { return json({ error: 'bad_request' }, 400); }
+        const prov = String(b.province || '').trim().slice(0, 40);
+        const url = String(b.url || '').trim().slice(0, 600);
+        if (!prov) return json({ error: 'missing_province' }, 400);
+        const key = 'pc:' + prov;
+        if (!url) await env.DB.prepare('DELETE FROM site_stats WHERE key=?').bind(key).run();
+        else await env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET val=?').bind(key, url, url).run();
+        return json({ ok: true, province: prov, url });
+      }
       if (p === '/photos' && method === 'GET') {
         const { results } = await env.DB.prepare('SELECT * FROM photos ORDER BY ord, id').all();
         return json((results || []).map(rowPhoto));
