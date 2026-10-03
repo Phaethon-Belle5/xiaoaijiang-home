@@ -182,7 +182,10 @@
 .dim-tab{font:inherit;font-size:.82em;color:var(--text-secondary);background:transparent;border:none;border-radius:999px;padding:7px 18px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .22s var(--ease-out);white-space:nowrap}
 .dim-tab:hover{color:var(--text-primary)}
 .dim-tab.active{color:#1a1408;background:linear-gradient(135deg,var(--gold-bright),var(--gold));box-shadow:0 2px 10px var(--gold-glow)}
-.dim-tab-ic{font-size:1.05em;line-height:1}
+.dim-tab-ic{display:block;flex:none;transition:transform .26s var(--ease-out)}
+.dim-tab:hover .dim-tab-ic{transform:translateY(-1px) scale(1.1)}
+.dim-tab:active{transform:scale(.95)}
+.dim-tab.active .dim-tab-ic{transform:scale(1.06)}
 .dim-subs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .dim-sub{font:inherit;font-size:.74em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:4px 12px;cursor:pointer;display:flex;gap:6px;align-items:center;transition:all .2s}
 .dim-sub:hover{color:var(--text-secondary);border-color:var(--gold-pale)}
@@ -212,14 +215,32 @@
 .dim-star.half{background:linear-gradient(90deg,var(--gold-bright) 50%,var(--surface-border) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .dim-score{margin-left:6px;font-size:.82em;color:var(--text-muted);font-variant-numeric:tabular-nums}
 .dim-review{font-size:.82em;color:var(--text-secondary);line-height:1.68;margin:0;white-space:pre-wrap;word-break:break-word}
-.dim-thought-btn{font:inherit;font-size:.75em;color:var(--gold);background:transparent;border:1px dashed rgba(212,168,67,.34);border-radius:8px;padding:5px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-start;transition:all .2s;margin-top:2px}
-.dim-thought-btn:hover{border-color:var(--gold);background:var(--gold-glow)}
-.dim-chev{transition:transform .25s var(--ease-out);display:inline-block}
+/* 整张卡片点击展开：详情（评价 / 感悟 / 链接）默认收起 */
+.dim-card.clickable{cursor:pointer}
+.dim-card.clickable:hover{border-color:var(--gold)}
+.dim-card.clickable:active{transform:translateY(-1px) scale(.995)}
+.dim-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.dim-toggle{display:flex;align-items:center;gap:6px;font-size:.74em;color:var(--gold);margin-top:3px;user-select:none;transition:color .2s}
+.dim-card:hover .dim-toggle{color:var(--gold-bright)}
+.dim-chev{transition:transform .28s var(--ease-out);display:inline-block;font-size:1.1em;line-height:1}
 .dim-card.open .dim-chev{transform:rotate(90deg)}
-.dim-thought{max-height:0;overflow:hidden;transition:max-height .3s var(--ease-out)}
-.dim-card.open .dim-thought{max-height:460px;overflow-y:auto}
-.dim-thought ul{margin:8px 0 0;padding-left:17px;display:flex;flex-direction:column;gap:5px}
+.dim-more{max-height:0;overflow:hidden;transition:max-height .34s var(--ease-out)}
+.dim-card.open .dim-more{max-height:560px;overflow-y:auto}
+.dim-more-in{display:flex;flex-direction:column;gap:7px;padding-top:4px}
+.dim-sec-lb{font-size:.72em;color:var(--gold-pale);letter-spacing:.04em}
+.dim-thought{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:5px}
 .dim-thought li{font-size:.8em;color:var(--text-secondary);line-height:1.72}
+.dim-svg{display:block}
+.dim-empty .dim-svg{margin:0 auto 10px;opacity:.55;color:var(--text-muted)}
+/* 切换分类时错落入场，让"点了有反应"看得见 */
+@keyframes dimIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.dim-anim .dim-card{animation:dimIn .4s var(--ease-out) both}
+.dim-anim .dim-card:nth-child(1){animation-delay:0s}
+.dim-anim .dim-card:nth-child(2){animation-delay:.05s}
+.dim-anim .dim-card:nth-child(3){animation-delay:.1s}
+.dim-anim .dim-card:nth-child(4){animation-delay:.15s}
+.dim-anim .dim-card:nth-child(5){animation-delay:.2s}
+.dim-anim .dim-card:nth-child(n+6){animation-delay:.25s}
 .dim-link{font-size:.75em;color:var(--gold);text-decoration:none;margin-top:2px;transition:color .2s}
 .dim-link:hover{color:var(--gold-bright)}
 .dim-empty{grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:.88em;padding:52px 16px;line-height:1.9}
@@ -1247,7 +1268,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-02 · 次元柜上线（书籍 / 影视 / 游戏）';
+const BUILD='2026-10-02 · 次元柜（卡片点击展开 + 线性图标）';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -3136,9 +3157,15 @@ function renderMain(){
         <div class="section-divider"></div>
         <div class="dim-toolbar reveal">
           <div class="dim-tabs" role="tablist">
-            <button class="dim-tab active" type="button" data-dim-kind="books" onclick="setDimKind('books')" role="tab"><span class="dim-tab-ic">📖</span>书籍</button>
-            <button class="dim-tab" type="button" data-dim-kind="films" onclick="setDimKind('films')" role="tab"><span class="dim-tab-ic">🎬</span>影视</button>
-            <button class="dim-tab" type="button" data-dim-kind="games" onclick="setDimKind('games')" role="tab"><span class="dim-tab-ic">🎮</span>游戏</button>
+            <button class="dim-tab active" type="button" data-dim-kind="books" onclick="setDimKind('books')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16H7a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2h12z"/><path d="M19 16H7a2 2 0 0 0 -2 2"/><path d="M11 8h5"/></svg>
+              <span>书籍</span></button>
+            <button class="dim-tab" type="button" data-dim-kind="films" onclick="setDimKind('films')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 15h16"/><path d="M9 4v5"/><path d="M15 4v5"/><path d="M9 15v5"/><path d="M15 15v5"/></svg>
+              <span>影视</span></button>
+            <button class="dim-tab" type="button" data-dim-kind="games" onclick="setDimKind('games')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6H7a4 4 0 0 0 -4 4v4a4 4 0 0 0 4 4h10a4 4 0 0 0 4 -4v-4a4 4 0 0 0 -4 -4z"/><path d="M7 12h4"/><path d="M9 10v4"/><path d="M15 11h.01"/><path d="M17.5 13h.01"/></svg>
+              <span>游戏</span></button>
           </div>
           <div class="dim-subs" id="dim-subs"></div>
         </div>
@@ -4164,12 +4191,36 @@ const DIM_KINDS=[
   {id:'films',label:'影视',creator:'导演 / 平台',icon:'🎬'},
   {id:'games',label:'游戏',creator:'平台 / 制作',icon:'🎮'}
 ];
+// 前台用的线性图标（和导航栏同一套风格，不用 emoji）
+const DIM_ICONS={
+  books:'<path d="M19 4v16H7a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2h12z"/><path d="M19 16H7a2 2 0 0 0 -2 2"/><path d="M11 8h5"/>',
+  films:'<path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 15h16"/><path d="M9 4v5"/><path d="M15 4v5"/><path d="M9 15v5"/><path d="M15 15v5"/>',
+  games:'<path d="M17 6H7a4 4 0 0 0 -4 4v4a4 4 0 0 0 4 4h10a4 4 0 0 0 4 -4v-4a4 4 0 0 0 -4 -4z"/><path d="M7 12h4"/><path d="M9 10v4"/><path d="M15 11h.01"/><path d="M17.5 13h.01"/>'
+};
+function dimIconSvg(kind,size){return '<svg class="dim-svg" viewBox="0 0 24 24" width="'+(size||16)+'" height="'+(size||16)+'" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(DIM_ICONS[kind]||DIM_ICONS.books)+'</svg>';}
 let dimKind='books',dimSub='';
 function dimKindInfo(k){return DIM_KINDS.find(x=>x.id===k)||DIM_KINDS[0];}
 function dimKit(){if(!data.dimension||typeof data.dimension!=='object')data.dimension={subs:{books:[],films:[],games:[]},items:[]};const d=data.dimension;if(!d.subs||typeof d.subs!=='object')d.subs={books:[],films:[],games:[]};if(!Array.isArray(d.items))d.items=[];DIM_KINDS.forEach(k=>{if(!Array.isArray(d.subs[k.id]))d.subs[k.id]=[];});return d;}
 function dimItems(kind){return dimKit().items.filter(it=>it&&it.kind===kind);}
 function dimSubs(kind){return dimKit().subs[kind]||[];}
-function setDimKind(k){if(dimKind===k)return;dimKind=k;dimSub='';renderDimension();}
+function setDimKind(k){
+  if(dimKind===k)return;
+  dimKind=k;dimSub='';
+  // 切换时给网格来一次错落入场动画，让"点了有反应"看得见
+  const grid=document.getElementById('dim-grid');
+  if(grid){
+    grid.classList.remove('dim-anim');
+    void grid.offsetWidth;            // 强制重排，动画才能重放
+    grid.classList.add('dim-anim');
+  }
+  renderDimension();
+  // 立刻同步（renderDimension 里只重绘网格，这里保证选中态立刻生效）
+  document.querySelectorAll('.dim-tab').forEach(b=>{
+    const on=b.dataset.dimKind===dimKind;
+    b.classList.toggle('active',on);
+    b.setAttribute('aria-selected',on?'true':'false');
+  });
+}
 function setDimSub(s){dimSub=(dimSub===s)?'':s;renderDimension();}
 function dimStars(v){
   const n=Math.max(0,Math.min(5,Number(v)||0));
@@ -4181,11 +4232,13 @@ function dimStars(v){
   }
   return '<span class="dim-stars" title="'+(n?n+' 分':'未评分')+'">'+h+'<span class="dim-score">'+(n?n.toFixed(1).replace(/\.0$/,''):'—')+'</span></span>';
 }
-function toggleDimThought(btn){
-  const card=btn.closest('.dim-card');if(!card)return;
+// 整张卡片点击展开/收起详情（评价、感悟、链接都在里面）
+function toggleDimCard(card){
+  if(!card||!card.classList.contains('clickable'))return;
   const on=card.classList.toggle('open');
-  btn.setAttribute('aria-expanded',on?'true':'false');
-  const lb=btn.querySelector('.dim-thought-lb');if(lb)lb.textContent=on?'收起感悟':'感悟';
+  card.setAttribute('aria-expanded',on?'true':'false');
+  const lb=card.querySelector('.dim-toggle-lb');
+  if(lb)lb.textContent=on?'收起':'查看详情';
 }
 function dimCard(it){
   const isGame=it.kind==='games';
@@ -4193,28 +4246,39 @@ function dimCard(it){
   const sub=String(it.sub||'').trim();
   const review=String(it.review||'').trim();
   const thought=String(it.thought||'').trim();
+  const link=String(it.link||'').trim();
   const lines=thought?thought.split('\n').map(s=>s.trim()).filter(Boolean):[];
+  const hasMore=!!(review||lines.length||link);
   const img=cover
     ? '<img class="'+(isGame?'dim-icon':'dim-poster')+'" src="'+escHtml(cover)+'" alt="" loading="lazy" onerror="this.classList.add(\'dim-img-broken\');this.removeAttribute(\'src\')">'
-    : '<div class="'+(isGame?'dim-icon':'dim-poster')+' dim-img-none">'+dimKindInfo(it.kind).icon+'</div>';
+    : '<div class="'+(isGame?'dim-icon':'dim-poster')+' dim-img-none">'+dimIconSvg(it.kind,isGame?26:34)+'</div>';
   const meta=[String(it.creator||'').trim(),String(it.date||'').trim()].filter(Boolean).join(' · ');
-  return '<article class="dim-card'+(isGame?' is-game':'')+'" data-kind="'+it.kind+'">'+
+  return '<article class="dim-card'+(isGame?' is-game':'')+(hasMore?' clickable':'')+'"'+
+      (hasMore?' role="button" tabindex="0" aria-expanded="false" onclick="toggleDimCard(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleDimCard(this);}"':'')+'>'+
       '<div class="dim-thumb">'+img+'</div>'+
       '<div class="dim-body">'+
         '<div class="dim-head"><h3 class="dim-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
           (sub?'<span class="dim-chip">'+escHtml(sub)+'</span>':'')+'</div>'+
         (meta?'<p class="dim-meta">'+escHtml(meta)+'</p>':'')+
         dimStars(it.rating)+
-        (review?'<p class="dim-review">'+escHtml(review)+'</p>':'')+
-        (lines.length?'<button class="dim-thought-btn" type="button" aria-expanded="false" onclick="toggleDimThought(this)">'+
-            '<span class="dim-thought-lb">感悟</span><span class="dim-chev">›</span></button>'+
-            '<div class="dim-thought"><ul>'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
-        (String(it.link||'').trim()?'<a class="dim-link" href="'+escHtml(String(it.link).trim())+'" target="_blank" rel="noopener">去看看 ↗</a>':'')+
+        (hasMore?'<div class="dim-more"><div class="dim-more-in">'+
+            (review?'<p class="dim-review">'+escHtml(review)+'</p>':'')+
+            (lines.length?'<div class="dim-sec-lb">感悟</div><ul class="dim-thought">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul>':'')+
+            (link?'<a class="dim-link" href="'+escHtml(link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">去看看 ↗</a>':'')+
+          '</div></div>'+
+          '<div class="dim-toggle"><span class="dim-toggle-lb">查看详情</span><span class="dim-chev">›</span></div>':'')+
       '</div></article>';
 }
 function renderDimension(){
   const grid=document.getElementById('dim-grid');if(!grid)return;
-  grid.className='dim-grid'+(dimKind==='games'?' games':'');   // 游戏用更紧凑的网格
+  // 用 classList 而不是 className：否则会把 setDimKind 加上的 .dim-anim 冲掉，入场动画就没了
+  grid.classList.toggle('games',dimKind==='games');
+  // 同步 tab 的选中态（之前漏了这一步，导致切了之后高亮还留在原来那个上面）
+  document.querySelectorAll('.dim-tab').forEach(b=>{
+    const on=b.dataset.dimKind===dimKind;
+    b.classList.toggle('active',on);
+    b.setAttribute('aria-selected',on?'true':'false');
+  });
   const subsBox=document.getElementById('dim-subs');
   const info=dimKindInfo(dimKind);
   const all=dimItems(dimKind);
@@ -4235,7 +4299,7 @@ function renderDimension(){
   const cnt=document.getElementById('dim-count');
   if(cnt)cnt.textContent=list.length?('共 '+list.length+' 部'+info.label+(dimSub?(' · '+(dimSub==='__none__'?'未分类':dimSub)):'')):'';
   if(!list.length){
-    grid.innerHTML='<p class="dim-empty">'+escHtml(info.icon)+' 这里还空着 —— 在管理面板的「次元柜」里添加'+escHtml(info.label)+'记录吧。</p>';
+    grid.innerHTML='<p class="dim-empty">'+dimIconSvg(dimKind,30)+'<br>这里还空着 —— 在管理面板的「次元柜」里添加'+escHtml(info.label)+'记录吧。</p>';
     return;
   }
   grid.innerHTML=list.map(dimCard).join('');
