@@ -683,6 +683,19 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .log-body li{font-size:.76em;line-height:1.6;color:var(--text-secondary);position:relative}
 .log-body li::before{content:'';position:absolute;left:-12px;top:.62em;width:4px;height:4px;border-radius:50%;background:var(--gold-pale);opacity:.75}
 .log-foot{font-size:.66em;color:var(--text-muted);margin-top:8px;text-align:center}
+/* 更新日志：类别检索 + 时间排序 + 置顶 */
+.log-tools{display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap}
+.log-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0}
+.log-chip{font:inherit;font-size:.68em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:2px 9px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:4px}
+.log-chip:hover{color:var(--text-secondary);border-color:var(--gold-pale)}
+.log-chip.on{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
+.log-chip i{font-style:normal;opacity:.65;font-size:.92em}
+.log-sortbtn{font:inherit;font-size:.68em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap;flex:none;transition:all .18s}
+.log-sortbtn:hover{color:var(--gold-bright);border-color:var(--gold-pale)}
+.log-pin{color:var(--gold-bright);font-size:.84em;flex:none;margin-right:2px}
+.log-item.pinned{background:var(--gold-glow);box-shadow:inset 0 0 0 1px var(--gold-pale)}
+.log-pinbtn{font:inherit;font-size:.64em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:1px 8px;margin:0 0 6px 10px;cursor:pointer;transition:all .18s}
+.log-pinbtn:hover{color:var(--gold-bright);border-color:var(--gold)}
 .log-hint{font-size:.76em;line-height:1.65;color:var(--text-muted)}
 @media(max-width:900px){.log-list{max-height:none}}
 .hot-item{display:flex;align-items:center;gap:var(--space-3);padding:7px 8px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:.82em;line-height:1.45;transition:background .15s,color .15s}
@@ -1422,7 +1435,7 @@ const ADMIN={
     // 数组类：兜底再读一次，避免输入后未触发 change
     document.querySelectorAll('#admin-panel [data-m-idx]').forEach(el=>{const i=+el.dataset.mIdx;if(data.modules[i])data.modules[i][el.dataset.mField]=el.value;});
     document.querySelectorAll('#admin-panel [data-p-idx]').forEach(el=>{const i=+el.dataset.pIdx;if(data.portfolio[i])data.portfolio[i][el.dataset.pField]=(el.type==='checkbox')?el.checked:el.value;});
-    document.querySelectorAll('#admin-panel [data-l-idx]').forEach(el=>{const i=+el.dataset.lIdx;if(data.changelog&&data.changelog[i])data.changelog[i][el.dataset.lField]=el.value;});
+    document.querySelectorAll('#admin-panel [data-l-idx]').forEach(el=>{const i=+el.dataset.lIdx;if(data.changelog&&data.changelog[i]){const f=el.dataset.lField;let v=(el.type==='checkbox')?el.checked:el.value;if(f==='date')v=logDateNorm(v);data.changelog[i][f]=v;}});
     document.querySelectorAll('#admin-panel [data-v-dur]').forEach(el=>{const i=+el.dataset.vDur;if(data.wallpaper.videos&&data.wallpaper.videos[i])data.wallpaper.videos[i].duration=parseInt(el.value)||8;});
   },
 
@@ -1768,6 +1781,7 @@ ADMIN_RENDER.changelog=function(){
         '<div class="admin-card-head">'+
           '<input type="text" value="'+escHtml(it.date||'')+'" data-l-idx="'+i+'" data-l-field="date" placeholder="日期 2026-10-01" style="width:132px">'+
           '<input type="text" value="'+escHtml(it.tag||'')+'" data-l-idx="'+i+'" data-l-field="tag" placeholder="标签（功能/修复/优化…）" list="log-tag-list" style="width:118px">'+
+          '<label class="admin-chk" title="置顶这条（会排在日志最前面）"><input type="checkbox" data-l-idx="'+i+'" data-l-field="pinned"'+(it.pinned?' checked':'')+'> 置顶</label>'+
           '<button class="admin-sbtn icon danger" type="button" onclick="removeLogItem('+i+')" title="删除">'+AI.trash+'</button>'+
         '</div>'+
         '<input type="text" value="'+escHtml(it.title||'')+'" data-l-idx="'+i+'" data-l-field="title" placeholder="这次改了什么（一句话）" style="width:100%">'+
@@ -2783,33 +2797,7 @@ function renderMain(){
 
         <!-- 中：更新日志（默认收起，点条目展开看这次改了什么） -->
         <div class="hp-slot" id="hp-slot">
-          ${(data.changelog||[]).length?`
-          <div class="log-card">
-            <div class="log-head">
-              <div>
-                <p class="log-eyebrow">Changelog</p>
-                <h3 class="log-title">更新日志</h3>
-              </div>
-              <span class="log-count">${(data.changelog||[]).length} 次</span>
-            </div>
-            <div class="log-list">
-              ${(data.changelog||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map((it,i)=>`
-              <div class="log-item${i===0?' latest':''}">
-                <button class="log-row" type="button" onclick="toggleLog(this)" aria-expanded="false">
-                  <span class="log-date">${escHtml(String(it.date||'').slice(5)||'')}</span>
-                  ${it.tag?`<span class="log-tag">${escHtml(it.tag)}</span>`:''}
-                  <span class="log-name">${escHtml(it.title||'')}</span>
-                  <svg class="log-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-                </button>
-                <div class="log-body"><ul>${String(it.text||'').split('\n').map(s=>s.trim()).filter(Boolean).map(s=>`<li>${escHtml(s.replace(/^[-•·*]\s*/,''))}</li>`).join('')}</ul></div>
-              </div>`).join('')}
-            </div>
-            ${(data.changelog||[]).length>6?'<p class="log-foot">点击日期展开 · 共 '+data.changelog.length+' 次更新</p>':''}
-          </div>`:`
-          <div class="log-card log-empty">
-            <div class="log-head"><div><p class="log-eyebrow">Changelog</p><h3 class="log-title">更新日志</h3></div></div>
-            <p class="log-hint">还没有记录。在管理面板的「更新日志」里写下每次大改动，这里会按时间列出、点击展开。</p>
-          </div>`}
+          ${logCardHTML()}
         </div>
 
         <!-- 右：全网热点 -->
@@ -3963,6 +3951,101 @@ function toggleLog(btn){
   const open=item.classList.toggle('open');
   btn.setAttribute('aria-expanded',open?'true':'false');
 }
+
+// ============================================================
+// 更新日志卡：类别检索 + 时间排序 + 置顶
+// 状态在这里，卡片由 logCardHTML() 生成；改动后只需重渲染 #hp-slot，不用整页重绘。
+// ============================================================
+let logFilter='', logSort='desc';   // logSort: desc=新→旧, asc=旧→新
+// 日期可能被手填成 2026-9-01（月份没补零），直接按字符串比大小会把 9 排到 10 后面。
+// 统一解析成时间戳来排序，显示和保存时再补零，三种写法都能正确工作。
+function logTs(it){
+  const m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String((it&&it.date)||''));
+  return m?Date.UTC(+m[1],+m[2]-1,+m[3]):0;
+}
+function logDateLabel(d){
+  const m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(d||''));
+  if(!m)return String(d||'').slice(5);
+  return ('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);
+}
+function logDateNorm(d){
+  const m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(d||'').trim());
+  if(!m)return String(d||'').trim();
+  return m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);
+}
+function logTagList(){
+  const seen=[];
+  (data.changelog||[]).forEach(it=>{const t=String((it&&it.tag)||'').trim();if(t&&seen.indexOf(t)<0)seen.push(t);});
+  return seen;
+}
+function logSortedFiltered(){
+  const all=data.changelog||[];
+  const rows=all.map((it,i)=>({it:it,i:i}));
+  const keep=rows.filter(r=>!logFilter||String((r.it&&r.it.tag)||'').trim()===logFilter);
+  keep.sort((a,b)=>{
+    const pa=a.it&&a.it.pinned?1:0, pb=b.it&&b.it.pinned?1:0;
+    if(pa!==pb)return pb-pa;                                    // 置顶的永远排在前面
+    const d=logTs(a.it)-logTs(b.it);                            // 按真实时间戳，月份没补零也正确
+    if(d!==0)return logSort==='asc'?d:-d;
+    return a.i-b.i;                                             // 同一天保持原有先后
+  });
+  return keep;
+}
+function logCardHTML(){
+  const all=data.changelog||[];
+  const head='<div class="log-head"><div><p class="log-eyebrow">Changelog</p><h3 class="log-title">更新日志</h3></div>'+
+    '<span class="log-count">'+all.length+' 次</span></div>';
+  if(!all.length){
+    return '<div class="log-card log-empty">'+head+
+      '<p class="log-hint">还没有记录。在管理面板的「更新日志」里写下每次大改动，这里会按时间列出、点击展开。</p></div>';
+  }
+  const tags=logTagList();
+  const rows=logSortedFiltered();
+  const countOf=t=>all.filter(x=>String((x&&x.tag)||'').trim()===t).length;
+  const chip=(label,on,onclick,cnt)=>'<button class="log-chip'+(on?' on':'')+'" type="button" onclick="'+onclick+'">'+
+    escHtml(label)+(cnt!=null?'<i>'+cnt+'</i>':'')+'</button>';
+  const tools='<div class="log-tools">'+
+      '<div class="log-chips">'+
+        chip('全部',!logFilter,'setLogFilter(\'\')',all.length)+
+        tags.map(t=>chip(t,logFilter===t,'setLogFilter(\''+escHtml(t).replace(/'/g,'&#39;')+'\')',countOf(t))).join('')+
+      '</div>'+
+      '<button class="log-sortbtn" type="button" onclick="setLogSort(\''+(logSort==='desc'?'asc':'desc')+'\')" '+
+        'title="按时间排序：当前'+(logSort==='desc'?'新→旧':'旧→新')+'">'+(logSort==='desc'?'↓ 新→旧':'↑ 旧→新')+'</button>'+
+    '</div>';
+  const items=rows.map(r=>{
+    const it=r.it||{};
+    return '<div class="log-item'+(it.pinned?' pinned':'')+'">'+
+      '<button class="log-row" type="button" onclick="toggleLog(this)" aria-expanded="false">'+
+        (it.pinned?'<span class="log-pin" title="已置顶">★</span>':'')+
+        '<span class="log-date">'+escHtml(logDateLabel(it.date))+'</span>'+
+        (it.tag?'<span class="log-tag">'+escHtml(it.tag)+'</span>':'')+
+        '<span class="log-name">'+escHtml(it.title||'')+'</span>'+
+        '<svg class="log-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'+
+      '</button>'+
+      (isAdmin?'<button class="log-pinbtn" type="button" onclick="toggleLogPin('+r.i+')" title="'+(it.pinned?'取消置顶':'置顶这条')+'">'+(it.pinned?'取消置顶':'置顶')+'</button>':'')+
+      '<div class="log-body"><ul>'+String(it.text||'').split('\n').map(s=>s.trim()).filter(Boolean).map(s=>'<li>'+escHtml(s.replace(/^[-•·*]\s*/,''))+'</li>').join('')+'</ul></div>'+
+    '</div>';
+  }).join('');
+  return '<div class="log-card">'+head+tools+'<div class="log-list">'+
+      (items||'<p class="log-hint">这个类别下还没有记录。</p>')+
+    '</div><p class="log-foot">点击条目展开明细 · 共 '+all.length+' 次更新'+
+      (logFilter?' · 当前只看「'+escHtml(logFilter)+'」':'')+'</p></div>';
+}
+function renderLogCard(){
+  const el=document.getElementById('hp-slot');
+  if(el)el.innerHTML=logCardHTML();
+}
+function setLogFilter(tag){logFilter=tag||'';renderLogCard();}
+function setLogSort(s){logSort=(s==='asc')?'asc':'desc';renderLogCard();}
+function toggleLogPin(i){
+  const it=(data.changelog||[])[i];
+  if(!it)return;
+  if(typeof ADMIN!=='undefined'&&ADMIN.mutate){
+    ADMIN.mutate('changelog',it.pinned?'取消置顶':'置顶更新记录',()=>{it.pinned=!it.pinned;});
+  }else{ it.pinned=!it.pinned; if(typeof saveData==='function')saveData(false); }
+  renderLogCard();
+}
+
 
 // ============================================================
 // 个人精选：按 group 分组展示（同组排一起），组名顺序固定
