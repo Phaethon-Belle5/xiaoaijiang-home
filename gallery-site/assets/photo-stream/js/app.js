@@ -37,7 +37,9 @@ const rng = mulberry(0x2545f491);
 // ────────────────────────────────────────────────────────────── state
 
 let W = innerWidth, H = innerHeight, DPR = 1, PW = 1, PH = 1;
-let CW = 18, SPACING = CW / NF, PHOTO_W = 0.8 * SPACING, SLOT = 1.9 * PHOTO_W;
+// CW = 幕布总宽；调大让线条铺满视野（原来 18 时两边空、中间挤）
+// PHOTO_W = 单条光线的粗细；调大让线条更粗壮（原来 0.8*SPACING 偏细）
+let CW = 27, SPACING = CW / NF, PHOTO_W = 1.15 * SPACING, SLOT = 1.75 * PHOTO_W;
 let stories = [], photos = [];
 let cityLabels = [];
 let labelView = '', cursorPosition = '';
@@ -83,8 +85,10 @@ function project(x, y) {
 function buildFibres() {
   for (const key of ['x0','seed','speed','o','v','py','hold']) fib[key] = new Float32Array(NF);
   fib.py.fill(CH*.5); fib.phase = new Float64Array(NF); fib.flow = new Float64Array(NF);
-  CW = clamp(CH * (W / H) * 0.8, 8.5, 22);
-  SPACING = CW / NF; PHOTO_W = Math.min(2.8,0.8 * SPACING); SLOT = 1.9 * PHOTO_W;
+  // 幕布铺满视野（原来 0.8 倍、上限 22 → 两边留白明显）
+  CW = clamp(CH * (W / H) * 1.08, 12, 30);
+  // 线条更粗壮（原来 0.8*SPACING、上限 2.8 偏细）
+  SPACING = CW / NF; PHOTO_W = Math.min(3.8, 1.18 * SPACING); SLOT = 1.75 * PHOTO_W;
   const rows = Math.ceil(NF / 1024), fs = new Float32Array(1024 * rows * 4);
   for (let i = 0; i < NF; i++) {
     fib.x0[i] = -CW / 2 + (i + 0.5 + (rng() - 0.5) * 0.2) * SPACING;
