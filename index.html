@@ -223,21 +223,48 @@
 .dim-toggle{display:flex;align-items:center;gap:6px;font-size:.74em;color:var(--gold);margin-top:3px;user-select:none;transition:color .2s}
 .dim-card:hover .dim-toggle{color:var(--gold-bright)}
 .dim-chev{transition:transform .28s var(--ease-out);display:inline-block;font-size:1.1em;line-height:1}
-/* ============ 书籍卡片：悬浮上浮 + 3D 倾斜（视差）============ */
-.dim-card.tilt{transform-style:flat;will-change:transform;transition:transform .22s var(--ease-out),box-shadow .3s var(--ease-out),border-color .3s}
-/* 没有 JS 时的兜底：至少还有上浮放大 */
-.dim-card.tilt:hover{transform:perspective(1000px) translateY(-6px) scale(1.03);
-  box-shadow:0 20px 46px rgba(0,0,0,.4),0 2px 10px rgba(0,0,0,.25);
-  border-color:var(--gold-pale);z-index:3}
-.dim-card.tilt .dim-thumb{overflow:hidden}
-.dim-card.tilt .dim-poster{transition:transform .34s var(--ease-out);will-change:transform}
-/* 跟随鼠标的高光，让倾斜有"被光照到"的立体感 */
-.dim-sheen{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .26s var(--ease-out);
-  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.30) 0%,rgba(255,255,255,.10) 34%,rgba(255,255,255,0) 68%)}
-.dim-card.tilt:hover .dim-sheen{opacity:1}
+/* ============ 书籍：立体书（参考博客书架的抽书效果）============ */
+.dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:30px 22px;perspective:1400px}
+.book3d{--book-depth:34px;position:relative;background:none;border:none;border-radius:0;overflow:visible;padding:0;
+  perspective:900px;cursor:default;transition:none}
+.book3d.clickable{cursor:pointer}
+.book3d:hover,.book3d:focus-visible{transform:none;box-shadow:none;border-color:transparent}
+.book3d:focus-visible{outline:2px solid var(--gold);outline-offset:6px;border-radius:4px}
+.book3d-scene{position:relative;width:100%;aspect-ratio:25/36}
+.book3d-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .52s cubic-bezier(.22,.61,.36,1)}
+.book3d:hover .book3d-inner{transform:rotateY(-30deg) scale(1.09) translateX(-14px)}
+.book3d.following .book3d-inner{transition:transform .16s ease-out}
+.book3d-cover{position:absolute;inset:0;border-radius:3px 5px 5px 3px;overflow:hidden;background:#1c1a16;
+  box-shadow:0 1px 2px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.32),
+             inset -2px 0 3px rgba(0,0,0,.35),inset 1px 0 1px rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.25)}
+.book3d-art{position:absolute;inset:0;overflow:hidden;background:linear-gradient(135deg,#2a2721,#1b1915)}
+.book3d-img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.book3d-img-broken{display:none}
+.book3d-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:16px 11px;text-align:center;
+  background:linear-gradient(150deg,#3d3628,#221e17);color:var(--gold-pale)}
+.book3d-fb-title{font-size:.84em;line-height:1.55;font-weight:600;color:#f2e8d2;word-break:break-word}
+.book3d-fb-author{font-size:.68em;opacity:.72}
+/* 书脊高光/暗部，让封面有"被装订过"的立体感 */
+.book3d-bind{position:absolute;left:0;top:0;bottom:0;width:10%;z-index:2;pointer-events:none;mix-blend-mode:overlay;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.26) 26%,rgba(255,255,255,0) 52%,rgba(0,0,0,.3) 84%,rgba(0,0,0,.12))}
+.book3d-tag{position:absolute;top:6px;left:6px;z-index:3;font-size:.6em;color:#fff;background:rgba(0,0,0,.58);border-radius:4px;padding:2px 6px;line-height:1.5;pointer-events:none;letter-spacing:.02em}
+.book3d-score{position:absolute;top:6px;right:6px;z-index:3;font-size:.63em;font-weight:700;color:#fbbf24;background:rgba(0,0,0,.58);border-radius:4px;padding:2px 6px;line-height:1.5;pointer-events:none}
+/* 右侧书页边：绕 Y 转 90° 后正好连起封面与封底，抽出来时才看得见 */
+.book3d-pages{position:absolute;top:3px;left:calc(100% - var(--book-depth) / 2 - 3px);width:calc(var(--book-depth) - 2px);height:calc(100% - 12px);
+  transform:rotateY(90deg) translateX(calc(var(--book-depth) / 2));
+  background:repeating-linear-gradient(90deg,#f6f2e8,#ded9cc 1px,#f6f2e8 3px,#bab4a5 2px)}
+.book3d-back{position:absolute;inset:0;border-radius:3px 5px 5px 3px;transform:translateZ(calc(-1 * var(--book-depth)));
+  background:linear-gradient(135deg,#2b2822,#191714);box-shadow:inset 0 0 12px rgba(0,0,0,.55)}
+@media (max-width:820px){ .dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:24px 16px} }
+@media (max-width:520px){
+  .dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:20px 12px}
+  .book3d{--book-depth:22px}
+  .book3d-tag{font-size:.54em;top:4px;left:4px;padding:1px 4px}
+  .book3d-score{font-size:.56em;top:4px;right:4px;padding:1px 4px}
+}
 @media (prefers-reduced-motion: reduce){
-  .dim-card.tilt:hover{transform:none}
-  .dim-card.tilt .dim-poster{transition:none}
+  .book3d-inner{transition:none}
+  .book3d:hover .book3d-inner{transform:none}
 }
 .dim-svg{display:block}
 .dim-empty .dim-svg{margin:0 auto 10px;opacity:.55;color:var(--text-muted)}
@@ -1315,7 +1342,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-02 · 书籍卡片 3D 倾斜跟随鼠标';
+const BUILD='2026-10-02 · 书籍改成 3D 立体书';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4279,42 +4306,43 @@ function dimStars(v){
   }
   return '<span class="dim-stars" title="'+(n?n+' 分':'未评分')+'">'+h+'<span class="dim-score">'+(n?n.toFixed(1).replace(/\.0$/,''):'—')+'</span></span>';
 }
-// 书籍卡片：鼠标悬浮轻微上浮/放大/柔和阴影 + 跟随鼠标的 3D 倾斜（视差）
-// 用事件委托绑在网格上，这样 renderDimension 重绘卡片后依然有效。
+// 立体书：悬停"抽出来"（rotateY -30° + 放大 + 左移），并在抽出的姿态上跟随鼠标微调
+// 用事件委托绑在网格上，renderDimension 重绘后依然有效。
 function initDimTilt(){
   const grid=document.getElementById('dim-grid');
   if(!grid||grid.__tiltBound)return;
   grid.__tiltBound=true;
-  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return; // 尊重系统"减少动态效果"
-  const MAX_TILT=9;    // 最大倾斜角度
-  const MAX_SHIFT=7;   // 封面视差位移（像素）
+  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const BASE_Y=-30, SHIFT_X=-14, SCALE=1.09;   // 和 CSS 里悬停姿态保持一致
   let cur=null;
-  const reset=card=>{
+  const clear=card=>{
     if(!card)return;
-    card.style.transform='';
-    const img=card.querySelector('.dim-poster, .dim-icon');
-    if(img)img.style.transform='';
-    const sh=card.querySelector('.dim-sheen');
-    if(sh)sh.style.opacity='0';
+    card.classList.remove('following');
+    const inner=card.querySelector('.book3d-inner');
+    if(inner){inner.style.transform='';inner.style.transition='';}
   };
   grid.addEventListener('mousemove',e=>{
-    const card=e.target&&e.target.closest?e.target.closest('.dim-card.tilt'):null;
-    if(!card){ if(cur){reset(cur);cur=null;} return; }
-    if(cur&&cur!==card)reset(cur);
-    cur=card;
+    const card=(e.target&&e.target.closest)?e.target.closest('.book3d'):null;
+    if(!card){ if(cur){clear(cur);cur=null;} return; }
+    if(reduced)return;
+    const inner=card.querySelector('.book3d-inner');
+    if(!inner)return;
+    if(card!==cur){
+      clear(cur); cur=card;
+      card.classList.add('following');
+      // 这一帧仍然用 CSS 的 0.52s：让"抽出来"这段有质感
+    }else{
+      // 之后切成跟手的快过渡，鼠标动书就动，不拖泥带水
+      inner.style.transition='transform .16s ease-out';
+    }
     const r=card.getBoundingClientRect();
     if(!r.width||!r.height)return;
-    const px=(e.clientX-r.left)/r.width;           // 0~1
-    const py=(e.clientY-r.top)/r.height;
-    const nx=Math.max(-1,Math.min(1,px*2-1));      // -1~1
-    const ny=Math.max(-1,Math.min(1,py*2-1));
-    card.style.transform='perspective(1000px) rotateX('+(-ny*MAX_TILT).toFixed(2)+'deg) rotateY('+(nx*MAX_TILT).toFixed(2)+'deg) translateY(-6px) scale(1.03)';
-    const img=card.querySelector('.dim-poster, .dim-icon');
-    if(img)img.style.transform='translate3d('+(-nx*MAX_SHIFT).toFixed(1)+'px,'+(-ny*MAX_SHIFT).toFixed(1)+'px,0) scale(1.08)';
-    const sh=card.querySelector('.dim-sheen');
-    if(sh){sh.style.setProperty('--mx',(px*100).toFixed(1)+'%');sh.style.setProperty('--my',(py*100).toFixed(1)+'%');sh.style.opacity='1';}
+    const nx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width)*2-1));
+    const ny=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height)*2-1));
+    // 在"抽出来"的基准姿态上，叠加鼠标带来的小幅倾斜 —— 书会跟着手轻轻转
+    inner.style.transform='rotateY('+(BASE_Y+nx*6).toFixed(2)+'deg) rotateX('+(-ny*5).toFixed(2)+'deg) scale('+SCALE+') translateX('+SHIFT_X+'px)';
   });
-  grid.addEventListener('mouseleave',()=>{ if(cur){reset(cur);cur=null;} });
+  grid.addEventListener('mouseleave',()=>{ if(cur){clear(cur);cur=null;} });
 }
 // 点卡片 → 弹出详情窗（不是在页面里展开）
 function openDimDetail(idx){
@@ -4367,7 +4395,33 @@ function closeDimDetail(){
   if(box)box.classList.remove('show');
   document.body.classList.remove('dim-modal-open');
 }
+// 书籍：做成一本立体书（封面 / 右侧书页边 / 封底三片，靠 preserve-3d 撑出厚度）
+// 参考了博客书架的常见做法：外层 perspective，悬停把整本书 rotateY 抽出来。
+// 这里不带下面的文字块 —— 只显示封面，点书弹详情。
+function bookCard(it,idx){
+  const cover=String(it.cover||'').trim();
+  const sub=String(it.sub||'').trim();
+  const title=String(it.title||'未命名');
+  const creator=String(it.creator||'').trim();
+  const rating=Number(it.rating)||0;
+  const hasMore=!!(String(it.review||'').trim()||String(it.thought||'').trim()||String(it.link||'').trim());
+  const art=cover
+    ? '<img class="book3d-img" src="'+escHtml(cover)+'" alt="" loading="lazy" onerror="this.classList.add(\'book3d-img-broken\')">'
+    : '<div class="book3d-fallback"><span class="book3d-fb-title">'+escHtml(title)+'</span>'+(creator?'<span class="book3d-fb-author">'+escHtml(creator)+'</span>':'')+'</div>';
+  return '<div class="book3d'+(hasMore?' clickable':'')+'" title="'+escHtml(title+(creator?' · '+creator:''))+(hasMore?'（点击查看详情）':'')+'"'+
+      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+');}"':'')+'>'+
+      '<div class="book3d-scene"><div class="book3d-inner">'+
+        '<div class="book3d-cover"><div class="book3d-art">'+art+
+          '<div class="book3d-bind" aria-hidden="true"></div>'+
+          (sub?'<span class="book3d-tag">'+escHtml(sub)+'</span>':'')+
+          (rating?'<span class="book3d-score">★'+String(rating.toFixed(1)).replace(/\.0$/,'')+'</span>':'')+
+        '</div></div>'+
+        '<div class="book3d-pages" aria-hidden="true"></div>'+
+        '<div class="book3d-back" aria-hidden="true"></div>'+
+      '</div></div></div>';
+}
 function dimCard(it,idx){
+  if(it.kind==='books')return bookCard(it,idx);   // 书籍走立体书
   const isGame=it.kind==='games';
   const cover=String(it.cover||'').trim();
   const sub=String(it.sub||'').trim();
@@ -4379,10 +4433,9 @@ function dimCard(it,idx){
     ? '<img class="'+(isGame?'dim-icon':'dim-poster')+'" src="'+escHtml(cover)+'" alt="" loading="lazy" onerror="this.classList.add(\'dim-img-broken\');this.removeAttribute(\'src\')">'
     : '<div class="'+(isGame?'dim-icon':'dim-poster')+' dim-img-none">'+dimIconSvg(it.kind,isGame?26:34)+'</div>';
   const meta=[String(it.creator||'').trim(),String(it.date||'').trim()].filter(Boolean).join(' · ');
-  const tiltable=(it.kind==='books');   // 3D 倾斜目前只给书籍（要影视/游戏也加，把这里放宽即可）
-  return '<article class="dim-card'+(isGame?' is-game':'')+(hasMore?' clickable':'')+(tiltable?' tilt':'')+'"'+
+  return '<article class="dim-card'+(isGame?' is-game':'')+(hasMore?' clickable':'')+'"'+
       (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+');}"':'')+'>'+
-      '<div class="dim-thumb">'+img+(tiltable?'<span class="dim-sheen" aria-hidden="true"></span>':'')+'</div>'+
+      '<div class="dim-thumb">'+img+'</div>'+
       '<div class="dim-body">'+
         '<div class="dim-head"><h3 class="dim-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
           (sub?'<span class="dim-chip">'+escHtml(sub)+'</span>':'')+'</div>'+
@@ -4395,6 +4448,7 @@ function renderDimension(){
   const grid=document.getElementById('dim-grid');if(!grid)return;
   // 用 classList 而不是 className：否则会把 setDimKind 加上的 .dim-anim 冲掉，入场动画就没了
   grid.classList.toggle('games',dimKind==='games');
+  grid.classList.toggle('books',dimKind==='books');
   // 同步 tab 的选中态（之前漏了这一步，导致切了之后高亮还留在原来那个上面）
   document.querySelectorAll('.dim-tab').forEach(b=>{
     const on=b.dataset.dimKind===dimKind;
