@@ -14,9 +14,9 @@
 import { StoryView } from './story.js';
 import { clamp, smooth, damp, mulberry } from './math.js';
 import { createGLHelpers } from './gl.js';
-import { loadCatalog } from './catalog.js?v=11';
-import { loadTextures } from './photos.js?v=11';
-import { buildStories, NF } from './stories.js?v=11';
+import { loadCatalog } from './catalog.js?v=12';
+import { loadTextures } from './photos.js?v=12';
+import { buildStories, NF } from './stories.js?v=12';
 import { IDLE, FIBRE_VS, FIBRE_FS, FLOOR_VS, FLOOR_FS, POST_VS, DOWN_FS, UP_FS, BLUR_FS, COMPOSITE_FS } from './shaders.js';
 
 const canvas = document.getElementById('stream');

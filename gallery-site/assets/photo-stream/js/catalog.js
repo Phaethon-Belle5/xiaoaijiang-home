@@ -1,4 +1,4 @@
-import { setThreadCount } from './stories.js?v=11';
+import { setThreadCount } from './stories.js?v=12';
 
 // 三级层级：
 //   level1 = 全部省份（每个省一条线，线里流该省的全部照片）
@@ -19,15 +19,24 @@ export async function loadCatalog() {
       const p = photos[j];
       return { photo: String(id), layer: j, src: p.src, aspect: p.aspect, caption: p.description, date: p.date, text: p.text };
     }).filter(Boolean);
-    // 每条线要有自己的颜色（光瀑用它决定线条与页面的色调），取该线所有照片平均色的均值。
-    // 缺了 col 会在 uploadStories 里抛 "s.col is not iterable"。
+    // 颜色必须做 HSL 归一化（照搬参考项目 stories.js 的 colourStory）：
+    // 直接用照片原始平均色的话，浅色/白色照片会得到接近白色的线，而光瀑是加法混合
+    // 渲染，整幅画面就会过曝。参考实现把明度钉在 0.62、饱和度钳到 0.45~0.9，
+    // 于是每条线都是"发光但不刺眼"的颜色。
     let r = 0, gg = 0, b = 0;
     for (const c of chapters) {
       const a = (photos[c.layer] && photos[c.layer].avg) || [0.82, 0.66, 0.27];
       r += a[0]; gg += a[1]; b += a[2];
     }
-    const n = chapters.length || 1;
-    const col = [r / n, gg / n, b / n];
+    const n = chapters.length || 1; r /= n; gg /= n; b /= n;
+    const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), l = (mx + mn) / 2;
+    const sat = mx === mn ? 0 : (mx - mn) / (1 - Math.abs(2 * l - 1) || 1);
+    let hue = 0;
+    if (mx !== mn) hue = mx === r ? ((gg - b) / (mx - mn) + 6) % 6 : mx === gg ? (b - r) / (mx - mn) + 2 : (r - gg) / (mx - mn) + 4;
+    const S = Math.min(0.9, Math.max(0.45, sat * 1.9 + 0.2)), L = 0.62;
+    const C = (1 - Math.abs(2 * L - 1)) * S, X = C * (1 - Math.abs((hue % 2) - 1)), m = L - C / 2;
+    const t3 = hue < 1 ? [C, X, 0] : hue < 2 ? [X, C, 0] : hue < 3 ? [0, C, X] : hue < 4 ? [0, X, C] : hue < 5 ? [X, 0, C] : [C, 0, X];
+    const col = [t3[0] + m, t3[1] + m, t3[2] + m];
     return { key: String(g.key), title: g.title, chapters, col, rgb: col.map((v) => Math.round(v * 255)).join(' ') };
   };
 

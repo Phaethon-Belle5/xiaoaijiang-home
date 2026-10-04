@@ -46,7 +46,7 @@ export async function loadTextures(gl, photos, onProgress) {
         photos[i].aspect = img.naturalWidth / img.naturalHeight;
         ctx.drawImage(img, 0, 0, LAYER, LAYER); // stretched to the square layer; the stream restores the aspect
       } else {
-        photos[i].aspect = photos[i].aspect || 4 / 3;
+        photos[i].aspect = photos[i].aspect || 1;   // 兜底用正方形，不要用 4/3：竖图配 4/3 会显得被横向拉长
         ctx.fillStyle = '#1b2233'; ctx.fillRect(0, 0, LAYER, LAYER);
       }
       tctx.drawImage(scratch, 0, 0, 8, 8);
