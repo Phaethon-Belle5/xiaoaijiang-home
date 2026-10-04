@@ -1,4 +1,4 @@
-import { setThreadCount } from './stories.js?v=7';
+import { setThreadCount } from './stories.js?v=10';
 
 // 三级层级：
 //   level1 = 全部省份（每个省一条线，线里流该省的全部照片）
@@ -19,7 +19,16 @@ export async function loadCatalog() {
       const p = photos[j];
       return { photo: String(id), layer: j, src: p.src, aspect: p.aspect, caption: p.description, date: p.date, text: p.text };
     }).filter(Boolean);
-    return { key: String(g.key), title: g.title, chapters };
+    // 每条线要有自己的颜色（光瀑用它决定线条与页面的色调），取该线所有照片平均色的均值。
+    // 缺了 col 会在 uploadStories 里抛 "s.col is not iterable"。
+    let r = 0, gg = 0, b = 0;
+    for (const c of chapters) {
+      const a = (photos[c.layer] && photos[c.layer].avg) || [0.82, 0.66, 0.27];
+      r += a[0]; gg += a[1]; b += a[2];
+    }
+    const n = chapters.length || 1;
+    const col = [r / n, gg / n, b / n];
+    return { key: String(g.key), title: g.title, chapters, col, rgb: col.map((v) => Math.round(v * 255)).join(' ') };
   };
 
   const levels = catalog.levels || [[], {}];

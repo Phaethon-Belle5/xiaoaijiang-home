@@ -9,7 +9,10 @@ function decode(src) {
   // 超时保护：有图片既不 load 也不 error 时，promise 会永远挂着，
   // 表现为"加载进度不动、无任何报错、应用永远不 ready"。超过 12 秒就放弃这张。
   return new Promise((res, rej) => {
-    const img = new Image(); img.crossOrigin = 'anonymous'; img.decoding = 'async';
+    const img = new Image();
+    // data: URL 自带同源属性，再声明 crossOrigin 反而可能让某些浏览器不触发 load
+    if (!/^data:/i.test(String(src))) img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
     let done = false;
     const timer = setTimeout(() => { if (!done) { done = true; rej(new Error('decode timeout')); } }, 12000);
     img.onload = () => { if (!done) { done = true; clearTimeout(timer); res(img); } };
@@ -34,10 +37,18 @@ export async function loadTextures(gl, photos, onProgress) {
   const worker = async () => {
     while (queue.length) {
       const i = queue.shift();
-      const img = await decode(photos[i].src);
-      photos[i].aspect = img.naturalWidth / img.naturalHeight;
+      // 一张图解不开不能拖垮整个照片流：失败就画一块占位色，索引照旧占位
+      let img = null;
+      try { img = await decode(photos[i].src); }
+      catch (e) { console.warn('[照片流] 跳过一张读不出的图：', String(photos[i].src).slice(0, 46), e && e.message); }
       ctx.clearRect(0, 0, LAYER, LAYER);
-      ctx.drawImage(img, 0, 0, LAYER, LAYER); // stretched to the square layer; the stream restores the aspect
+      if (img) {
+        photos[i].aspect = img.naturalWidth / img.naturalHeight;
+        ctx.drawImage(img, 0, 0, LAYER, LAYER); // stretched to the square layer; the stream restores the aspect
+      } else {
+        photos[i].aspect = photos[i].aspect || 4 / 3;
+        ctx.fillStyle = '#1b2233'; ctx.fillRect(0, 0, LAYER, LAYER);
+      }
       tctx.drawImage(scratch, 0, 0, 8, 8);
       // 兜底：万一某张图仍因跨域被污染，不要让整个照片流挂掉，给个中性色继续
       let px; try { px = tctx.getImageData(0, 0, 8, 8).data; } catch (e) { px = null; }

@@ -1,4 +1,4 @@
-import { clamp } from './math.js?v=7';
+import { clamp } from './math.js?v=10';
 export let NF = 1;
 export function setThreadCount(count) { NF = count; }
 
