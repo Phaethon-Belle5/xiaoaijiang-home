@@ -1482,6 +1482,13 @@ function memStreamPrep(url) {
   });
 }
 function memReadCatalog(){
+  // 等主页面把城市/照片数据读完（iframe 可能比 renderAll 更早启动）
+  const waitData = async () => {
+    for (let i = 0; i < 60 && !(mapCityPoints.length && mapCityPoints.some(c => c.photos && c.photos.length)); i++) {
+      await new Promise(r => setTimeout(r, 250));
+    }
+  };
+  return waitData().then(() => {
   const cityOf=new Map(mapCityPoints.map(c=>[c.cityKey,c]));
   const raw=(GALLERY||[]).map((p,i)=>{
     const c=cityOf.get(p.cityKey);
@@ -1499,7 +1506,30 @@ function memReadCatalog(){
   });
   return Promise.all(raw.map(ph=>memStreamPrep(ph.src))).then(preps=>{
     preps.forEach((prep,i)=>{ raw[i].src=prep.src; raw[i].aspect=prep.aspect; raw[i].avg=prep.avg; });
-    return { photos: raw, failed: 0 };
+    // 三级层级：① 全部省份 → ② 某省的所有城市 → ③ 单个城市的照片
+    // photos 始终是全量（WebGL 纹理只加载一次），层级只决定"哪些照片归到哪条线"
+    const byProv=new Map();
+    mapCityPoints.forEach(c=>{
+      const prov=(c.name||'未归类').trim()||'未归类';
+      if(!byProv.has(prov))byProv.set(prov,[]);
+      byProv.get(prov).push(c);
+    });
+    const level1=[], level2={};
+    // 注意：mapCityPoints[].photos 是归一化后的形状，主键叫 index（不是 id）；
+    // 早先写成 p.id 会全部取到 undefined，导致层级里一张照片都匹配不上、层级数据全空。
+    const pid=p=>String(p.index!=null?p.index:(p.id!=null?p.id:''));
+    byProv.forEach((cities,prov)=>{
+      const allIds=[];
+      cities.forEach(c=>(c.photos||[]).forEach(p=>{const k=pid(p);if(k)allIds.push(k);}));
+      if(!allIds.length)return;
+      level1.push({ key:prov, title:prov, photoIds:allIds });
+      level2[prov]=cities
+        .map(c=>({ key:c.cityKey, title:c.cityName, photoIds:(c.photos||[]).map(pid).filter(Boolean) }))
+        .filter(x=>x.photoIds.length);
+    });
+    level1.sort((a,b)=>b.photoIds.length-a.photoIds.length);
+    return { photos: raw, failed: 0, levels: [level1, level2] };
+  });
   });
 }
 function memStatsHTML(){

@@ -13,10 +13,11 @@
   <canvas id="stream" tabindex="0" aria-label="旅行照片光瀑，每座城市一条光线。滚轮或双指缩放，拖动浏览，方向键选择城市，回车展开该城市的全部照片，空格暂停。"></canvas>
   <div id="city-labels" aria-hidden="true"></div>
   <nav class="stream-toolbar" aria-label="照片浏览">
+    <button id="level-back" type="button" hidden>← 返回全部省份</button>
     <button id="directory-toggle" type="button" aria-controls="photo-directory" aria-expanded="false">照片目录</button>
     <span id="photo-count" role="status">正在读取城市照片…</span>
   </nav>
-  <p class="stream-hint">滚轮 / 双指缩放 · 拖动浏览 · 点击光线展开照片 · 空格暂停</p>
+  <p class="stream-hint">滚轮 / 双指缩放 · 拖动浏览 · 点省份的光线展开该省城市 · 再点城市看照片 · 空格暂停</p>
   <section id="photo-directory" aria-label="全部城市照片" hidden><div class="directory-grid"></div></section>
   <button id="fallback-preview" type="button" aria-label="关闭照片预览" hidden><img alt=""></button>
   <p id="error" role="alert" hidden></p>
@@ -41,7 +42,7 @@
     </div>
   </section>
 
-  <script type="module" src="./js/app.js?v=3"></script>
+  <script type="module" src="./js/app.js?v=7"></script>
   <script>
     document.getElementById('fallback-preview').onclick = function(){this.hidden=true;};
     addEventListener('keydown',function(event){

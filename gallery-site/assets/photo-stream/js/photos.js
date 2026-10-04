@@ -6,7 +6,16 @@ function decode(src) {
   // 但必须显式声明 crossOrigin，否则图片会"污染"canvas：
   //   · 下面算平均色的 getImageData 会抛 SecurityError
   //   · 更致命的是 WebGL 的 texSubImage3D 直接拒绝跨域纹理，整个照片流渲染不出来
-  return new Promise((res, rej) => { const img = new Image(); img.crossOrigin = 'anonymous'; img.decoding = 'async'; img.onload = () => res(img); img.onerror = () => rej(new Error(`Could not load photo: ${src}`)); img.src = src; });
+  // 超时保护：有图片既不 load 也不 error 时，promise 会永远挂着，
+  // 表现为"加载进度不动、无任何报错、应用永远不 ready"。超过 12 秒就放弃这张。
+  return new Promise((res, rej) => {
+    const img = new Image(); img.crossOrigin = 'anonymous'; img.decoding = 'async';
+    let done = false;
+    const timer = setTimeout(() => { if (!done) { done = true; rej(new Error('decode timeout')); } }, 12000);
+    img.onload = () => { if (!done) { done = true; clearTimeout(timer); res(img); } };
+    img.onerror = () => { if (!done) { done = true; clearTimeout(timer); rej(new Error(`Could not load photo: ${String(src).slice(0, 50)}`)); } };
+    img.src = src;
+  });
 }
 export async function loadTextures(gl, photos, onProgress) {
   const limit = gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS);

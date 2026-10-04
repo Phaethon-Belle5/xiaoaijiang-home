@@ -14,9 +14,9 @@
 import { StoryView } from './story.js';
 import { clamp, smooth, damp, mulberry } from './math.js';
 import { createGLHelpers } from './gl.js';
-import { loadCatalog } from './catalog.js?v=2';
-import { loadTextures } from './photos.js?v=2';
-import { buildStories, NF } from './stories.js?v=2';
+import { loadCatalog } from './catalog.js?v=7';
+import { loadTextures } from './photos.js?v=7';
+import { buildStories, NF } from './stories.js?v=7';
 import { IDLE, FIBRE_VS, FIBRE_FS, FLOOR_VS, FLOOR_FS, POST_VS, DOWN_FS, UP_FS, BLUR_FS, COMPOSITE_FS } from './shaders.js';
 
 const canvas = document.getElementById('stream');
@@ -82,15 +82,23 @@ function project(x, y) {
 
 // ────────────────────────────────────────────────────────────── world
 
-function buildFibres() {
+function buildFibres(active) {
   for (const key of ['x0','seed','speed','o','v','py','hold']) fib[key] = new Float32Array(NF);
   fib.py.fill(CH*.5); fib.phase = new Float64Array(NF); fib.flow = new Float64Array(NF);
   // 幕布铺满视野（原来 0.8 倍、上限 22 → 两边留白明显）
   CW = clamp(CH * (W / H) * 1.08, 12, 30);
+  // 当前层级真正在用的线条数：只用这几条均分整个幕布宽度，多余的推到屏幕外
+  const live = clamp(Math.round(active == null ? NF : active), 1, NF);
+  SPACING = CW / live;
   // 线条更粗壮（原来 0.8*SPACING、上限 2.8 偏细）
-  SPACING = CW / NF; PHOTO_W = Math.min(3.8, 1.18 * SPACING); SLOT = 1.75 * PHOTO_W;
+  PHOTO_W = Math.min(3.8, 1.18 * SPACING); SLOT = 1.75 * PHOTO_W;
   const rows = Math.ceil(NF / 1024), fs = new Float32Array(1024 * rows * 4);
   for (let i = 0; i < NF; i++) {
+    if (i >= live) {                       // 本层级用不到的线程：推到极远，既不显示也不可点
+      fib.x0[i] = 1e5; fib.seed[i] = 0; fib.speed[i] = 1; fib.phase[i] = 0; fib.py[i] = CH * .5;
+      fs.set([fib.x0[i], 0, 1, 0], i * 4);
+      continue;
+    }
     fib.x0[i] = -CW / 2 + (i + 0.5 + (rng() - 0.5) * 0.2) * SPACING;
     fib.seed[i] = rng(); fib.speed[i] = 0.8 + rng() * 0.45; fib.phase[i] = rng() * 50 * SLOT;
     fs.set([fib.x0[i], fib.seed[i], fib.speed[i], rng()], i * 4);
@@ -156,8 +164,57 @@ function chapterAt(i, y) {
 
 // ────────────────────────────────────────────────────────────── stories
 
-function openStory(i, { chapter = null, x = null } = {}) {
+// ── 三级层级：① 全部省份 → ② 该省的城市 → ③ 城市的照片 ──
+let LEVEL1 = [], LEVEL2 = {}, curLevel = 1, curProv = '';
+
+function showThreads(list, level, prov) {
+  if (!list || !list.length) return;
+  curLevel = level; curProv = prov || '';
+  stories.length = 0;                       // 就地替换，StoryView 里的引用仍然有效
+  for (const s of list) stories.push(s);
+  const live = stories.length;
+  while (stories.length < NF) {             // 补齐占位（会被 buildFibres 推到屏幕外）
+    stories.push({ key: '__pad' + stories.length, title: '', chapters: [stories[0].chapters[0]], col: [0, 0, 0] });
+  }
+  buildFibres(live);
+  uploadStories();
+  cityLabels.forEach((el, i) => { el.textContent = i < live ? (stories[i].title || '') : ''; });
+  const back = document.getElementById('level-back');
+  if (back) {
+    back.hidden = level < 2;
+    back.textContent = '← 返回全部省份';
+  }
+  const lbl = document.getElementById('photo-count');
+  if (lbl) {
+    lbl.textContent = level === 1
+      ? LEVEL1.length + ' 个省份 · ' + photos.length + ' 张照片'
+      : prov + ' · ' + live + ' 座城市 · ' + list.reduce((n, s) => n + s.chapters.length, 0) + ' 张照片';
+  }
+  hideLabel();
+  kbLine = -1; hover.line = -1;
+}
+function goBackLevel() {
+  if (curLevel >= 2) showThreads(LEVEL1, 1, '');
+}
+function openCity(prov, city) {              // 照片目录里点某张照片 → 跳到它所属的城市
+  const cities = LEVEL2[prov];
+  if (!cities) return;
+  showThreads(cities, 2, prov);
+  const idx = cities.findIndex((s) => s.title === city);
+  if (idx >= 0) openStory(idx);
+}
+
+function openStory(i, opts = {}) {
+  // 第一层点的是省份线：不打开照片，而是下钻到该省的城市线
+  if (curLevel === 1) {
+    const s = stories[i];
+    const cities = s && LEVEL2[s.key];
+    if (cities && cities.length) { showThreads(cities, 2, s.key); return; }
+  }
+  const s = stories[i];
+  if (!s || !s.chapters || !s.chapters.length) return;
   if (i < 0 || view.isOpen) return;
+  const { chapter = null, x = null } = opts;
   const sx = x ?? project(fib.x0[i], CH * 0.5).x;
   pluck.line = i; pluck.age = 0; pluck.amp = 0.12 * motion;
   view.open(i, { chapter, x: clamp(sx, 0, W) });
@@ -515,11 +572,17 @@ async function boot() {
   resize();
   photos = catalog.photos;
   arrTex = await loadTextures(gl, photos, progress => $loader.style.setProperty('--p', progress.toFixed(3)));
-  buildFibres();
-  stories = buildStories(photos, catalog.authored, catalog.journal);
-  cityLabels = stories.map(story => {
+  // 层级数据：第一层是省份，第二层是「省份 -> 该省城市」
+  LEVEL1 = catalog.level1 || [];
+  LEVEL2 = catalog.level2 || {};
+  const firstLevel = LEVEL1.length ? LEVEL1 : (Object.values(LEVEL2)[0] || []);
+  stories = firstLevel.slice();
+  const live0 = Math.max(1, stories.length);
+  while (stories.length < NF) stories.push({ key: '__pad' + stories.length, title: '', chapters: [firstLevel[0].chapters[0]], col: [0, 0, 0] });
+  buildFibres(live0);
+  cityLabels = stories.map((story, i) => {
     const label = document.createElement('span');
-    label.textContent = story.title;
+    label.textContent = i < live0 ? story.title : '';
     return label;
   });
   $('#city-labels').replaceChildren(...cityLabels);
@@ -527,11 +590,14 @@ async function boot() {
 
   cam.x = 0; cam.y = HOME_Y; cam.lsT = LS_MIN(); cam.ls = cam.lsT - 0.25;
   view = new StoryView({ stories, onShow: onStoryShow, onCovered: onStoryCovered, onHide: onStoryHide });
+  curLevel = 1; curProv = '';
+  document.getElementById('level-back')?.addEventListener('click', goBackLevel);
+  // 先把对外接口挂上：即使后面的分享链接路由出问题，层级功能照样能用
+  window.__undertow = { cam, stories, fib, get hover() { return hover; }, pickLine, chapterAt, project, unproject, openStory, zoomBy, LS_MIN, LS_MAX, get slot() { return SLOT; }, openCity, goBackLevel, showThreads, get level() { return curLevel; }, LEVEL1, LEVEL2 };
   body.classList.add('ready');
   last = performance.now();
   requestAnimationFrame(frame);
-  view.route(); // a shared link opens straight into its story
-  window.__undertow = { cam, stories, fib, get hover() { return hover; }, pickLine, chapterAt, project, unproject, openStory, zoomBy, LS_MIN, LS_MAX, get slot() { return SLOT; } };
+  try { view.route(); } catch (e) { console.warn('route skipped:', e && e.message); }
 }
 boot().catch(err => {
   console.error(err);

@@ -163,3 +163,7 @@ body.story-open #cursor{opacity:0!important}
 }
 
 #error{position:fixed;inset:40% 10% auto;margin:0;text-align:center;font:16px/1.6 var(--serif);z-index:40}
+
+/* 三级层级：返回上一层 */
+#level-back{position:static;margin-right:2px}
+#level-back[hidden]{display:none}

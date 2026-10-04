@@ -1,0 +1,12 @@
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+const r = await fetch('https://map.231060101.xyz/assets/photo-stream/js/app.js?v=7', { headers: { 'User-Agent': UA, 'Cache-Control': 'no-cache' } });
+const t = await r.text();
+console.log('  app.js HTTP ' + r.status + '  ' + t.length + ' 字节');
+console.log('  含 showThreads            = ' + (t.includes('showThreads') ? '✅' : '❌'));
+const iU = t.indexOf('window.__undertow');
+const iR = t.indexOf("classList.add('ready')");
+console.log('  __undertow 位置 = ' + iU + '   ready 位置 = ' + iR + '  → ' + (iU > 0 && iU < iR ? '✅ 在 ready 之前' : '❌ 仍在之后'));
+console.log('  含 route skipped          = ' + (t.includes('route skipped') ? '✅' : '❌'));
+const r2 = await fetch('https://map.231060101.xyz/assets/photo-stream/index.html', { headers: { 'User-Agent': UA, 'Cache-Control': 'no-cache' } });
+const t2 = await r2.text();
+console.log('  index.html 引用           = ' + ((t2.match(/app\.js\?v=\d+/) || ['无'])[0]));
