@@ -1,4 +1,4 @@
-import { setThreadCount } from './stories.js?v=10';
+import { setThreadCount } from './stories.js?v=11';
 
 // 三级层级：
 //   level1 = 全部省份（每个省一条线，线里流该省的全部照片）

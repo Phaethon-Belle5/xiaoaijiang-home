@@ -14,9 +14,9 @@
 import { StoryView } from './story.js';
 import { clamp, smooth, damp, mulberry } from './math.js';
 import { createGLHelpers } from './gl.js';
-import { loadCatalog } from './catalog.js?v=10';
-import { loadTextures } from './photos.js?v=10';
-import { buildStories, NF } from './stories.js?v=10';
+import { loadCatalog } from './catalog.js?v=11';
+import { loadTextures } from './photos.js?v=11';
+import { buildStories, NF } from './stories.js?v=11';
 import { IDLE, FIBRE_VS, FIBRE_FS, FLOOR_VS, FLOOR_FS, POST_VS, DOWN_FS, UP_FS, BLUR_FS, COMPOSITE_FS } from './shaders.js';
 
 const canvas = document.getElementById('stream');
@@ -39,7 +39,7 @@ const rng = mulberry(0x2545f491);
 let W = innerWidth, H = innerHeight, DPR = 1, PW = 1, PH = 1;
 // CW = 幕布总宽；调大让线条铺满视野（原来 18 时两边空、中间挤）
 // PHOTO_W = 单条光线的粗细；调大让线条更粗壮（原来 0.8*SPACING 偏细）
-let CW = 27, SPACING = CW / NF, PHOTO_W = 1.15 * SPACING, SLOT = 1.75 * PHOTO_W;
+let CW = 27, SPACING = CW / NF, PHOTO_W = 0.88 * SPACING, SLOT = 1.7 * PHOTO_W;
 let stories = [], photos = [];
 let cityLabels = [];
 let labelView = '', cursorPosition = '';
@@ -90,8 +90,10 @@ function buildFibres(active) {
   // 当前层级真正在用的线条数：只用这几条均分整个幕布宽度，多余的推到屏幕外
   const live = clamp(Math.round(active == null ? NF : active), 1, NF);
   SPACING = CW / live;
-  // 线条更粗壮（原来 0.8*SPACING、上限 2.8 偏细）
-  PHOTO_W = Math.min(3.8, 1.18 * SPACING); SLOT = 1.75 * PHOTO_W;
+  // 线宽必须小于间距：光瀑是加法混合渲染，线条一旦相互重叠亮度就会累加，
+  // 整幅画面会过曝；相邻照片也会横向挤在一起，看起来像被横向拉长。
+  // 想让线条显得"粗"，应该靠幕布宽度 CW（线条少时自然更粗），而不是加宽单条线去压过间距。
+  PHOTO_W = Math.min(4.5, 0.88 * SPACING); SLOT = 1.7 * PHOTO_W;
   const rows = Math.ceil(NF / 1024), fs = new Float32Array(1024 * rows * 4);
   for (let i = 0; i < NF; i++) {
     if (i >= live) {                       // 本层级用不到的线程：推到极远，既不显示也不可点
