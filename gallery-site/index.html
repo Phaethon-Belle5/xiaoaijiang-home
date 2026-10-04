@@ -680,7 +680,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 
 <footer class="site-footer">
   <div class="foot-run">本站已经运行 <b id="footRun">…</b></div>
-  <div class="foot-stats">总访问量（PV）：<b id="footPv">…</b><span class="sep">|</span>总访客数（UV）：<b id="footUv">…</b></div>
+  <div class="foot-stats">总访问量（PV）：<b id="footPv">…</b><span class="sep">|</span>总访客数（UV）：<b id="footUv">…</b><span class="sep">|</span>构建：<b id="footBuild">…</b></div>
   <div class="foot-meta">2026-2026 · 作者：伶俜 <span class="sep">|</span> 新站：<a href="https://home.231060101.xyz" target="_blank" rel="noopener">home.231060101.xyz</a></div>
   <div class="foot-beian"><a href="https://beian.miit.gov.cn" target="_blank" rel="noopener">陕ICP备2026022295号-1</a><span class="sep">|</span><a href="https://icp.gov.moe/?keyword=20260854" target="_blank" rel="noopener">&copy; 萌ICP备20260854号</a></div>
   <div class="foot-contact">
@@ -743,6 +743,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script src="assets/cities-geo.js?v=20261001"></script>
 <script>
 const API='https://mapi.231060101.xyz';
+// 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
+const GALLERY_BUILD='2026-10-04 · 照片流三级分布 + 3D 书架';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -2127,6 +2129,7 @@ addEventListener('keydown',e=>{
   const fmt=n=>Number(n).toLocaleString('en-US');
   let vid=localStorage.getItem('mapgallery-vid');
   if(!vid){vid=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2));localStorage.setItem('mapgallery-vid',vid);}
+  try{document.getElementById('footBuild').textContent=GALLERY_BUILD;}catch(e){}
   const pvEl=document.getElementById('footPv'),uvEl=document.getElementById('footUv');
   fetch(API+'/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vid})})
     .then(r=>r.json())
