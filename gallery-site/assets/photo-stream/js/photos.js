@@ -1,4 +1,7 @@
-export const LAYER = 128;
+// 每张照片在图集里的边长。128 时放大到屏幕约 300px 会明显发糊（用户反馈「照片太模糊」），
+// 提到 256：像素变 4 倍；图集边长 = 256*4 = 1024，66 张照片共 5 个图层，
+// RGBA 加 mipmap 约 27MB 显存，桌面和主流手机都承受得住。
+export const LAYER = 256;
 export const ATLAS_GRID = 4;
 
 function decode(src) {

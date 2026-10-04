@@ -4,7 +4,7 @@
 // story has an address and the back button returns to the waterfall.
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-import { clamp, smooth, damp, mod } from './math.js?v=12';
+import { clamp, smooth, damp, mod } from './math.js?v=14';
 const DRIFT = 30; // px/s the stream flows on its own
 
 export class StoryView {
