@@ -1397,8 +1397,20 @@ async function openBook(prov){
   if(!g)return;
   const layer=document.getElementById('bookLayer');
   const title=document.getElementById('bkTitle');
-  const book=document.getElementById('bkBook');
-  if(!layer||!book)return;
+  if(!layer)return;
+  // 关键：每次打开都换一个全新的空容器。
+  // page-flip 会在容器元素上留包装状态（stf__parent 等），destroy() 也清不干净，
+  // 于是同一元素第二次 new PageFlip 会失败 —— 表现为"点开第一本书后，第二本就点不开了"。
+  let book=document.getElementById('bkBook');
+  if(!book){
+    book=document.createElement('div'); book.className='bk-book'; book.id='bkBook';
+    (document.querySelector('.bk-wrap')||layer).appendChild(book);
+  } else {
+    const fresh=document.createElement('div');
+    fresh.className='bk-book'; fresh.id='bkBook';
+    book.replaceWith(fresh);
+    book=fresh;
+  }
   title.textContent=prov+' · 记忆相册';
   const pages=[];
   __bookCityPage={};
@@ -1467,8 +1479,16 @@ function closeBook(){
   const layer=document.getElementById('bookLayer');
   if(layer){layer.classList.remove('show');layer.setAttribute('aria-hidden','true');}
   document.body.style.overflow='';
-  if(__flip&&__flip.destroy){try{__flip.destroy()}catch(e){}}
+  try{ if(__flip&&__flip.destroy)__flip.destroy(); }catch(e){}
   __flip=null;
+  // 顺手把容器也换新，下次打开必定是干净元素
+  try{
+    const old=document.getElementById('bkBook');
+    if(old){
+      const fresh=document.createElement('div'); fresh.className='bk-book'; fresh.id='bkBook';
+      old.replaceWith(fresh);
+    }
+  }catch(e){}
 }
 function updateBookFoot(){
   const el=document.getElementById('bkPage');
