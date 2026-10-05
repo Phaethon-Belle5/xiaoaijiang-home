@@ -1377,7 +1377,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-02 · 影视立体书 + 弹窗优化 + 修归档不显示';
+const BUILD='2026-10-05 · 热榜提速（首屏快一倍 + 卡死的源不再干等）';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4713,18 +4713,37 @@ function normalizeHot60s(arr){
     hot:(it&&(it.hot_value!=null?it.hot_value:it.hot_value_desc))||'',
   })).filter(x=>x.title);
 }
+// ---- 直连失败记忆 ----
+// 60s 系源（抖音/微博/知乎）服务端拿不到，只能浏览器直连 60s.viki.moe。
+// 国内网络下这个域名经常连不上，每次都要等满超时 —— 于是点一次卡十几秒。
+// 这里记住"哪个源直连失败过"，10 分钟内不再尝试，失败就快速给出提示。
+const HOT_DIRECT_FAIL_KEY='xiaoaijiang-hot-direct-fail-v1';
+const HOT_DIRECT_FAIL_TTL=10*60*1000;
+function hotDirectBlocked(src){
+  try{const a=JSON.parse(localStorage.getItem(HOT_DIRECT_FAIL_KEY)||'{}');return Date.now()-(a[src]||0)<HOT_DIRECT_FAIL_TTL;}catch(e){return false;}
+}
+function hotDirectMarkFail(src){
+  try{const a=JSON.parse(localStorage.getItem(HOT_DIRECT_FAIL_KEY)||'{}');a[src]=Date.now();localStorage.setItem(HOT_DIRECT_FAIL_KEY,JSON.stringify(a));}catch(e){}
+}
+function hotDirectMarkOk(src){
+  try{const a=JSON.parse(localStorage.getItem(HOT_DIRECT_FAIL_KEY)||'{}');if(a[src]){delete a[src];localStorage.setItem(HOT_DIRECT_FAIL_KEY,JSON.stringify(a));}}catch(e){}
+}
 async function loadHotDirect(src){
   const cfg=HOT_DIRECT[src];
   if(!cfg)return null;
+  if(hotDirectBlocked(src))return null;      // 最近失败过，不再干等
   try{
-    const r=await fetch(cfg.url,{signal:AbortSignal.timeout(12000),cache:'no-store'});
-    if(!r.ok)return null;
+    // 超时从 12 秒收到 5 秒：连不上就快点失败，别把界面吊着
+    const r=await fetch(cfg.url,{signal:AbortSignal.timeout(5000),cache:'no-store'});
+    if(!r.ok){hotDirectMarkFail(src);return null;}
     const j=await r.json();
     const d=j&&j.data;
     const arr=Array.isArray(d)?d:(d&&Array.isArray(d.list)?d.list:null);
     const list=arr?normalizeHot60s(arr):null;
-    return (list&&list.length)?list:null;
-  }catch(e){return null;}
+    if(list&&list.length){hotDirectMarkOk(src);return list;}
+    hotDirectMarkFail(src);
+    return null;
+  }catch(e){hotDirectMarkFail(src);return null;}
 }
 // ---- 热榜本地缓存（解决"加载很慢"）----
 // 上游首次请求要 0.4~1.6s（60s 系还要走浏览器直连，更慢）。榜单本身几分钟才变一次，
@@ -4752,6 +4771,17 @@ function hotCacheSet(src,list){
   }catch(e){}
 }
 
+// ---- 提前并行发起热榜请求 ----
+// 以前 loadHot() 是在整页渲染完之后才调的，接口那 0.2~0.9 秒全加在关键路径上，
+// 实测首屏热榜要 3.4 秒才出来。现在在启动流程一开始就把请求发出去（与 loadData、
+// 渲染并行），DOM 一就绪立刻就有数据可画。
+let _hotEarly=null,_hotEarlySrc='';
+function kickHotEarly(){
+  const src=_hotSrc||'github';
+  if(hotCacheGet(src))return;            // 本地已有缓存就不必抢跑
+  _hotEarlySrc=src;
+  try{ _hotEarly=fetchHot(src).catch(()=>null); }catch(e){ _hotEarly=null; }
+}
 async function loadHot(src,force){
   src=src||_hotSrc;
   const box=document.getElementById('hot-list');
@@ -4780,7 +4810,14 @@ async function loadHot(src,force){
 
   // 2) 没有缓存：显示加载态并请求
   if(box)box.innerHTML='<div class="hot-state">正在获取热点…</div>';
-  const list=await fetchHot(src);
+  let list;
+  if(_hotEarly&&_hotEarlySrc===src){
+    // 复用启动时就已经发出的那个请求 —— 省掉整段等待
+    list=await _hotEarly;
+    _hotEarly=null;
+  }else{
+    list=await fetchHot(src);
+  }
   if(list&&list.length){
     hotCacheSet(src,list);_hotCache[src]=list;
     renderHotList(list,src);setHotStaleBadge(src,Date.now());
@@ -4795,11 +4832,25 @@ function setHotStaleBadge(src,at){
   const when=mins<1?'刚刚':(mins<60?mins+' 分钟前':Math.round(mins/60)+' 小时前');
   el.textContent=(HOT_SRC_LABEL[src]||src)+' · '+when;
 }
-// 取一次数据：Worker 优先（有 KV+边缘缓存），失败再由浏览器直连兜底
+// 取一次数据。
+// 60s 系源（抖音/微博/知乎）服务端根本够不到（60s.viki.moe 拒绝 CF 出口 IP），
+// 原来的顺序是"先等 Worker（要等很久）→ 失败后再浏览器直连（又等一轮）"，
+// 两段时间叠起来，点一下要十几秒。现在这类源直接先走浏览器直连，
+// Worker 只作为兜底（短超时），总等待时间砍掉一大半。
+const HOT_BROWSER_FIRST={douyin:1,weibo:1,zhihu:1};
 async function fetchHot(src){
+  const browserFirst=!!HOT_BROWSER_FIRST[src];
+  // 这类源服务端拿不到，直接只走浏览器直连（5 秒超时 + 失败记忆），不再等 Worker。
+  // 等 Worker 那 4~9 秒纯属白等，只会让用户觉得"点了没反应"。
+  if(browserFirst){
+    const d=await loadHotDirect(src);
+    if(d&&d.length)return d;
+    console.warn('hot '+src+' 直连取数失败（已记入静默期，10 分钟内不再尝试）');
+    return [];
+  }
   let list=[],err='';
   try{
-    const r=await fetch(API_URL+'/hot?src='+encodeURIComponent(src),{signal:AbortSignal.timeout(12000),cache:'no-store'});
+    const r=await fetch(API_URL+'/hot?src='+encodeURIComponent(src),{signal:AbortSignal.timeout(8000),cache:'no-store'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
     list=Array.isArray(j.items)?j.items:[];
@@ -4853,6 +4904,7 @@ function initHotTopics(){
 
 setTimeout(async function(){
   initTheme();
+  kickHotEarly();   // 热榜请求与后面的加载/渲染并行跑，别排在渲染后面
   try{
     const oldKeys=['xiaoaijiang-site-v5','xiaoaijiang-site-v4','xiaoaijiang-site-v3'];
     for(const k of oldKeys){const old=localStorage.getItem(k);if(old){await dbSet(LS_KEY,JSON.parse(old));localStorage.removeItem(k);break;}}

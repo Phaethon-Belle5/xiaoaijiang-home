@@ -96,7 +96,10 @@ async function hotFetchSource(src) {
   const errors = [];
   for (const t of hotUpstreams(src)) {
     try {
-      const r = await fetch(t.url, { headers: t.headers, signal: AbortSignal.timeout(9000) });
+      // 60s 系源（kind:'60s'）在服务端本来就够不到（60s.viki.moe 拒绝 CF 出口 IP），
+      // 给它 9 秒只会让前端干等；给它 4 秒快速失败即可，前端另有浏览器直连兜底。
+      const tmo = (HOT_SOURCES[src] && HOT_SOURCES[src].kind === '60s') ? 4000 : 9000;
+      const r = await fetch(t.url, { headers: t.headers, signal: AbortSignal.timeout(tmo) });
       if (!r.ok) { errors.push(t.via + ':' + r.status); continue; }
       const items = hotNormalize(src, hotParseJson(await r.text()));
       if (items && items.length) return { items, via: t.via, errors };
