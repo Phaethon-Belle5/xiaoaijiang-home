@@ -242,8 +242,15 @@
 .book3d-img-broken{display:none}
 .book3d-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:16px 11px;text-align:center;
   background:linear-gradient(150deg,#3d3628,#221e17);color:var(--gold-pale)}
+.book3d-fb-ic{opacity:.55;margin-bottom:2px}
 .book3d-fb-title{font-size:.84em;line-height:1.55;font-weight:600;color:#f2e8d2;word-break:break-word}
 .book3d-fb-author{font-size:.68em;opacity:.72}
+/* 影视：海报是 2:3，书薄一点，网格也稍宽 */
+.dim-grid.films{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:30px 24px}
+.book3d.film3d{--book-depth:30px}
+.book3d.film3d .book3d-scene{aspect-ratio:2/3}
+.book3d.film3d .book3d-cover{border-radius:4px 7px 7px 4px}
+.book3d.film3d .book3d-back{border-radius:4px 7px 7px 4px}
 /* 书脊高光/暗部，让封面有"被装订过"的立体感 */
 .book3d-bind{position:absolute;left:0;top:0;bottom:0;width:10%;z-index:2;pointer-events:none;mix-blend-mode:overlay;
   background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.26) 26%,rgba(255,255,255,0) 52%,rgba(0,0,0,.3) 84%,rgba(0,0,0,.12))}
@@ -275,17 +282,39 @@ body.dim-modal-open{overflow:hidden}
 .dim-modal-mask{position:absolute;inset:0;background:rgba(6,8,14,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .dim-modal-box{position:relative;width:min(640px,100%);max-height:min(86vh,860px);display:flex;flex-direction:column;
   background:linear-gradient(160deg,rgba(28,26,22,.98),rgba(18,17,15,.99));border:1px solid var(--gold-pale);
-  border-radius:18px;box-shadow:0 28px 80px rgba(0,0,0,.6);transform:translateY(18px) scale(.97);transition:transform .3s var(--ease-out);overflow:hidden}
-.dim-modal.show .dim-modal-box{transform:none}
+  border-radius:18px;box-shadow:0 28px 80px rgba(0,0,0,.6);
+  transform:translateY(26px) scale(.93);opacity:0;
+  transition:transform .36s cubic-bezier(.16,1,.3,1),opacity .26s ease-out;
+  overflow:hidden}
+.dim-modal.show .dim-modal-box{transform:none;opacity:1}
+/* 弹窗内容依次淡入，开起来有层次 */
+@keyframes dimMIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.dim-modal-scroll>*{animation:dimMIn .44s var(--ease-out) both}
+.dim-modal-scroll>*:nth-child(1){animation-delay:.04s}
+.dim-modal-scroll>*:nth-child(2){animation-delay:.09s}
+.dim-modal-scroll>*:nth-child(3){animation-delay:.13s}
+.dim-modal-scroll>*:nth-child(4){animation-delay:.17s}
+.dim-modal-scroll>*:nth-child(5){animation-delay:.21s}
+.dim-modal-scroll>*:nth-child(6){animation-delay:.25s}
+.dim-modal-scroll>*:nth-child(n+7){animation-delay:.28s}
+@media (prefers-reduced-motion: reduce){
+  .dim-modal-box{transition:opacity .2s}
+  .dim-modal-scroll>*{animation:none}
+}
 .dim-modal-x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,.42);color:var(--text-secondary);border:1px solid var(--glass-border);border-radius:50%;cursor:pointer;transition:all .2s}
 .dim-modal-x:hover{color:var(--gold-bright);border-color:var(--gold);background:rgba(0,0,0,.62)}
 .dim-modal-x:active{transform:scale(.92)}
 .dim-modal-scroll{padding:26px 28px 28px;overflow-y:auto;overscroll-behavior:contain}
-.dim-m-cover{margin:-26px -28px 18px;height:240px;background:rgba(0,0,0,.3);overflow:hidden}
-.dim-m-cover.is-game{height:180px}
-.dim-m-cover img{width:100%;height:100%;object-fit:cover;display:block}
-.dim-m-cover-broken{display:none}
+.dim-m-cover{position:relative;margin:-26px -28px 18px;height:280px;overflow:hidden;background:rgba(0,0,0,.4);
+  display:flex;align-items:center;justify-content:center}
+.dim-m-cover.is-game{height:220px}
+/* 背景：同一张图放大 + 高斯模糊，作为衬底（主图不裁切，边缘不会突兀） */
+.dim-m-cover-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;
+  filter:blur(30px) saturate(1.25) brightness(.72);transform:scale(1.12)}
+/* 主图：完整显示（contain），带投影，长宽比再极端也不会被切掉 */
+.dim-m-cover-img{position:relative;z-index:1;max-width:calc(100% - 36px);max-height:calc(100% - 26px);width:auto;height:auto;
+  object-fit:contain;display:block;border-radius:5px;box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)}
 .dim-m-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
 .dim-m-kind{display:inline-flex;align-items:center;gap:5px;font-size:.72em;color:var(--gold-pale);letter-spacing:.04em}
 .dim-m-title{font-size:1.28em;color:var(--text-primary);margin:0 0 6px;line-height:1.4;font-weight:600;word-break:break-word;padding-right:36px}
@@ -303,7 +332,7 @@ body.dim-modal-open{overflow:hidden}
   .dim-modal{padding:0;align-items:flex-end}
   .dim-modal-box{width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-bottom:none}
   .dim-modal-scroll{padding:22px 20px 26px}
-  .dim-m-cover{margin:-22px -20px 16px;height:190px}
+  .dim-m-cover{margin:-22px -20px 16px;height:230px}
   .dim-m-title{font-size:1.15em}
 }
 /* 切换分类时错落入场，让"点了有反应"看得见 */
@@ -916,6 +945,12 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 /* ---- Wallpaper Controls ---- */
 #wp-stage{position:fixed;inset:0;z-index:0;overflow:hidden;background:#0B0E14}
 #wp-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* 主内容必须抬到背景舞台之上。
+   #wp-stage 是 position:fixed + z-index:0 的「定位元素」，按 CSS 绘制顺序会盖住普通流内容；
+   而 main 原来是 position:static + z-index:auto，所以凡是没做定位的子元素
+   （比如说说的归档列表 .memo-arch-row）都会被背景视频/图片挡在后面 ——
+   表现就是"点了归档什么都不显示"。给 main 一个定位和层级，一次性解决这类问题。 */
+main#main{position:relative;z-index:1}
 #wp-stage .wp-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;filter:brightness(0.85);transform:translateZ(0)}
 #wp-stage .wp-img.on{opacity:1}
 .wp-controls{position:fixed;bottom:28px;right:24px;z-index:998;display:flex;gap:6px;align-items:center}
@@ -1342,7 +1377,7 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-02 · 书籍改成 3D 立体书';
+const BUILD='2026-10-02 · 影视立体书 + 弹窗优化 + 修归档不显示';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4374,7 +4409,10 @@ function openDimDetail(idx){
   }
   const body=document.getElementById('dim-modal-body');
   body.innerHTML=
-    (cover?'<div class="dim-m-cover'+(isGame?' is-game':'')+'"><img src="'+escHtml(cover)+'" alt="" onerror="this.parentNode.classList.add(\'dim-m-cover-broken\');this.remove()"></div>':'')+
+    (cover?'<div class="dim-m-cover'+(isGame?' is-game':'')+'">'+
+        '<div class="dim-m-cover-bg"></div>'+
+        '<img class="dim-m-cover-img" src="'+escHtml(cover)+'" alt="" onerror="this.style.display=\'none\'">'+
+      '</div>':'')+
     '<div class="dim-m-head">'+
       '<span class="dim-m-kind">'+dimIconSvg(it.kind,14)+'<span>'+escHtml(info.label)+'</span></span>'+
       (sub?'<span class="dim-chip">'+escHtml(sub)+'</span>':'')+
@@ -4389,6 +4427,11 @@ function openDimDetail(idx){
   box.classList.add('show');
   document.body.classList.add('dim-modal-open');
   body.scrollTop=0;
+  // 封面背景用同一张图做高斯模糊衬底，主图完整显示不裁切
+  const bg=body.querySelector('.dim-m-cover-bg');
+  if(bg&&cover)bg.style.backgroundImage='url("'+cover.replace(/["\\]/g,'')+'")';
+  const img=body.querySelector('.dim-m-cover-img');
+  if(img)img.addEventListener('load',()=>body.classList.add('has-cover'));
 }
 function closeDimDetail(){
   const box=document.getElementById('dim-modal');
@@ -4399,6 +4442,7 @@ function closeDimDetail(){
 // 参考了博客书架的常见做法：外层 perspective，悬停把整本书 rotateY 抽出来。
 // 这里不带下面的文字块 —— 只显示封面，点书弹详情。
 function bookCard(it,idx){
+  const isFilm=it.kind==='films';
   const cover=String(it.cover||'').trim();
   const sub=String(it.sub||'').trim();
   const title=String(it.title||'未命名');
@@ -4407,8 +4451,8 @@ function bookCard(it,idx){
   const hasMore=!!(String(it.review||'').trim()||String(it.thought||'').trim()||String(it.link||'').trim());
   const art=cover
     ? '<img class="book3d-img" src="'+escHtml(cover)+'" alt="" loading="lazy" onerror="this.classList.add(\'book3d-img-broken\')">'
-    : '<div class="book3d-fallback"><span class="book3d-fb-title">'+escHtml(title)+'</span>'+(creator?'<span class="book3d-fb-author">'+escHtml(creator)+'</span>':'')+'</div>';
-  return '<div class="book3d'+(hasMore?' clickable':'')+'" title="'+escHtml(title+(creator?' · '+creator:''))+(hasMore?'（点击查看详情）':'')+'"'+
+    : '<div class="book3d-fallback"><span class="book3d-fb-ic">'+dimIconSvg(it.kind,30)+'</span><span class="book3d-fb-title">'+escHtml(title)+'</span>'+(creator?'<span class="book3d-fb-author">'+escHtml(creator)+'</span>':'')+'</div>';
+  return '<div class="book3d'+(isFilm?' film3d':'')+(hasMore?' clickable':'')+'" title="'+escHtml(title+(creator?' · '+creator:''))+(hasMore?'（点击查看详情）':'')+'"'+
       (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+');}"':'')+'>'+
       '<div class="book3d-scene"><div class="book3d-inner">'+
         '<div class="book3d-cover"><div class="book3d-art">'+art+
@@ -4421,7 +4465,8 @@ function bookCard(it,idx){
       '</div></div></div>';
 }
 function dimCard(it,idx){
-  if(it.kind==='books')return bookCard(it,idx);   // 书籍走立体书
+  // 书籍与影视都做成"立体书"：封面 + 右侧书页边 + 封底，悬停抽出来
+  if(it.kind==='books'||it.kind==='films')return bookCard(it,idx);
   const isGame=it.kind==='games';
   const cover=String(it.cover||'').trim();
   const sub=String(it.sub||'').trim();
@@ -4449,6 +4494,7 @@ function renderDimension(){
   // 用 classList 而不是 className：否则会把 setDimKind 加上的 .dim-anim 冲掉，入场动画就没了
   grid.classList.toggle('games',dimKind==='games');
   grid.classList.toggle('books',dimKind==='books');
+  grid.classList.toggle('films',dimKind==='films');
   // 同步 tab 的选中态（之前漏了这一步，导致切了之后高亮还留在原来那个上面）
   document.querySelectorAll('.dim-tab').forEach(b=>{
     const on=b.dataset.dimKind===dimKind;
