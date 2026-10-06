@@ -1406,7 +1406,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-05 · 后台添加入口吸顶 + 分区筛选';
+const BUILD='2026-10-05 · 所有内容按日期倒序（最新在最上）';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -1790,6 +1790,24 @@ function admField(label,inner,help){
 // 越用越累。这里把添加入口吸在分区顶部（滚动时始终可见），并配一个即时筛选框，
 // 内容再多也能马上找到目标那条。
 // ============================================================
+// ============================================================
+// 统一的「按日期倒序」：最新在最上面
+// 返回 [{it, i}]，i 是它在原数组里的下标 —— 后台编辑框用下标回写，
+// 所以显示可以排序，但一定要带着原始下标，否则编辑会串行。
+// 没有日期的排最后；都没日期时，后加的在前（更符合"新内容在最上"的直觉）。
+// ============================================================
+function sortByDateDesc(list){
+  return (list||[]).map((it,i)=>({it,i})).sort((a,b)=>{
+    const da=String((a.it&&a.it.date)||'').trim();
+    const db=String((b.it&&b.it.date)||'').trim();
+    if(da&&db){const c=db.localeCompare(da);if(c)return c;return a.i-b.i;}
+    if(da)return -1;
+    if(db)return 1;
+    return b.i-a.i;
+  });
+}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
 function admStickyBar(addLabel,addFn,count,placeholder){
   return '<div class="admin-sticky">'+
     '<button class="admin-sbtn primary" type="button" onclick="'+addFn+'">'+addLabel+'</button>'+
@@ -1917,10 +1935,11 @@ ADMIN_RENDER.content=function(){
   return admArea('关于我','e-about',(data.about&&data.about.text)||'',4)+
     '<div class="admin-group" data-adm-label="功能模块"><label>功能模块（'+((data.modules||[]).length)+' 个）</label>'+
   admStickyBar('+ 添加模块','addModule()',(data.modules||[]).length,'筛选模块…')+
-      (data.modules||[]).map((m,i)=>
+      sortByDateDesc(data.modules||[]).map(({it:m,i})=>
         '<div class="admin-card"><div class="admin-card-head">'+
           '<input type="text" value="'+escHtml(m.title)+'" data-m-idx="'+i+'" data-m-field="title" style="flex:1" aria-label="模块标题">'+
           '<input type="text" value="'+escHtml(m.icon)+'" data-m-idx="'+i+'" data-m-field="icon" style="width:52px;text-align:center" aria-label="模块图标">'+
+          '<input type="text" value="'+escHtml(m.date||'')+'" data-m-idx="'+i+'" data-m-field="date" placeholder="日期 2026-01-01" style="width:126px" title="按日期倒序排列，最新在最上面" aria-label="模块日期">'+
           '<button class="admin-sbtn icon danger" type="button" onclick="removeModule('+i+')" title="删除模块">'+AI.trash+'</button>'+
         '</div>'+
         '<textarea data-m-idx="'+i+'" data-m-field="text" style="width:100%;min-height:64px" aria-label="模块内容">'+escHtml(m.text)+'</textarea></div>').join('')+
@@ -2012,9 +2031,10 @@ ADMIN_RENDER.works=function(){
   return '<div class="admin-group" data-adm-label="个人作品列表"><label>作品（'+list.length+' 个）</label>'+
     '<p class="admin-help"><b>标签</b>和说说一样是自由填写的：多个标签用逗号隔开（例如「我的项目, 工具」），前台的标签栏就会按它筛选，卡片上也会显示。<b>旧的「分组」会自动当成一个标签</b>，老数据不用改。「说明」显示在卡片标题下面；勾「谨慎」打 ⚠ 角标，勾「推广」打「推广」角标。</p>'+
   admStickyBar('+ 添加作品','addPortfolio()',list.length,'筛选作品（标题 / 标签 / 说明）…')+
-    (list.map((it,i)=>
+    (sortByDateDesc(list).map(({it,i})=>
       '<div class="admin-card"><div class="admin-card-head">'+
         '<input type="text" value="'+escHtml(it.title)+'" data-p-idx="'+i+'" data-p-field="title" placeholder="作品名" style="flex:1">'+
+        '<input type="text" value="'+escHtml(it.date||'')+'" data-p-idx="'+i+'" data-p-field="date" placeholder="日期 2026-01-01" style="width:126px" title="按日期倒序排列，最新在最上面">'+
         '<button class="admin-sbtn icon danger" type="button" onclick="removePortfolio('+i+')" title="删除">'+AI.trash+'</button>'+
       '</div>'+
       '<div style="display:flex;gap:8px;align-items:flex-start">'+
@@ -2067,7 +2087,7 @@ ADMIN_RENDER.dimension=function(){
     '前台游戏用小图标、书籍和影视用大封面，所以游戏封面建议用方形图标。</p>'+
   admStickyBar('+ 添加一条','addDimItem()',items.length,'筛选（标题 / 作者 / 子分类 / 评价）…')+
     '<div class="admin-card" style="margin-bottom:10px"><label style="font-size:.82em">子分类管理</label>'+subRow('books','书籍')+subRow('films','影视')+subRow('games','游戏')+'</div>'+
-    (items.map((it,i)=>
+    (sortByDateDesc(items).map(({it,i})=>
       '<div class="admin-card">'+
         '<div class="admin-card-head" style="flex-wrap:wrap">'+
           '<select data-d-idx="'+i+'" data-d-field="kind" onchange="dimKindChanged(this)" style="width:104px" title="类型">'+kindOpts(it.kind)+'</select>'+
@@ -2144,7 +2164,7 @@ ADMIN_RENDER.changelog=function(){
     '<p class="admin-help">显示在首页「音乐播放器」和「全网热点」中间那张卡上，<b>默认收起、点条目展开</b>。'+
     '标题一句话，正文里<b>每行写一条</b>。新增的会加在最上面，首页按日期倒序显示。</p>'+
   admStickyBar('+ 添加更新记录','addLogItem()',list.length,'筛选记录（日期 / 标签 / 标题 / 正文）…')+
-    (list.map((it,i)=>
+    (sortByDateDesc(list).map(({it,i})=>
       '<div class="admin-card">'+
         '<div class="admin-card-head">'+
           '<input type="text" value="'+escHtml(it.date||'')+'" data-l-idx="'+i+'" data-l-field="date" placeholder="日期 2026-10-01" style="width:132px">'+
@@ -2196,7 +2216,7 @@ ADMIN_RENDER.memos=function(){
       '<button class="admin-sbtn" type="button" onclick="ADMIN.memoBatchPin(false)">取消置顶</button>'+
       '<button class="admin-sbtn danger" type="button" onclick="ADMIN.memoBatchDel()">'+AI.trash+'删除所选</button>'+
     '</div>'+
-    '<div id="memo-list">'+list.map((m,i)=>ADMIN.memoItem(m,i,list.length)).join('')+'</div>'+
+    '<div id="memo-list">'+sortByDateDesc(list).map(({it:m,i})=>ADMIN.memoItem(m,i,list.length)).join('')+'</div>'+
     '<button class="admin-sbtn" type="button" style="width:100%;justify-content:center;height:34px" onclick="addMemo()">新增说说</button>';
 };
 ADMIN.memoItem=function(m,i,total){
@@ -3246,7 +3266,7 @@ function renderMain(){
 
       <!-- Bento Row 1: Modules + Contact preview -->
       <div class="bento-grid">
-        ${data.modules.length?data.modules.map((m,i)=>`
+        ${data.modules.length?sortByDateDesc(data.modules).map(({it:m,i})=>`
           <div class="bento-tile small bento-dark star-corners-4 reveal reveal-d${Math.min(i+2,5)}">
             <span class="card-label">${escHtml(m.icon||'')} ${escHtml(m.title)}</span>
             <div class="card-text">${linkMountains(m.text)}</div>
@@ -3273,7 +3293,7 @@ function renderMain(){
         <span class="pf-count" id="portfolio-count"></span>
       </div>
       <div class="portfolio-grid" id="portfolio-all">
-      ${(data.portfolio||[]).map((item,i)=>{
+      ${sortByDateDesc(data.portfolio||[]).map(({it:item,i})=>{
         const imgSrc=item.image||portfolioFallback(i);
         const hasUrl=item.url&&item.url.trim();
         const tags=pfTags(item);
@@ -4006,7 +4026,7 @@ function saveAdmin(){
   saveData();applyAll();closeAdmin();toast('已保存','success');
   try{initMusicPlayer();}catch(e){console.warn(e);}
 }
-function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});ADMIN.focusNew('content');}
+function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...',date:todayStr()});});ADMIN.focusNew('content',true);}
 function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
 function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});ADMIN.focusNew('memos');}
 // 说说分区：把「新增说说」和筛选吸顶，内容多了也不用划到底
@@ -4121,7 +4141,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_curMemoId)
     }).catch(()=>{});
   }
 })();
-function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'',url:'',tags:''});});ADMIN.focusNew('works',true);}
+function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'',url:'',tags:'',date:todayStr()});});ADMIN.focusNew('works',true);}
 function removePortfolio(i){if(!confirm('删除这个作品？'))return;ADMIN.mutate('works','删除作品',()=>{data.portfolio.splice(i,1);});}
 function deleteTestimonialPanel(i){}
 // Gallery CRUD —— 映像馆的数据在 D1/图床侧维护，面板不直接改，这里不再保留旧入口
