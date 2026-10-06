@@ -999,6 +999,18 @@ main#main{position:relative;z-index:1}
 /* 新增条目后高亮闪一下，让"刚加的那条"一眼可见 */
 @keyframes adminFlash{0%{box-shadow:0 0 0 0 rgba(212,168,67,.75),0 0 0 1px var(--gold)}70%{box-shadow:0 0 0 10px rgba(212,168,67,0),0 0 0 1px var(--gold)}100%{box-shadow:0 0 0 0 rgba(212,168,67,0),0 0 0 1px transparent}}
 .admin-flash{animation:adminFlash 1.7s var(--ease-out) 1;border-color:var(--gold) !important}
+/* 长列表分区的吸顶工具条：添加入口常驻手边 + 即时筛选 */
+.admin-sticky{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  margin:0 0 10px;padding:9px 2px;
+  background:linear-gradient(to bottom,var(--admin-bg,rgba(20,19,17,.97)) 62%,rgba(20,19,17,0));
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.admin-sbtn.primary{color:#1a1408;background:linear-gradient(135deg,var(--gold-bright),var(--gold));border-color:transparent;font-weight:600}
+.admin-sbtn.primary:hover{filter:brightness(1.08)}
+.admin-filter{flex:1;min-width:120px;font:inherit;font-size:.8em;color:var(--text-primary);background:rgba(0,0,0,.24);
+  border:1px solid var(--surface-border);border-radius:8px;padding:6px 10px;transition:border-color .2s}
+.admin-filter:focus{outline:none;border-color:var(--gold)}
+.admin-sticky-count{font-size:.74em;color:var(--text-muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+[data-theme="light"] .admin-sticky{background:linear-gradient(to bottom,rgba(248,246,241,.97) 62%,rgba(248,246,241,0))}
 .admin-status[data-state="dirty"]{color:var(--gold-bright);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
 .admin-status[data-state="dirty"]::before{background:var(--gold-bright)}
 .admin-status[data-state="saving"]::before{background:var(--gold);animation:adminPulse 1s ease-in-out infinite}
@@ -1394,7 +1406,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-05 · 作品改用自由标签 + 后台新增后自动定位';
+const BUILD='2026-10-05 · 后台添加入口吸顶 + 分区筛选';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -1772,6 +1784,41 @@ function memoMiniCard(m,opts){
 function admField(label,inner,help){
   return '<div class="admin-group" data-adm-label="'+escHtml(label)+'"><label>'+escHtml(label)+'</label>'+inner+(help?'<p class="admin-help">'+help+'</p>':'')+'</div>';
 }
+// ============================================================
+// 长列表分区的吸顶工具条
+// 原来「添加」按钮在各分区列表的最底下 —— 内容一多，每次新增都要先划到底，
+// 越用越累。这里把添加入口吸在分区顶部（滚动时始终可见），并配一个即时筛选框，
+// 内容再多也能马上找到目标那条。
+// ============================================================
+function admStickyBar(addLabel,addFn,count,placeholder){
+  return '<div class="admin-sticky">'+
+    '<button class="admin-sbtn primary" type="button" onclick="'+addFn+'">'+addLabel+'</button>'+
+    '<input class="admin-filter" type="search" placeholder="'+escHtml(placeholder||'筛选…')+'" oninput="admFilterCards(this)" aria-label="筛选本区内容">'+
+    '<span class="admin-sticky-count">共 '+(count||0)+' 条</span>'+
+  '</div>';
+}
+function admFilterCards(input){
+  const root=input.closest('[data-sec-body]');
+  if(!root)return;
+  const q=String(input.value||'').trim().toLowerCase();
+  const cards=[].slice.call(root.querySelectorAll('.admin-card'));
+  let shown=0;
+  cards.forEach(c=>{
+    // 注意：innerText 拿不到 <input>/<textarea> 里填的值，而这些表单的内容恰恰都在输入框里，
+    // 所以要把各字段的 value 也拼进来，否则搜标题一个字都搜不到。
+    let hay=String(c.innerText||'');
+    const fields=c.querySelectorAll('input,textarea,select');
+    for(let i=0;i<fields.length;i++){
+      const el=fields[i];
+      hay+=' '+(el.value||'')+' '+String(el.getAttribute('placeholder')||'');
+    }
+    const hit=!q||hay.toLowerCase().indexOf(q)>=0;
+    c.hidden=!hit;
+    if(hit)shown++;
+  });
+  const cnt=root.querySelector('.admin-sticky-count');
+  if(cnt)cnt.textContent=q?(shown+' / '+cards.length+' 条'):('共 '+cards.length+' 条');
+}
 function admText(label,id,val,ph){
   return admField(label,'<input type="text" id="'+id+'" value="'+escHtml(val==null?'':val)+'"'+(ph?' placeholder="'+escHtml(ph)+'"':'')+'>');
 }
@@ -1869,6 +1916,7 @@ ADMIN_RENDER.content=function(){
   const c=data.content||{};
   return admArea('关于我','e-about',(data.about&&data.about.text)||'',4)+
     '<div class="admin-group" data-adm-label="功能模块"><label>功能模块（'+((data.modules||[]).length)+' 个）</label>'+
+  admStickyBar('+ 添加模块','addModule()',(data.modules||[]).length,'筛选模块…')+
       (data.modules||[]).map((m,i)=>
         '<div class="admin-card"><div class="admin-card-head">'+
           '<input type="text" value="'+escHtml(m.title)+'" data-m-idx="'+i+'" data-m-field="title" style="flex:1" aria-label="模块标题">'+
@@ -1963,6 +2011,7 @@ ADMIN_RENDER.works=function(){
   const list=data.portfolio||[];
   return '<div class="admin-group" data-adm-label="个人作品列表"><label>作品（'+list.length+' 个）</label>'+
     '<p class="admin-help"><b>标签</b>和说说一样是自由填写的：多个标签用逗号隔开（例如「我的项目, 工具」），前台的标签栏就会按它筛选，卡片上也会显示。<b>旧的「分组」会自动当成一个标签</b>，老数据不用改。「说明」显示在卡片标题下面；勾「谨慎」打 ⚠ 角标，勾「推广」打「推广」角标。</p>'+
+  admStickyBar('+ 添加作品','addPortfolio()',list.length,'筛选作品（标题 / 标签 / 说明）…')+
     (list.map((it,i)=>
       '<div class="admin-card"><div class="admin-card-head">'+
         '<input type="text" value="'+escHtml(it.title)+'" data-p-idx="'+i+'" data-p-field="title" placeholder="作品名" style="flex:1">'+
@@ -2016,6 +2065,7 @@ ADMIN_RENDER.dimension=function(){
   return '<div class="admin-group" data-adm-label="次元柜"><label>次元柜（共 '+items.length+' 条：书籍 '+cnt('books')+' · 影视 '+cnt('films')+' · 游戏 '+cnt('games')+'）</label>'+
     '<p class="admin-help">显示在导航栏「次元柜」里。三类各自维护子分类；评分 0~5（可填 4.5 这样的半星）；<b>评价</b>显示在卡片上，<b>感悟</b>每行写一条、访客点「感悟」展开看。'+
     '前台游戏用小图标、书籍和影视用大封面，所以游戏封面建议用方形图标。</p>'+
+  admStickyBar('+ 添加一条','addDimItem()',items.length,'筛选（标题 / 作者 / 子分类 / 评价）…')+
     '<div class="admin-card" style="margin-bottom:10px"><label style="font-size:.82em">子分类管理</label>'+subRow('books','书籍')+subRow('films','影视')+subRow('games','游戏')+'</div>'+
     (items.map((it,i)=>
       '<div class="admin-card">'+
@@ -2093,6 +2143,7 @@ ADMIN_RENDER.changelog=function(){
   return '<div class="admin-group" data-adm-label="更新日志"><label>更新日志（'+list.length+' 条）</label>'+
     '<p class="admin-help">显示在首页「音乐播放器」和「全网热点」中间那张卡上，<b>默认收起、点条目展开</b>。'+
     '标题一句话，正文里<b>每行写一条</b>。新增的会加在最上面，首页按日期倒序显示。</p>'+
+  admStickyBar('+ 添加更新记录','addLogItem()',list.length,'筛选记录（日期 / 标签 / 标题 / 正文）…')+
     (list.map((it,i)=>
       '<div class="admin-card">'+
         '<div class="admin-card-head">'+
@@ -2136,8 +2187,8 @@ function removeLogItem(i){
 // ============ 说说（重点优化） ============
 ADMIN_RENDER.memos=function(){
   const list=data.memos||[];
-  if(!list.length)return '<div class="memo-empty">还没有说说，点下方「新增说说」开始写。</div>';
-  return '<div class="memo-bulk">'+
+  if(!list.length)return memoSecBar()+'<div class="memo-empty">还没有说说，点上方「新增说说」开始写。</div>';
+  return memoSecBar()+'<div class="memo-bulk">'+
       '<label style="display:inline-flex;align-items:center;gap:6px;font-size:.76em;color:var(--text-secondary);cursor:pointer">'+
         '<input type="checkbox" id="memo-sel-all" onchange="ADMIN.memoSelAll(this.checked)"> 全选</label>'+
       '<span class="bulk-count" id="memo-bulk-count">'+list.length+' 条</span>'+
@@ -3958,6 +4009,15 @@ function saveAdmin(){
 function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});ADMIN.focusNew('content');}
 function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
 function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});ADMIN.focusNew('memos');}
+// 说说分区：把「新增说说」和筛选吸顶，内容多了也不用划到底
+function memoSecBar(){
+  const n=(data.memos||[]).length;
+  return '<div class="admin-sticky">'+
+    '<button class="admin-sbtn primary" type="button" onclick="addMemo()">+ 新增说说</button>'+
+    '<input class="admin-filter" type="search" placeholder="筛选说说（正文 / 标签 / 日期）…" oninput="admFilterCards(this)" aria-label="筛选说说">'+
+    '<span class="admin-sticky-count">共 '+n+' 条</span>'+
+  '</div>';
+}
 function deleteSelectedMemos(){ ADMIN.memoBatchDel(); }
 function removeMemo(i){ADMIN.memoDel(i);}
 
