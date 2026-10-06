@@ -647,6 +647,20 @@ button,.btn,.slide-cta,.download-btn,input,textarea,select,.card-label,.nav-bran
 .pf-badge{position:absolute;top:8px;right:8px;z-index:2;font-size:.66em;padding:2px 7px;border-radius:999px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .pf-badge.warn{background:rgba(220,120,60,.22);border:1px solid rgba(220,120,60,.55);color:#f0b070}
 .pf-badge.promo{background:rgba(148,163,184,.18);border:1px solid rgba(148,163,184,.4);color:#c3ccd8}
+/* 个人精选的标签栏与卡片标签（和说说同一套观感） */
+.pf-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-5)}
+.pf-tagbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pf-tag{font:inherit;font-size:.76em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);
+  border-radius:999px;padding:5px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s var(--ease-out)}
+.pf-tag:hover{color:var(--text-secondary);border-color:var(--gold-pale);transform:translateY(-1px)}
+.pf-tag:active{transform:scale(.96)}
+.pf-tag.on{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
+.pf-tag i{font-style:normal;font-size:.88em;opacity:.7;font-variant-numeric:tabular-nums}
+.pf-count{font-size:.74em;color:var(--text-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pf-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pf-tagchip{font-size:.68em;color:var(--gold-pale);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:1px 8px;
+  cursor:pointer;transition:all .18s;line-height:1.7}
+.pf-tagchip:hover{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
 
 /* Portfolio grid — unified Webflow card style */
 /* ---- 个人精选：整体改为与说说/热点/音乐同一套毛玻璃语言 ---- */
@@ -982,6 +996,9 @@ main#main{position:relative;z-index:1}
 .admin-status{display:inline-flex;align-items:center;gap:6px;font-size:.74em;color:var(--text-muted);
   padding:4px 11px;border-radius:var(--radius-pill);border:1px solid var(--surface-border);white-space:nowrap}
 .admin-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex:none}
+/* 新增条目后高亮闪一下，让"刚加的那条"一眼可见 */
+@keyframes adminFlash{0%{box-shadow:0 0 0 0 rgba(212,168,67,.75),0 0 0 1px var(--gold)}70%{box-shadow:0 0 0 10px rgba(212,168,67,0),0 0 0 1px var(--gold)}100%{box-shadow:0 0 0 0 rgba(212,168,67,0),0 0 0 1px transparent}}
+.admin-flash{animation:adminFlash 1.7s var(--ease-out) 1;border-color:var(--gold) !important}
 .admin-status[data-state="dirty"]{color:var(--gold-bright);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
 .admin-status[data-state="dirty"]::before{background:var(--gold-bright)}
 .admin-status[data-state="saving"]::before{background:var(--gold);animation:adminPulse 1s ease-in-out infinite}
@@ -1377,7 +1394,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-05 · 热榜提速（首屏快一倍 + 卡死的源不再干等）';
+const BUILD='2026-10-05 · 作品改用自由标签 + 后台新增后自动定位';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -1723,6 +1740,24 @@ ADMIN.mutate=function(sec,label,fn){
   this.refresh(sec);
   toast(label+'完成','success');
 };
+// 新增条目后：滚到它、聚焦第一个文字输入框、闪一下高亮。
+// 以前点「添加」只在列表里多出一项（还在最上面），分段表单很长时很难找到刚加的那条，
+// 常常出现"点了添加却不知道加哪去了"。现在加完视线与光标会直接被带过去。
+// 第二个参数 true 表示"新条目加在末尾"（比如作品是 push 进去的），这时要定位最后一张卡。
+ADMIN.focusNew=function(sec,last){
+  const host=document.querySelector('[data-sec-body="'+(sec||this.active)+'"]');
+  if(!host)return;
+  setTimeout(()=>{
+    const cards=host.querySelectorAll('.admin-card');
+    if(!cards.length)return;
+    const el=last?cards[cards.length-1]:cards[0];
+    try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
+    el.classList.add('admin-flash');
+    setTimeout(()=>el.classList.remove('admin-flash'),2200);
+    const f=el.querySelector('input[type="text"],input:not([type]),textarea');
+    if(f){try{f.focus({preventScroll:true});}catch(e){try{f.focus();}catch(e2){}}}
+  },150);
+};
 // 便签缩略量（与站点 .memo-card 同一套样式，用于预览与列表配图）
 // 预览里的图默认按通栏处理（加 img-land，不依赖 orientation 判定，避免出现未定样式时的变形）
 function memoMiniCard(m,opts){
@@ -1927,7 +1962,7 @@ ADMIN_RENDER.comments=function(){
 ADMIN_RENDER.works=function(){
   const list=data.portfolio||[];
   return '<div class="admin-group" data-adm-label="个人作品列表"><label>作品（'+list.length+' 个）</label>'+
-    '<p class="admin-help">「分组」决定卡片归到哪一栏（我的项目 / 推荐工具 / 朋友的作品 / 整活 / 其他）；「说明」显示在卡片标题下面。勾「谨慎」会在卡片打 ⚠ 角标，勾「推广」打「推广」角标。</p>'+
+    '<p class="admin-help"><b>标签</b>和说说一样是自由填写的：多个标签用逗号隔开（例如「我的项目, 工具」），前台的标签栏就会按它筛选，卡片上也会显示。<b>旧的「分组」会自动当成一个标签</b>，老数据不用改。「说明」显示在卡片标题下面；勾「谨慎」打 ⚠ 角标，勾「推广」打「推广」角标。</p>'+
     (list.map((it,i)=>
       '<div class="admin-card"><div class="admin-card-head">'+
         '<input type="text" value="'+escHtml(it.title)+'" data-p-idx="'+i+'" data-p-field="title" placeholder="作品名" style="flex:1">'+
@@ -1937,7 +1972,7 @@ ADMIN_RENDER.works=function(){
         (it.image?'<img src="'+escHtml(it.image)+'" alt="" style="width:64px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--surface-border);flex:none" onerror="this.style.opacity=.3">'
                 :'<div style="width:64px;height:46px;border-radius:6px;border:1px dashed var(--surface-border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.62em;flex:none">无图</div>')+
         '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">'+
-          '<input type="text" value="'+escHtml(it.group||'')+'" data-p-idx="'+i+'" data-p-field="group" placeholder="分组" list="pf-group-list">'+
+          '<input type="text" value="'+escHtml(it.tags!=null&&it.tags!==''?it.tags:(it.group||''))+'" data-p-idx="'+i+'" data-p-field="tags" placeholder="标签，多个用逗号隔开" list="pf-tag-list">'+
           '<input type="text" value="'+escHtml(it.url||'')+'" data-p-idx="'+i+'" data-p-field="url" placeholder="链接地址（可选）">'+
           '<textarea data-p-idx="'+i+'" data-p-field="desc" rows="2" placeholder="一句话说明这是什么（会显示在卡片上）" style="resize:vertical;min-height:46px">'+escHtml(it.desc||'')+'</textarea>'+
           '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:.76em;color:var(--text-secondary)">'+
@@ -1948,7 +1983,7 @@ ADMIN_RENDER.works=function(){
           '<button class="admin-sbtn" type="button" onclick="uploadPortfolioImg('+i+')">'+AI.img+'上传图片</button>'+
         '</div>'+
       '</div></div>').join('')||'<p class="admin-help">还没有作品</p>')+
-    '<datalist id="pf-group-list"><option value="我的项目"></option><option value="推荐工具"></option><option value="朋友的作品"></option><option value="整活"></option><option value="其他"></option></datalist>'+
+    '<datalist id="pf-tag-list">'+allPfTags().map(([t])=>'<option value="'+escHtml(t)+'"></option>').join('')+'</datalist>'+
     '<button class="admin-sbtn" type="button" onclick="addPortfolio()">添加作品</button></div>';
 };
 ADMIN_PREVIEW.works=function(){
@@ -2025,6 +2060,7 @@ function addDimItem(){
     const d=dimKit();
     d.items.unshift({id:'dm_'+Date.now(),kind:'books',sub:(d.subs.books[0]||''),title:'',creator:'',rating:0,review:'',thought:'',cover:'',date:new Date().toISOString().slice(0,10),link:''});
   });
+  ADMIN.focusNew('dimension');
 }
 function removeDimItem(i){
   if(!confirm('删除这条记录？'))return;
@@ -2090,6 +2126,7 @@ function addLogItem(){
     if(!Array.isArray(data.changelog))data.changelog=[];
     data.changelog.unshift({date:new Date().toISOString().slice(0,10),tag:'功能',title:'',text:''});
   });
+  ADMIN.focusNew('changelog');
 }
 function removeLogItem(i){
   if(!confirm('删除这条更新记录？'))return;
@@ -3180,33 +3217,31 @@ function renderMain(){
         <h2 class="header-headline" style="font-size:clamp(2rem,4vw,3rem);font-weight:600">${escHtml(c.portfolioHeadline||'个人精选')}</h2>
       </div>
       <div class="section-divider"></div>
-      ${groupPortfolio(data.portfolio||[]).map(([gname,items])=>`
-      <div class="pf-group">
-        <div class="pf-group-head">
-          <span class="pf-group-name">${escHtml(gname)}</span>
-          <span class="pf-group-count">${items.length}</span>
-          ${PF_GROUP_HINT[gname]?`<span class="pf-group-hint">${escHtml(PF_GROUP_HINT[gname])}</span>`:''}
-        </div>
-        <div class="portfolio-grid">
-        ${items.map(({it:item,i})=>{
-          const imgSrc=item.image||portfolioFallback(i);
-          const hasUrl=item.url&&item.url.trim();
-          return`
-          <div class="portfolio-item reveal reveal-d${Math.min(i+2,5)}" ${hasUrl?'onclick="leaveConfirm(\''+item.url.replace(/'/g,"\\'")+'\',true)"':''} role="${hasUrl?'link':'article'}" tabindex="0">
-            <div class="portfolio-thumb">
-              <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src=portfolioFallback(${i})">
-              ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
-              ${item.warn?'<span class="pf-badge warn" title="点了会有意外结果">⚠ 谨慎</span>':''}
-              ${item.promo?'<span class="pf-badge promo" title="含推广参数">推广</span>':''}
-            </div>
-            <div class="portfolio-info">
-              <div class="portfolio-title">${escHtml(item.title)}</div>
-              ${item.desc?`<div class="portfolio-desc">${escHtml(item.desc)}</div>`:''}
-            </div>
-          </div>`;
-        }).join('')}
-        </div>
-      </div>`).join('')}
+      <div class="pf-toolbar reveal">
+        <div class="pf-tagbar" id="portfolio-tagbar"></div>
+        <span class="pf-count" id="portfolio-count"></span>
+      </div>
+      <div class="portfolio-grid" id="portfolio-all">
+      ${(data.portfolio||[]).map((item,i)=>{
+        const imgSrc=item.image||portfolioFallback(i);
+        const hasUrl=item.url&&item.url.trim();
+        const tags=pfTags(item);
+        return`
+        <div class="portfolio-item reveal reveal-d${Math.min(i+2,5)}" data-tags="${escHtml(tags.join('|'))}" ${hasUrl?'onclick="leaveConfirm(\''+item.url.replace(/'/g,"\\'")+'\',true)"':''} role="${hasUrl?'link':'article'}" tabindex="0">
+          <div class="portfolio-thumb">
+            <img src="${imgSrc}" alt="${escHtml(item.title)}" loading="lazy" onerror="this.src=portfolioFallback(${i})">
+            ${hasUrl?'<div class="portfolio-overlay"><span>'+escHtml(c.portfolioOverlay||'查看详情')+'</span></div>':''}
+            ${item.warn?'<span class="pf-badge warn" title="点了会有意外结果">⚠ 谨慎</span>':''}
+            ${item.promo?'<span class="pf-badge promo" title="含推广参数">推广</span>':''}
+          </div>
+          <div class="portfolio-info">
+            <div class="portfolio-title">${escHtml(item.title)}</div>
+            ${item.desc?`<div class="portfolio-desc">${escHtml(item.desc)}</div>`:''}
+            ${tags.length?`<div class="pf-tags">${tags.map(t=>`<span class="pf-tagchip" onclick="event.stopPropagation();setPfFilter('${escHtml(t).replace(/'/g,"\\'")}')" role="button" tabindex="0">${escHtml(t)}</span>`).join('')}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+      </div>
       </div>`:''}
     </section>
     </div><!-- /view-content -->
@@ -3324,6 +3359,8 @@ function renderMain(){
   try{document.documentElement.setAttribute('data-build',BUILD);const fb=document.getElementById('footBuild');if(fb)fb.textContent='构建 '+BUILD;}catch(e){}
   // 说说：一进页面就把标签栏填好（以前要点一下「归档」才出现，容易被当成"没做分类"）
   try{if(typeof renderMemoTagbar==='function')renderMemoTagbar();}catch(e){}
+  // 个人精选：同理，进页面就把标签栏和筛选状态准备好
+  try{if(typeof renderPfTagbar==='function')renderPfTagbar();}catch(e){}
   // 状态回传（只发一次，用于远程排查"看不到新功能"这类问题）
   sendBeacon();
   // ?diag=1 显示诊断条：用来确认"浏览器里这份到底是哪个版本、功能在不在"
@@ -3918,9 +3955,9 @@ function saveAdmin(){
   saveData();applyAll();closeAdmin();toast('已保存','success');
   try{initMusicPlayer();}catch(e){console.warn(e);}
 }
-function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});}
+function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...'});});ADMIN.focusNew('content');}
 function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
-function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});}
+function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});ADMIN.focusNew('memos');}
 function deleteSelectedMemos(){ ADMIN.memoBatchDel(); }
 function removeMemo(i){ADMIN.memoDel(i);}
 
@@ -4024,7 +4061,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_curMemoId)
     }).catch(()=>{});
   }
 })();
-function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'新作品',url:''});});}
+function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'',url:'',tags:''});});ADMIN.focusNew('works',true);}
 function removePortfolio(i){if(!confirm('删除这个作品？'))return;ADMIN.mutate('works','删除作品',()=>{data.portfolio.splice(i,1);});}
 function deleteTestimonialPanel(i){}
 // Gallery CRUD —— 映像馆的数据在 D1/图床侧维护，面板不直接改，这里不再保留旧入口
@@ -4638,19 +4675,57 @@ function toggleLogPin(i){
 // ============================================================
 // 个人精选：按 group 分组展示（同组排一起），组名顺序固定
 // ============================================================
-const PF_GROUP_ORDER=['我的项目','推荐工具','朋友的作品','整活','其他'];
-const PF_GROUP_HINT={'推荐工具':'不是我的作品，是我觉得好用的','整活':'点之前想清楚'};
-function groupPortfolio(list){
-  const m=new Map();
-  (list||[]).forEach((it,i)=>{
-    const g=String((it&&it.group)||'').trim()||'其他';
-    if(!m.has(g))m.set(g,[]);
-    m.get(g).push({it,i});
+// ============================================================
+// 个人精选：分类改用「说说」那一套自由标签
+//   · tags 允许是数组或「逗号/顿号/空格」分隔的字符串（和说说完全一致）
+//   · 旧的 group 字段自动当成一个标签 —— 老数据不迁移也不会丢分类
+//   · 顶部标签栏按标签筛选，卡片上直接显示自己的标签，和说说一个交互
+// ============================================================
+function pfTags(item){
+  if(!item)return [];
+  const t=item.tags;
+  let list;
+  if(Array.isArray(t))list=t.map(x=>String(x).trim()).filter(Boolean);
+  else list=String(t||'').split(/[,，、\s]+/).map(x=>x.trim()).filter(Boolean);
+  if(!list.length){const g=String(item.group||'').trim();if(g)list=[g];}   // 兼容旧「分组」字段
+  return list;
+}
+function allPfTags(){
+  const s=new Map();
+  (data.portfolio||[]).forEach(it=>pfTags(it).forEach(t=>s.set(t,(s.get(t)||0)+1)));
+  return [...s.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'zh'));
+}
+let pfFilter='';
+function setPfFilter(t){
+  pfFilter=(t&&pfFilter!==t)?t:'';
+  applyPfFilter();
+}
+function applyPfFilter(){
+  const grid=document.getElementById('portfolio-all');
+  if(grid)grid.querySelectorAll('.portfolio-item').forEach(el=>{
+    const tags=String(el.dataset.tags||'');
+    el.hidden=pfFilter?tags.split('|').indexOf(pfFilter)<0:false;
   });
-  return [...m.entries()].sort((a,b)=>{
-    const ia=PF_GROUP_ORDER.indexOf(a[0]),ib=PF_GROUP_ORDER.indexOf(b[0]);
-    return (ia<0?99:ia)-(ib<0?99:ib)||a[0].localeCompare(b[0],'zh');
-  });
+  document.querySelectorAll('#portfolio-tagbar .pf-tag').forEach(b=>b.classList.toggle('on',(b.dataset.tag||'')===pfFilter));
+  const cnt=document.getElementById('portfolio-count');
+  if(cnt){
+    const total=(data.portfolio||[]).length;
+    const shown=grid?[].slice.call(grid.querySelectorAll('.portfolio-item')).filter(e=>!e.hidden).length:total;
+    cnt.textContent=pfFilter?('「'+pfFilter+'」 '+shown+' / '+total):('共 '+total+' 个');
+  }
+}
+function renderPfTagbar(){
+  const bar=document.getElementById('portfolio-tagbar');
+  if(!bar)return;
+  const tags=allPfTags();
+  const total=(data.portfolio||[]).length;
+  if(!tags.length){
+    bar.innerHTML='<span class="memo-tag-hint">在管理面板的「作品」里填「标签」，这里就能按标签筛选了</span>';
+  }else{
+    bar.innerHTML='<button class="pf-tag'+(pfFilter?'':' on')+'" type="button" data-tag="" onclick="setPfFilter(\'\')">全部<i>'+total+'</i></button>'+
+      tags.map(([t,n])=>'<button class="pf-tag'+(pfFilter===t?' on':'')+'" type="button" data-tag="'+escHtml(t)+'" onclick="setPfFilter(\''+escHtml(t).replace(/'/g,"\\'")+'\')">'+escHtml(t)+'<i>'+n+'</i></button>').join('');
+  }
+  applyPfFilter();
 }
 
 // ============================================================
