@@ -1064,7 +1064,7 @@ main#main{position:relative;z-index:1}
 .admin-group input[type="color"]{height:38px;padding:3px;cursor:pointer}
 /* 两列栅格，减少无谓滚动 */
 .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--space-3) var(--space-4)}
-.admin-card{padding:var(--space-4);border-radius:var(--radius-md);border:1px solid var(--surface-border);
+.admin-card,.admin-subcard{padding:var(--space-4);border-radius:var(--radius-md);border:1px solid var(--surface-border);
   background:rgba(255,255,255,.035);margin-bottom:var(--space-3)}
 .admin-card-head{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
 .admin-card-title{font-size:.8em;color:var(--text-secondary);flex:1;min-width:0}
@@ -1406,7 +1406,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-05 · 所有内容按日期倒序（最新在最上）';
+const BUILD='2026-10-06 · 修「新增条目被填上旧内容」';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -1622,10 +1622,13 @@ const ADMIN={
   render(id){
     const host=document.querySelector('[data-sec-body="'+id+'"]');
     if(!host)return;
-    // 同理：重绘前先同步，保证未保存的编辑不会因为重绘而回退
-    this.readAll();
+    // 同理：重绘前先同步，保证未保存的编辑不会因为重绘而回退。
+    // 但如果这次重绘是 mutate 触发的（数据刚变过、下标可能已错位），就必须跳过，
+    // 否则会把旧 DOM 的内容按旧下标写回，串到别的条目上。
+    if(!this._skipRead)this.readAll();
     const fn=ADMIN_RENDER[id];
     host.innerHTML=fn?fn():'<div class="admin-empty">该分区暂无内容</div>';
+    admNoAutofill(host);   // 关掉浏览器自动填充，否则新增的空白条目会被填上上一条的内容
     if(ADMIN_AFTER[id])ADMIN_AFTER[id](host);
   },
   // 只重绘一个分区（旧版是全量重建，导致滚动/输入丢失）
@@ -1747,9 +1750,18 @@ const ADMIN_PREVIEW={};
 ADMIN.mutate=function(sec,label,fn){
   this.readAll();
   this.snapshot(label);
-  fn();
-  this.markDirty(sec);
-  this.refresh(sec);
+  // ★ 先关掉"重绘前再同步一次界面"：fn() 里可能 unshift 插入新条目，
+  //   数据下标整体后移，而此时 DOM 还是旧的（下标还指着原来的位置），
+  //   再 readAll 就会把旧卡片的内容写进刚插入的那一条 ——
+  //   表现就是"新加的内容自动填上了上一条的内容"。
+  this._skipRead=true;
+  try{
+    fn();
+    this.markDirty(sec);
+    this.refresh(sec);
+  }finally{
+    this._skipRead=false;
+  }
   toast(label+'完成','success');
 };
 // 新增条目后：滚到它、聚焦第一个文字输入框、闪一下高亮。
@@ -1760,7 +1772,9 @@ ADMIN.focusNew=function(sec,last){
   const host=document.querySelector('[data-sec-body="'+(sec||this.active)+'"]');
   if(!host)return;
   setTimeout(()=>{
-    const cards=host.querySelectorAll('.admin-card');
+    // 说说分区用的是 .memo-item 而不是 .admin-card，两种都要能找到
+    let cards=host.querySelectorAll('.admin-card');
+    if(!cards.length)cards=host.querySelectorAll('.memo-item');
     if(!cards.length)return;
     const el=last?cards[cards.length-1]:cards[0];
     try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){el.scrollIntoView();}
@@ -1783,6 +1797,27 @@ function memoMiniCard(m,opts){
 }
 function admField(label,inner,help){
   return '<div class="admin-group" data-adm-label="'+escHtml(label)+'"><label>'+escHtml(label)+'</label>'+inner+(help?'<p class="admin-help">'+help+'</p>':'')+'</div>';
+}
+// ============================================================
+// 关掉后台输入框的浏览器自动填充
+// 症状：在作品/次元柜里点「添加」，新出来的空白条目会自动带上"上一条填过的内容"。
+// 原因：这些输入框没有 name、placeholder 又都一样，浏览器把它们当成同一个字段，
+//       再加上新增后我们会自动聚焦，浏览器就顺手把上次填过的值填了进去。
+// 处理：统一加上 autocomplete=off，并给每个框一个唯一的 name，让浏览器认成不同字段。
+// ============================================================
+function admNoAutofill(root){
+  const host=root||document.getElementById('admin-panel');
+  if(!host)return;
+  host.querySelectorAll('input,textarea').forEach((el,i)=>{
+    el.setAttribute('autocomplete','off');
+    el.setAttribute('autocorrect','off');
+    el.setAttribute('autocapitalize','off');
+    if(el.type!=='checkbox'&&el.type!=='radio')el.setAttribute('spellcheck','false');
+    if(!el.name){
+      const f=el.dataset.pField||el.dataset.dField||el.dataset.mField||el.dataset.lField||el.dataset.vDur||'f';
+      el.name='adm-'+f+'-'+i+'-'+Math.random().toString(36).slice(2,7);
+    }
+  });
 }
 // ============================================================
 // 长列表分区的吸顶工具条
@@ -2086,7 +2121,7 @@ ADMIN_RENDER.dimension=function(){
     '<p class="admin-help">显示在导航栏「次元柜」里。三类各自维护子分类；评分 0~5（可填 4.5 这样的半星）；<b>评价</b>显示在卡片上，<b>感悟</b>每行写一条、访客点「感悟」展开看。'+
     '前台游戏用小图标、书籍和影视用大封面，所以游戏封面建议用方形图标。</p>'+
   admStickyBar('+ 添加一条','addDimItem()',items.length,'筛选（标题 / 作者 / 子分类 / 评价）…')+
-    '<div class="admin-card" style="margin-bottom:10px"><label style="font-size:.82em">子分类管理</label>'+subRow('books','书籍')+subRow('films','影视')+subRow('games','游戏')+'</div>'+
+    '<div class="admin-subcard" style="margin-bottom:10px"><label style="font-size:.82em">子分类管理</label>'+subRow('books','书籍')+subRow('films','影视')+subRow('games','游戏')+'</div>'+
     (sortByDateDesc(items).map(({it,i})=>
       '<div class="admin-card">'+
         '<div class="admin-card-head" style="flex-wrap:wrap">'+
@@ -4026,7 +4061,7 @@ function saveAdmin(){
   saveData();applyAll();closeAdmin();toast('已保存','success');
   try{initMusicPlayer();}catch(e){console.warn(e);}
 }
-function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'新模块',icon:'*',text:'写内容...',date:todayStr()});});ADMIN.focusNew('content',true);}
+function addModule(){ADMIN.mutate('content','添加模块',()=>{data.modules.push({id:'mod_'+Date.now(),title:'',icon:'',text:'',date:todayStr()});});ADMIN.focusNew('content');}
 function removeModule(i){if(!confirm('删除这个模块？'))return;ADMIN.mutate('content','删除模块',()=>{data.modules.splice(i,1);});}
 function addMemo(){ADMIN.mutate('memos','新增说说',()=>{if(!Array.isArray(data.memos))data.memos=[];data.memos.unshift({id:'memo_'+Date.now(),text:'',date:new Date().toISOString().slice(0,10),pinned:false,image:'',tags:''});});ADMIN.focusNew('memos');}
 // 说说分区：把「新增说说」和筛选吸顶，内容多了也不用划到底
@@ -4141,7 +4176,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_curMemoId)
     }).catch(()=>{});
   }
 })();
-function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'',url:'',tags:'',date:todayStr()});});ADMIN.focusNew('works',true);}
+// 新条目带今天的日期，会排到最上面 —— 所以聚焦第一张卡（就是它）
+function addPortfolio(){ADMIN.mutate('works','添加作品',()=>{data.portfolio.push({image:'',title:'',url:'',tags:'',date:todayStr()});});ADMIN.focusNew('works');}
 function removePortfolio(i){if(!confirm('删除这个作品？'))return;ADMIN.mutate('works','删除作品',()=>{data.portfolio.splice(i,1);});}
 function deleteTestimonialPanel(i){}
 // Gallery CRUD —— 映像馆的数据在 D1/图床侧维护，面板不直接改，这里不再保留旧入口
