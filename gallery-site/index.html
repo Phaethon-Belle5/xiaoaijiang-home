@@ -404,7 +404,20 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
      ① 悬停 —— 整本书朝观者浮起（translateZ），并微微跟随鼠标倾斜
      ② 点击 —— 先"抽出"：朝镜头推近、书身微仰，像从书架上被抽出来
      ③ 随后封面绕左侧书脊翻开，露出封内纸背，再翻进内页 */
-.shelf-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:46px 30px;margin-bottom:var(--space-4)}
+/* 书架：书站在一条板材上，横向排开、可拖动 —— 排法照参考项目的书架 */
+.shelf-rail{position:relative;margin-bottom:var(--space-4)}
+.shelf-wrap{display:flex;gap:28px;align-items:flex-end;overflow-x:auto;overflow-y:visible;
+  padding:30px 10px 62px;scroll-snap-type:x proximity;
+  cursor:grab;scrollbar-width:thin;scrollbar-color:rgba(24,56,70,.25) transparent}
+.shelf-wrap.dragging{cursor:grabbing;scroll-snap-type:none}
+.shelf-wrap.dragging .shelf3d{pointer-events:none}   /* 拖动时别误触书本 */
+.shelf-wrap::-webkit-scrollbar{height:6px}
+.shelf-wrap::-webkit-scrollbar-thumb{background:rgba(24,56,70,.22);border-radius:3px}
+/* 书架板：一条横线 + 落影，和参考项目的 .memory-shelf-viewport::before 一个意思 */
+.shelf-rail::after{content:'';position:absolute;left:2%;right:2%;bottom:62px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(24,56,70,.24) 8%,rgba(24,56,70,.15) 92%,transparent);
+  box-shadow:0 16px 34px rgba(24,56,70,.16);pointer-events:none}
+.shelf3d{flex:0 0 200px;scroll-snap-align:start}
 .shelf3d{--book-depth:38px;--lift:0px;--liftz:0px;
   position:relative;perspective:1600px;perspective-origin:48% 46%;cursor:pointer;outline:none;
   container-type:inline-size}          /* 卡片内的字号按 cqw 随宽度缩放，比例永远和参考项目一致 */
@@ -852,7 +865,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-04 · 照片流三级分布 + 3D 书架';
+const GALLERY_BUILD='2026-10-18 · 真 3D 书 + 旅途影像 + 旅行年轮';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1330,6 +1343,7 @@ function renderMemZone(){
     else if(memTab==='stream')box.innerHTML=(typeof memStreamHTML==='function')?memStreamHTML():'<div class="mem-loading">照片流</div>';
     if(memTab==='stream'&&typeof memStreamMount==='function')memStreamMount();
     if(memTab==='shelf'&&typeof initShelf3D==='function')initShelf3D();
+    if(memTab==='shelf'&&typeof initShelfRail==='function')initShelfRail();
     if(memTab==='images'&&typeof mountMemImages==='function')mountMemImages();
     if(memTab==='rings'&&typeof mountMemRings==='function')mountMemRings();
   }catch(e){
@@ -1439,7 +1453,29 @@ function memProvinceGroups(){
     return g;
   }).sort((a,b)=>b.photos-a.photos);
 }
-// 立体书：悬停把书抽出来（rotateY -30° + 轻微放大 + 左移），并在抽出姿态上跟随鼠标微调。
+/* 书架板：横向拖动浏览（书多的时候不用挤成网格，手指/鼠标往旁边一拖就过去了） */
+function initShelfRail(){
+  const wrap=document.getElementById('shelfWrap');
+  if(!wrap||wrap.__railBound)return;
+  wrap.__railBound=true;
+  let down=false,startX=0,startScroll=0,moved=0;
+  wrap.addEventListener('pointerdown',e=>{
+    down=true;startX=e.clientX;startScroll=wrap.scrollLeft;moved=0;
+  });
+  wrap.addEventListener('pointermove',e=>{
+    if(!down)return;
+    const dx=e.clientX-startX;
+    moved=Math.max(moved,Math.abs(dx));
+    if(moved>7){wrap.classList.add('dragging');wrap.scrollLeft=startScroll-dx;}
+  });
+  const up=()=>{down=false;wrap.classList.remove('dragging');};
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>wrap.addEventListener(t,up));
+  // 拖动结束后紧跟的那次 click 要吞掉，否则会误打开一本书
+  wrap.addEventListener('click',e=>{
+    if(moved>7){e.stopPropagation();e.preventDefault();moved=0;}
+  },true);
+}
+// 立体书：悬停把书抽出来（朝观者浮起 + 跟随鼠标微调），点击抽出并翻开封面。
 // 事件委托绑在 #memPanel 上（它是静态元素，只有 innerHTML 会被换掉），所以书架重绘后依然有效。
 function initShelf3D(){
   const panel=document.getElementById('memPanel');
@@ -1479,7 +1515,7 @@ function initShelf3D(){
 function memShelfHTML(){  const provs=memProvinceGroups();
   if(!provs.length)return '<div class="mem-loading">还没有可以装订的省份记忆。</div>';
   const nameCls=p=>p.length>6?'sb-prov xlong':(p.length>4?'sb-prov long':'sb-prov');
-  return '<div class="shelf-wrap">'+
+  return '<div class="shelf-rail"><div class="shelf-wrap" id="shelfWrap">'+
     provs.map((g,idx)=>
       '<div class="shelf3d" onclick="openBook('+JSON.stringify(g.prov).replace(/"/g,'&quot;')+',this)" role="button" tabindex="0" title="翻开 '+escHtml(g.prov)+' 的记忆">'+
         '<div class="shelf3d-scene"><div class="shelf3d-inner">'+
@@ -1493,11 +1529,10 @@ function memShelfHTML(){  const provs=memProvinceGroups();
             '<span class="'+nameCls(g.prov)+'">'+escHtml(g.prov)+'</span>'+
             '<span class="sb-photo" style="background-image:url(\''+escHtml(thumbUrl(g.cover||''))+'\')"></span>'+
             '<span class="sb-meta"><span>'+g.cities.length+' 座城市</span><span>'+g.photos+' 张照片</span></span>'+
-          '</div>'+
-        '</div></div>'+
-      '</div>').join('')+
-  '</div>'+
-  '<p class="mem-sub">共 '+provs.length+' 个省份 · 点一本书翻开它</p>'+
+          '</div></div>'+
+      '</div></div>').join('')+
+  '</div></div>'+
+  '<p class="mem-sub">共 '+provs.length+' 个省份 · 拖动可横向浏览 · 点一本书翻开它</p>'+
   '<div class="book-layer" id="bookLayer" aria-hidden="true">'+
     '<div class="bk-scrim" onclick="closeBook()"></div>'+
     '<div class="bk-wrap">'+
