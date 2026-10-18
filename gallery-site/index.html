@@ -498,6 +498,13 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 }
 .mem-tree-inline{position:relative;height:min(70vh,620px);border-radius:14px;overflow:hidden;background:#f6f1e6}
 /* ══ 全屏影像层（年轮照片 / 照片墙 / 伞幕照片 / 旅行年轮树 都在这里打开）══ */
+/* 穹顶全屏 */
+.life-photo-dome.dome-fullscreen{position:fixed!important;inset:0!important;z-index:1400!important;
+  height:100vh!important;width:100vw!important;border-radius:0!important;margin:0!important}
+.dome-full-close{position:absolute;top:16px;right:20px;z-index:20;font:inherit;font-size:.9em;
+  color:#e9e2d0;background:rgba(10,16,24,.82);border:1px solid rgba(212,168,67,.4);
+  border-radius:999px;padding:9px 20px;cursor:pointer;backdrop-filter:blur(6px)}
+.dome-full-close:hover{background:rgba(212,168,67,.24)}
 .mem-frame-layer{position:fixed;inset:0;z-index:1300;display:flex;flex-direction:column;background:#0b1018}
 .mem-frame-layer[hidden]{display:none}
 .mfl-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -938,7 +945,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 修面板遮挡/放大穹顶/首页入口/年轮树/书架书脊';
+const GALLERY_BUILD='2026-10-18 · 穹顶全屏 + 按钮拆分 + 删重复年轮树';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1736,6 +1743,25 @@ async function memOpenAtlas(){
   }catch(e){ toast('加载失败：'+e.message); }
   finally{ __memFrameLoading=false; }
 }
+/* 穹顶全屏：不搬 DOM，直接给穹顶挂一个 fixed 全屏类，关闭时摘掉 —— 简单且一定能归位 */
+function memDomeFull(){
+  const dome=document.querySelector('#memPanel .life-photo-dome');
+  if(!dome)return;
+  if(dome.classList.contains('dome-fullscreen')){ memDomeExit(); return; }
+  dome.classList.add('dome-fullscreen');
+  const btn=document.createElement('button');
+  btn.type='button'; btn.className='dome-full-close'; btn.textContent='← 返回';
+  btn.onclick=memDomeExit;
+  dome.appendChild(btn);
+  try{ document.body.style.overflow='hidden'; }catch(e){}
+}
+function memDomeExit(){
+  const dome=document.querySelector('.life-photo-dome.dome-fullscreen');
+  if(!dome)return;
+  dome.classList.remove('dome-fullscreen');
+  const b=dome.querySelector('.dome-full-close'); if(b)b.remove();
+  try{ document.body.style.overflow=''; }catch(e){}
+}
 async function memOpenCanopy(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
@@ -1756,9 +1782,9 @@ let __domeGallery=null;
 function memImagesHTML(){
   const photos=memAllPhotos();
 return '<div class="ti-actions">'+
-      '<button type="button" onclick="memOpenAtlas()">◉ 年轮照片 / 照片墙</button>'+
+      '<button type="button" onclick="memOpenAtlas()">◉ 年轮照片</button>'+
       '<button type="button" onclick="memOpenCanopy()">☂ 伞幕照片</button>'+
-      '<button type="button" onclick="memOpenTree()">🌳 旅行年轮树</button>'+
+      '<button type="button" onclick="memDomeFull()">⛶ 穹顶全屏</button>'+
     '</div>'+
     '<div class="life-photo-dome" aria-label="旅途照片穹顶">'+
     '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
