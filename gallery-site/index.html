@@ -541,6 +541,17 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
      竖排省份名 + 册号就露出来了。 */
 #memPanel .memBookPos{position:relative}
 #memPanel .memory-book{width:308px;height:484px;transition:width .42s cubic-bezier(.16,1,.3,1)}
+/* 当前书微微侧转，让左侧书脊的布面厚度露出来（照视频里的观感） */
+#memPanel .memory-book.active .memory-book-object{transform:rotateY(-7deg) translateZ(6px)}
+#memPanel .memory-book.active .memory-book-spine-face{opacity:1}
+#memPanel .memory-book.active .memory-book-back{opacity:0}
+/* 信息面板列宽：照参考项目的 minmax(320px,390px) */
+#memPanel .memory-shelf-scene{grid-template-columns:minmax(300px,360px) minmax(0,1fr)}
+/* 书架两栏：左边信息面板、右边书架（显式指定列，避免被排成上下两行） */
+#memPanel .memory-shelf-scene{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);
+  align-items:stretch;column-gap:0;height:min(74vh,660px)}
+#memPanel .memory-province-info{grid-column:1;grid-row:1;min-height:0;overflow-y:auto}
+#memPanel .memory-shelf-viewport{grid-column:2;grid-row:1;min-height:0;height:100%}
 #memPanel .memory-book:not(.active){width:64px}
 #memPanel .memory-book:not(.active) .memory-book-page-face,
 #memPanel .memory-book:not(.active) .memory-book-page-edge,
@@ -945,7 +956,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 穹顶全屏 + 按钮拆分 + 删重复年轮树';
+const GALLERY_BUILD='2026-10-18 · 书架左侧信息面板 + 书脊厚度';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1537,9 +1548,11 @@ function memProvinceGroups(){
 /* 书架板：横向拖动浏览（书多的时候不用挤成网格，手指/鼠标往旁边一拖就过去了） */
 /* 书架：点书脊把它立成当前书；点当前书才翻开 */
 function memShelfSetActive(el){
-  const books=document.querySelectorAll('#memPanel .memory-book');
+  const books=[...document.querySelectorAll('#memPanel .memory-book')];
   books.forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
+  const idx=el?books.indexOf(el):0;
+  if(typeof memInfoUpdate==='function')memInfoUpdate(idx<0?0:idx);
 }
 function memShelfBindActive(){
   const books=[...document.querySelectorAll('#memPanel .memory-book')];
@@ -1618,10 +1631,48 @@ function initShelf3D(){
    ═══════════════════════════════════════════════════════════════════ */
 const MEMORY_BOOK_PALETTE=[['#3d7285','#e9e2cf','#f3ecd7','#8fb9c6'],['#a4523a','#ece5d1','#f6efdb','#c98f76'],['#d5c5a0','#efe9d8','#513d28','#b5a077'],['#67754a','#eae3ce','#f2ecd8','#93a37a'],['#a07938','#ece5d1','#faf4e0','#c9a75e'],['#5c4a37','#e9e1cd','#f0e7d0','#8c7455']];
 function memoryBookPalette(i){return MEMORY_BOOK_PALETTE[i%MEMORY_BOOK_PALETTE.length];}
+/* 书架左侧信息面板 —— DOM 结构与类名逐字照搬参考项目 memoryInfoHtml()：
+     记忆 01 / 08 · 省份大字 · 编辑 · N 座城市 / M 张照片 · 城市名 · 旅行时间 · 评价 · 底部说明 */
+function memProvinceDateText(group){
+  const months=[];
+  group.cities.forEach(c=>(c.photos||[]).forEach(p=>{
+    const d=String(p.date||'').slice(0,7);
+    if(d&&d.length===7)months.push(d);
+  }));
+  if(!months.length)return '时间尚未记录';
+  months.sort();
+  const a=months[0],b=months[months.length-1];
+  const f=m=>m.slice(0,4)+'年'+Number(m.slice(5,7))+'月';
+  return a===b?f(a):f(a)+' 至 '+f(b);
+}
+function memInfoHtml(provs,index){
+  const group=provs[index]||provs[0];
+  if(!group)return '';
+  const name=group.prov||'';
+  const nameCls=name.length>7?' extra-long':(name.length>3?' long':'');
+  return '<aside class="memory-province-info" id="memoryProvinceInfo" aria-live="polite">'+
+    '<span class="memory-info-count">记忆 '+String(index+1).padStart(2,'0')+' / '+String(provs.length).padStart(2,'0')+'</span>'+
+    '<div class="memory-info-heading"><h3 class="memory-info-name'+nameCls+'">'+escHtml(name)+'</h3></div>'+
+    '<div class="memory-info-stats"><span><b>'+group.cities.length+'</b> 座城市</span><span><b>'+group.photos+'</b> 张照片</span></div>'+
+    '<div class="memory-info-cities">'+group.cities.map(c=>'<span>'+escHtml(c.name)+'</span>').join('')+'</div>'+
+    '<div class="memory-info-date"><span>旅行时间</span><strong>'+escHtml(memProvinceDateText(group))+'</strong></div>'+
+    '<p class="memory-info-note">省份是一本书，城市是其中的一章。选中书籍后再次点击即可翻开。</p>'+
+  '</aside>';
+}
+function memInfoUpdate(index){
+  const host=document.getElementById('memoryProvinceInfo');
+  const provs=memProvinceGroups();
+  if(!host||!provs.length)return;
+  const wrap=document.createElement('div');
+  wrap.innerHTML=memInfoHtml(provs,index);
+  const next=wrap.firstElementChild;
+  if(next)host.replaceWith(next);
+}
 function memShelfHTML(){
   const provs=memProvinceGroups();
   if(!provs.length)return '<div class="memory-empty"><strong>你的旅行故事还没有开始</strong><span>点亮第一座城市，它会成为书架上的第一本书。</span></div>';
   return '<div class="memory-shelf-scene">'+
+    memInfoHtml(provs,0)+
     '<section class="memory-shelf-viewport" id="memoryShelfViewport" tabindex="0" aria-label="拖动浏览省份书籍">'+
       '<div class="memory-shelf-floor" aria-hidden="true"></div>'+
       '<div class="memory-shelf-track" id="memoryShelfTrack" style="width:'+(provs.length*248+200)+'px">'+
