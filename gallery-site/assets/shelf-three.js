@@ -13,9 +13,9 @@ const MEMORY_BOOK_COLORS =[
     ['#a07938','#ece5d1','#faf4e0','#c9a75e'],
     ['#5c4a37','#e9e1cd','#f0e7d0','#8c7455']
   ];
-const memoryShelfState ={provinces:[],active:0,level:'shelf',province:null,city:null,photos:[],page:0,dragOffset:0,pageShift:0,paging:false,bookRotation:null,suppressClickUntil:0,wheelAt:0,albumTurning:false,opening:false,infoTimer:0,switchTimer:0,pageTimer:0,openTimer:0,photoPositions:new Map()};
-const memoryProvinceCoverCache =new Map();
-const memoryThreeShelf =null,memoryThreePromise=null,memoryShelfResourcesPromise=null;
+let memoryShelfState ={provinces:[],active:0,level:'shelf',province:null,city:null,photos:[],page:0,dragOffset:0,pageShift:0,paging:false,bookRotation:null,suppressClickUntil:0,wheelAt:0,albumTurning:false,opening:false,infoTimer:0,switchTimer:0,pageTimer:0,openTimer:0,photoPositions:new Map()};
+let memoryProvinceCoverCache =new Map();
+let memoryThreeShelf =null,memoryThreePromise=null,memoryShelfResourcesPromise=null;
 
 function memoryEnsureThree(){
     if(window.THREE) return Promise.resolve(window.THREE);
@@ -56,7 +56,7 @@ function memoryBookCoverTexture(THREE,province,index){
       const rightSeam=ctx.createLinearGradient(503,0,512,0);rightSeam.addColorStop(0,'rgba(96,111,116,0)');rightSeam.addColorStop(.56,'rgba(96,111,116,.09)');rightSeam.addColorStop(1,'rgba(66,81,86,.23)');ctx.fillStyle=rightSeam;ctx.fillRect(503,0,9,768);
     };
     paint();const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
-    if(province.cover){const image=new Image();image.onload=()=>{paint(image);texture.needsUpdate=true;};image.src=province.cover;}
+    if(province.cover){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{paint(image);texture.needsUpdate=true;};image.src=province.cover;}
     return texture;
   }
 
@@ -372,3 +372,148 @@ function renderMemoryShelf(){
         '</div><button class="memory-shelf-more" id="memoryShelfMore" type="button" hidden></button><div class="memory-shelf-hint">拖动书架浏览，长按中心书籍左右旋转</div></section></div>';
     memoryApplyShelfTransforms(true);memoryBindShelf();memoryInitThreeShelf();
   }
+
+
+/* —— 补全 memoryCreateThreeBook 依赖的纹理与辅助函数 —— */
+function memoryClothTextures(THREE,color,index){
+    const width=160,height=320,albedo=document.createElement('canvas'),bump=document.createElement('canvas');albedo.width=bump.width=width;albedo.height=bump.height=height;
+    const ctx=albedo.getContext('2d'),bctx=bump.getContext('2d');let seed=((index+1)*2654435761)>>>0;const random=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
+    ctx.fillStyle=color;ctx.fillRect(0,0,width,height);
+    for(let i=0;i<54;i++){ctx.fillStyle=random()>.5?'rgba(255,255,255,.018)':'rgba(24,31,31,.018)';ctx.beginPath();ctx.ellipse(random()*width,random()*height,8+random()*28,10+random()*42,random()*.7,0,Math.PI*2);ctx.fill();}
+    ctx.lineWidth=.55;for(let x=.5;x<width;x+=3){ctx.strokeStyle=x%6<1?'rgba(255,255,255,.085)':'rgba(24,33,34,.065)';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+(random()-.5)*1.3,height);ctx.stroke();}
+    ctx.setLineDash([2,2]);ctx.lineWidth=.45;for(let y=.5;y<height;y+=4){ctx.lineDashOffset=y%8<1?0:2;ctx.strokeStyle=y%8<1?'rgba(255,255,255,.07)':'rgba(27,35,36,.055)';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y+(random()-.5)*.8);ctx.stroke();}ctx.setLineDash([]);
+    for(let i=0;i<180;i++){const light=random()>.52;ctx.strokeStyle=light?'rgba(255,255,255,.075)':'rgba(28,36,37,.06)';ctx.lineWidth=.35+random()*.35;const x=random()*width,y=random()*height;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(random()-.5)*9,y+(random()-.5)*2);ctx.stroke();}
+    bctx.fillStyle='#808080';bctx.fillRect(0,0,width,height);bctx.lineWidth=1;for(let x=.5;x<width;x+=3){bctx.strokeStyle=x%6<1?'#929292':'#747474';bctx.beginPath();bctx.moveTo(x,0);bctx.lineTo(x,height);bctx.stroke();}bctx.setLineDash([2,2]);for(let y=.5;y<height;y+=4){bctx.lineDashOffset=y%8<1?0:2;bctx.strokeStyle=y%8<1?'#8d8d8d':'#777';bctx.beginPath();bctx.moveTo(0,y);bctx.lineTo(width,y);bctx.stroke();}
+    const map=new THREE.CanvasTexture(albedo),bumpMap=new THREE.CanvasTexture(bump);map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=bumpMap.wrapS=bumpMap.wrapT=THREE.RepeatWrapping;map.repeat.set(1.2,2.7);bumpMap.repeat.copy(map.repeat);map.anisotropy=bumpMap.anisotropy=8;return {map,bumpMap};
+  }
+
+function memoryPageEdgeTexture(THREE,color){
+    const canvas=document.createElement('canvas');canvas.width=64;canvas.height=512;const ctx=canvas.getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,64,512);
+    ctx.strokeStyle='rgba(122,99,74,.06)';ctx.lineWidth=1;for(let y=2;y<512;y+=4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(64,y);ctx.stroke();}
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;return texture;
+  }
+
+function memoryChapterPreviewTexture(THREE,province,side){
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=768;
+    const ctx=canvas.getContext('2d'),isLeft=side==='left';
+    const wrapText=(text,x,y,maxWidth,lineHeight,maxLines)=>{
+      let line='',lineIndex=0;
+      for(const char of [...text]){
+        const next=line+char;
+        if(line&&ctx.measureText(next).width>maxWidth){ctx.fillText(line,x,y+lineIndex*lineHeight);line=char;lineIndex++;if(lineIndex>=maxLines) return;}
+        else line=next;
+      }
+      if(line&&lineIndex<maxLines) ctx.fillText(line,x,y+lineIndex*lineHeight);
+    };
+    const paint=image=>{
+      ctx.clearRect(0,0,512,768);ctx.filter='none';
+      const paper=ctx.createLinearGradient(0,0,512,0);
+      if(isLeft){paper.addColorStop(0,'#f4efe4');paper.addColorStop(.94,'#f4efe4');paper.addColorStop(1,'#e7dfd1');}
+      else{paper.addColorStop(0,'#e7dfd1');paper.addColorStop(.06,'#f4efe4');paper.addColorStop(1,'#f4efe4');}
+      ctx.fillStyle=paper;ctx.fillRect(0,0,512,768);
+      ctx.globalAlpha=.07;ctx.strokeStyle='#8d7c65';ctx.lineWidth=.5;for(let y=3;y<768;y+=6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(512,y+1);ctx.stroke();}ctx.globalAlpha=1;
+      ctx.fillStyle='rgba(122,99,74,.035)';for(let y=11;y<768;y+=19){for(let x=9;x<512;x+=23){ctx.fillRect(x+(y%7),y,1,1);}}
+      if(isLeft){
+        if(image){ctx.save();ctx.beginPath();ctx.rect(0,0,512,330);ctx.clip();const scale=Math.max(512/image.width,330/image.height),w=image.width*scale,h=image.height*scale;ctx.filter='saturate(1.08) contrast(1.04) brightness(1.03)';ctx.drawImage(image,(512-w)/2,(330-h)/2,w,h);ctx.filter='none';ctx.restore();}
+        else{ctx.fillStyle='#eee8dc';ctx.fillRect(0,0,512,330);}
+        const wash=ctx.createLinearGradient(0,190,0,330);wash.addColorStop(0,'rgba(25,48,62,0)');wash.addColorStop(1,'rgba(25,48,62,.34)');ctx.fillStyle=wash;ctx.fillRect(0,190,512,140);
+        ctx.fillStyle='#547383';ctx.font='600 15px "Microsoft YaHei",Arial';ctx.fillText('省份旅行记忆',48,382);
+        ctx.fillStyle='#1d3342';ctx.font='500 60px "Noto Serif SC","Source Han Serif SC","STSong","SimSun",serif';ctx.fillText(province.name,48,456);
+        ctx.fillStyle='#67808f';ctx.font='500 17px "Microsoft YaHei",Arial';wrapText(province.cities.map(city=>city.name).join('、'),48,500,416,30,2);
+        ctx.fillStyle='rgba(43,75,92,.18)';ctx.fillRect(48,574,416,1);
+        ctx.fillStyle='#203b4c';ctx.font='700 34px "Microsoft YaHei",Arial';ctx.fillText(String(province.cities.length),48,638);ctx.fillText(String(province.photoCount),178,638);
+        ctx.fillStyle='#567283';ctx.font='500 14px "Microsoft YaHei",Arial';ctx.fillText('城市章节',48,666);ctx.fillText('旅行照片',178,666);
+      }else{
+        const spineShade=ctx.createLinearGradient(0,0,24,0);spineShade.addColorStop(0,'rgba(76,58,42,.06)');spineShade.addColorStop(1,'rgba(76,58,42,0)');ctx.fillStyle=spineShade;ctx.fillRect(0,0,24,768);
+        ctx.fillStyle='#527386';ctx.font='600 15px "Microsoft YaHei",Arial';ctx.fillText('城市章节',54,64);ctx.textAlign='right';ctx.fillText(province.name,458,64);ctx.textAlign='left';
+        const cities=province.cities.slice(0,6),rowHeight=91;
+        cities.forEach((city,index)=>{
+          const top=103+index*rowHeight;
+          ctx.fillStyle='rgba(43,75,92,.15)';ctx.fillRect(54,top+70,404,1);
+          ctx.fillStyle='#79909d';ctx.font='600 20px "Playfair Display",Georgia,serif';ctx.fillText(String(index+1).padStart(2,'0'),58,top+28);
+          ctx.fillStyle='#284252';ctx.font='600 21px "Microsoft YaHei",Arial';ctx.fillText(city.name,118,top+25);
+          ctx.fillStyle='#7c919c';ctx.font='500 13px "Microsoft YaHei",Arial';ctx.fillText(city.firstMonth?formatMonth(city.firstMonth):'时间未记录',118,top+50);
+          ctx.textAlign='right';ctx.fillStyle='#65808f';ctx.font='500 13px "Microsoft YaHei",Arial';ctx.fillText(city.photoCount+' 张照片',454,top+31);ctx.textAlign='left';
+        });
+        if(province.cities.length>6){ctx.fillStyle='#6d8490';ctx.font='500 13px "Microsoft YaHei",Arial';ctx.fillText('另有 '+(province.cities.length-6)+' 座城市',54,724);}
+      }
+    };
+    paint();const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+    if(isLeft&&province.cover){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{paint(image);texture.needsUpdate=true;};image.src=province.cover;}
+    return texture;
+  }
+
+function memorySpineLabelMaterial(THREE,province,index,ink){
+    const canvas=document.createElement('canvas');canvas.width=192;canvas.height=768;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,192,768);
+    ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 40px "Microsoft YaHei","Source Han Sans SC",Arial,sans-serif';const numberChars=[...String(index+1).padStart(2,'0')],numberGap=10,numberWidths=numberChars.map(char=>ctx.measureText(char).width),numberWidth=numberWidths.reduce((sum,width)=>sum+width,0)+numberGap*(numberChars.length-1);let numberX=96-numberWidth*.5;numberChars.forEach((char,i)=>{const width=numberWidths[i];ctx.fillText(char,numberX+width*.5,80);numberX+=width+numberGap;});ctx.save();ctx.globalAlpha=.58;ctx.strokeStyle=ink;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(58,138);ctx.lineTo(134,138);ctx.stroke();ctx.restore();
+    const chars=[...province.name],gap=Math.min(108,370/Math.max(1,chars.length-1)),nameSize=Math.max(34,Math.min(82,Math.floor(gap*.82)));ctx.font='700 '+nameSize+'px "Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",Arial,sans-serif';ctx.lineWidth=2;ctx.strokeStyle=ink;const start=384-(chars.length-1)*gap*.5;chars.forEach((char,i)=>{ctx.strokeText(char,96,start+i*gap);ctx.fillText(char,96,start+i*gap);});
+    ctx.save();ctx.globalAlpha=.55;ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(62,630);ctx.lineTo(130,630);ctx.stroke();ctx.restore();ctx.fillStyle=ink;ctx.font='700 28px "Microsoft YaHei UI","Microsoft YaHei","Source Han Sans SC",Arial,sans-serif';
+    const footerChars=[...'旅行记忆'],footerGap=15,footerWidths=footerChars.map(char=>ctx.measureText(char).width),footerWidth=footerWidths.reduce((sum,width)=>sum+width,0)+footerGap*(footerChars.length-1);let footerX=96-footerWidth*.5;footerChars.forEach((char,i)=>{const width=footerWidths[i],center=footerX+width*.5;ctx.fillText(char,center,682);footerX+=width+footerGap;});
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;return new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest:.02,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+  }
+
+function memorySetActive(index,instant){
+    if(memoryShelfState.opening) return;
+    const max=Math.max(0,memoryShelfState.provinces.length-1);
+    const next=Math.max(0,Math.min(max,index));
+    const changed=next!==memoryShelfState.active;
+    memoryShelfState.active=next;
+    memoryShelfState.dragOffset=0;memoryShelfState.bookRotation=null;
+    memoryApplyShelfTransforms(!!instant);
+    if(changed){
+      memoryUpdateProvinceInfo();
+      const viewport=$('memoryShelfViewport');
+      if(viewport&&!instant){
+        clearTimeout(memoryShelfState.switchTimer);viewport.classList.remove('switching');void viewport.offsetWidth;viewport.classList.add('switching');
+        memoryShelfState.switchTimer=setTimeout(()=>viewport.classList.remove('switching'),820);
+      }
+    }
+  }
+
+function memoryBookCoverTexture(THREE,province,index){
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=768;
+    const ctx=canvas.getContext('2d'),paper='#f3f0e8',ink='#253943',paint=image=>{
+      ctx.clearRect(0,0,512,768);ctx.filter='none';ctx.fillStyle=paper;ctx.fillRect(0,0,512,768);
+      const shade=ctx.createLinearGradient(0,0,0,768);shade.addColorStop(0,'rgba(255,255,255,.16)');shade.addColorStop(.18,'rgba(255,255,255,0)');shade.addColorStop(.86,'rgba(77,70,55,0)');shade.addColorStop(1,'rgba(77,70,55,.035)');ctx.fillStyle=shade;ctx.fillRect(0,0,512,768);
+      ctx.globalAlpha=.035;ctx.strokeStyle='#fff';ctx.lineWidth=.45;for(let y=2;y<768;y+=6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(512,y+1);ctx.stroke();}ctx.globalAlpha=1;
+      ctx.fillStyle=ink;ctx.font='600 18px "Microsoft YaHei",Arial';ctx.fillText('旅行手册',72,62);ctx.textAlign='right';ctx.font='600 16px "Microsoft YaHei",Arial';ctx.fillText(String(index+1).padStart(2,'0'),462,62);ctx.textAlign='left';
+      const titleLength=[...province.name].length,titleSize=Math.max(34,Math.min(68,Math.floor(390/Math.max(1,titleLength))));ctx.font='500 '+titleSize+'px "Noto Serif SC","Source Han Serif SC","STSong","SimSun",serif';ctx.fillText(province.name,72,158);
+      if(image){ctx.save();ctx.beginPath();ctx.rect(0,180,512,588);ctx.clip();const scale=Math.max(512/image.width,588/image.height),w=image.width*scale,h=image.height*scale;ctx.filter='saturate(1.12) contrast(1.05) brightness(1.04)';ctx.drawImage(image,(512-w)/2,180+(588-h)/2,w,h);ctx.filter='none';ctx.restore();}
+      else{ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(0,180,512,588);}
+      const photoFade=ctx.createLinearGradient(0,170,0,330);photoFade.addColorStop(0,paper);photoFade.addColorStop(.24,'rgba(243,240,232,.96)');photoFade.addColorStop(1,'rgba(243,240,232,0)');ctx.fillStyle=photoFade;ctx.fillRect(0,170,512,160);
+      const footerFade=ctx.createLinearGradient(0,630,0,768);footerFade.addColorStop(0,'rgba(18,31,35,0)');footerFade.addColorStop(1,'rgba(18,31,35,.42)');ctx.fillStyle=footerFade;ctx.fillRect(0,630,512,138);
+      ctx.fillStyle='#f3f0e8';ctx.shadowColor='rgba(14,28,33,.88)';ctx.shadowBlur=4;ctx.shadowOffsetY=1;ctx.font='700 20px "Microsoft YaHei",Arial';ctx.fillText(province.cities.length+' 座城市　'+province.photoCount+' 张照片',72,724);ctx.textAlign='right';ctx.fillText('旅行记忆',462,724);ctx.textAlign='left';ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+      const leftSeam=ctx.createLinearGradient(0,0,12,0);leftSeam.addColorStop(0,'rgba(71,94,103,.28)');leftSeam.addColorStop(.42,'rgba(132,153,160,.15)');leftSeam.addColorStop(1,'rgba(132,153,160,0)');ctx.fillStyle=leftSeam;ctx.fillRect(0,0,12,768);
+      const rightSeam=ctx.createLinearGradient(503,0,512,0);rightSeam.addColorStop(0,'rgba(96,111,116,0)');rightSeam.addColorStop(.56,'rgba(96,111,116,.09)');rightSeam.addColorStop(1,'rgba(66,81,86,.23)');ctx.fillStyle=rightSeam;ctx.fillRect(503,0,9,768);
+    };
+    paint();const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+    if(province.cover){const image=new Image();image.crossOrigin='anonymous';image.onload=()=>{paint(image);texture.needsUpdate=true;};image.src=province.cover;}
+    return texture;
+  }
+
+const profile={memoryProvinceBooks:{},name:"",bio:""};
+function memoryOpenChapters(province){
+    if(!province) return;
+    memoryDisposeAlbum3D();
+    memoryDisposeThreeShelf();
+    memoryShelfState.opening=false;memoryShelfState.level='chapters';memoryShelfState.province=province;memoryShelfState.city=null;
+    memorySetHeader(province.name+'旅行章节','选择一座到达过的城市，翻开它的旅行相册。');
+    const preview=province.cover||province.cities.find(city=>city.cover)?.cover||'';
+    memoryShelfBodyEl.innerHTML='<div class="memory-chapters"><div class="memory-view-tools"><button class="memory-back" id="memoryBackShelf" type="button">返回书架</button><div class="memory-view-title"><span>城市章节</span><h3>'+escapeHtml(province.name)+'旅行记忆</h3></div></div>'+
+      '<div class="memory-chapter-book"><section class="memory-chapter-page left"><div class="memory-chapter-cover" id="memoryChapterCover"'+(preview?' style="background-image:url(\''+preview.replace(/'/g,"%27")+'\')"':'')+'></div><span class="memory-chapter-label">省份旅行记忆</span><h4>'+escapeHtml(province.name)+'</h4><p>'+escapeHtml(province.cities.map(city=>city.name).join(' · '))+'</p><div class="memory-chapter-totals"><span><b>'+province.cities.length+'</b>城市章节</span><span><b>'+province.photoCount+'</b>旅行照片</span></div></section>'+
+      '<section class="memory-chapter-page right"><div class="memory-chapter-list">'+province.cities.map((city,index)=>'<button class="memory-chapter-entry" type="button" data-memory-city="'+index+'"><span class="memory-chapter-no">'+String(index+1).padStart(2,'0')+'</span><span class="memory-chapter-copy"><b>'+escapeHtml(city.name)+'</b><span>'+(city.firstMonth?escapeHtml(formatMonth(city.firstMonth)):'时间未记录')+'</span></span><span class="memory-chapter-photos">'+city.photoCount+' 张照片</span></button>').join('')+'</div></section></div></div>';
+    $('memoryBackShelf').addEventListener('click',renderMemoryShelf);
+    memoryShelfBodyEl.querySelectorAll('[data-memory-city]').forEach(button=>{
+      const city=province.cities[Number(button.dataset.memoryCity)];
+      button.addEventListener('mouseenter',()=>{const cover=$('memoryChapterCover');if(cover&&city.cover) cover.style.backgroundImage='url("'+city.cover.replace(/"/g,'%22')+'")';});
+      button.addEventListener('focus',()=>{const cover=$('memoryChapterCover');if(cover&&city.cover) cover.style.backgroundImage='url("'+city.cover.replace(/"/g,'%22')+'")';});
+      button.addEventListener('click',()=>memoryOpenAlbum(province,city));
+    });
+  }
+
+function memorySetHeader(title,intro){
+    memoryShelfTitleEl.textContent=title;
+    memoryShelfIntroEl.textContent=intro;
+  }
+
+const memoryProvinceBooks =JSON.parse(JSON.stringify(profile.memoryProvinceBooks||{}));

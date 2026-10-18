@@ -1,0 +1,43 @@
+import { openTab, connect, closeTab, sleep, evalJs } from './cdp-client.mjs';
+const t = await openTab('about:blank');
+const c = await connect(t.ws);
+const ws2 = new WebSocket(t.ws);
+await new Promise(r => ws2.addEventListener('open', r));
+const errs = [];
+ws2.addEventListener('message', ev => { try { const m = JSON.parse(ev.data);
+  if (m.method === 'Runtime.consoleAPICalled' && (m.params.type==='error'||m.params.type==='warning')) errs.push((m.params.args||[]).map(a=>a.value||'').join(' ').slice(0,120));
+} catch (e) {} });
+ws2.send(JSON.stringify({ id: 1, method: 'Runtime.enable' }));
+await c.send('Network.enable');
+await c.send('Network.setCacheDisabled', { cacheDisabled: true });
+await c.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 950, deviceScaleFactor: 1.5, mobile: false });
+await c.send('Page.navigate', { url: 'https://map.231060101.xyz/?rig2=' + Date.now() });
+await sleep(13000);
+await evalJs(c, "(function(){var l=document.getElementById('launch');if(l)l.remove();return 0})()");
+await sleep(700);
+await evalJs(c, "openMemPop('shelf'), 1");
+await sleep(10000);
+const st = JSON.parse(await evalJs(c, `(function(){
+  var v=document.getElementById('memoryShelfViewport');
+  var cv=document.querySelector('.memory-shelf-webgl');
+  return JSON.stringify({类:v?v.className:'', canvas:cv?Math.round(cv.getBoundingClientRect().width)+'x'+Math.round(cv.getBoundingClientRect().height):'-',
+    有信息面板:!!document.querySelector('.memory-province-info')});
+})()`));
+console.log(JSON.stringify(st));
+const { data } = await c.send('Page.captureScreenshot', { format: 'png' });
+const fs = await import('node:fs/promises');
+await fs.writeFile('B:/dell/Documents/harness/shots/shelf-3d.png', Buffer.from(data, 'base64'));
+console.log('截图: shots/shelf-3d.png');
+// 点第二本书试试抽出
+const pt = JSON.parse(await evalJs(c, `(function(){var v=document.getElementById('memoryShelfViewport');var r=v.getBoundingClientRect();return JSON.stringify({x:Math.round(r.left+r.width*0.62),y:Math.round(r.top+r.height*0.55)})})()`));
+await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pt.x, y: pt.y, button: 'none' });
+await sleep(800);
+await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: pt.x, y: pt.y, button: 'left', clickCount: 1 });
+await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: pt.x, y: pt.y, button: 'left', clickCount: 1 });
+await sleep(2500);
+console.log('点后信息面板: ' + await evalJs(c, '(function(){var p=document.querySelector(".memory-province-info");return p?p.innerText.replace(/\\s+/g," ").slice(0,60):"无"})()'));
+const { data: d2 } = await c.send('Page.captureScreenshot', { format: 'png' });
+await fs.writeFile('B:/dell/Documents/harness/shots/shelf-3d-click.png', Buffer.from(d2, 'base64'));
+console.log('截图: shots/shelf-3d-click.png');
+console.log('错误: ' + (errs.length ? errs.slice(0,3).join(' | ') : '无'));
+ws2.close(); await closeTab(t.id);
