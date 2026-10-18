@@ -179,10 +179,10 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 .ml-btn:hover{color:var(--gold-bright);border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 18px var(--gold-glow)}
 .ml-ic{color:var(--gold);font-size:1.05em}
 /* ===== 记忆弹出层 ===== */
-.mem-pop{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;padding:3vh 2vw}
+.mem-pop{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;padding:2vh 1vw}
 .mem-pop.show{display:flex}
 .mp-scrim{position:absolute;inset:0;background:rgba(4,6,14,.82);backdrop-filter:blur(7px)}
-.mp-box{position:relative;z-index:2;width:min(1180px,96vw);height:min(88vh,880px);display:flex;flex-direction:column;
+.mp-box{position:relative;z-index:2;width:min(1680px,98vw);height:min(94vh,1080px);display:flex;flex-direction:column;
   background:linear-gradient(170deg,rgba(20,26,46,.98),rgba(11,14,22,.99));border:1px solid var(--glass-border);
   border-radius:var(--radius-lg);box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 0 1px rgba(212,168,67,.08);overflow:hidden}
 .mp-bar{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-5);
@@ -195,7 +195,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 .mp-close{font:inherit;font-size:1.6em;line-height:1;color:var(--text-secondary);background:transparent;border:0;
   cursor:pointer;padding:0 4px;flex:none}
 .mp-close:hover{color:var(--gold-bright)}
-.mp-body{flex:1;overflow-y:auto;padding:var(--space-6) var(--space-8)}
+.mp-body{flex:1;overflow-y:auto;padding:var(--space-5) var(--space-6)}
 .mp-body::-webkit-scrollbar{width:7px}
 .mp-body::-webkit-scrollbar-thumb{background:var(--gold-glow);border-radius:9px}
 .mem-panel{min-height:200px}
@@ -221,7 +221,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 .mem-chip{font-size:.76em;color:var(--text-secondary);background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--radius-pill);padding:3px 12px}
 .mem-chip b{color:var(--gold-bright);font-weight:600;margin-left:4px}
 /* 时间足迹 */
-.mem-time{position:relative;padding-left:30px;max-width:900px;margin:0 auto}
+.mem-time{position:relative;padding-left:30px;max-width:none;margin:0}
 .mem-time::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;
   background:linear-gradient(180deg,var(--gold) 0%,var(--gold-glow) 30%,rgba(212,168,67,.06) 100%)}
 .mem-year{font-family:var(--font-display);font-size:1.5em;font-weight:700;color:var(--gold-bright);
@@ -496,6 +496,21 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   .shelf3d:hover,.shelf3d:focus-visible{--lift:0px;--liftz:0px}
   .shelf3d.opening .shelf3d-cover,.shelf3d.opening .shelf3d-inside{animation:none}
 }
+/* ══ 全屏影像层（年轮照片 / 照片墙 / 伞幕照片 / 旅行年轮树 都在这里打开）══ */
+.mem-frame-layer{position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;background:#0b1018}
+.mem-frame-layer[hidden]{display:none}
+.mfl-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 18px;background:rgba(10,16,24,.96);border-bottom:1px solid rgba(212,168,67,.18)}
+.mfl-title{font-family:'Songti SC','Noto Serif SC',serif;font-size:1em;color:#e9e2d0;letter-spacing:.04em}
+.mfl-close{font:inherit;font-size:1.5em;line-height:1;color:#93a1ab;background:transparent;border:0;cursor:pointer;padding:2px 8px}
+.mfl-close:hover{color:#f0d58a}
+.mfl-host{flex:1 1 auto;min-height:0;position:relative}
+.mfl-host iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+/* 旅途影像里的三个入口 */
+.ti-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.ti-actions button{font:inherit;font-size:.84em;color:var(--text-secondary);background:rgba(255,255,255,.04);
+  border:1px solid var(--glass-border);border-radius:999px;padding:9px 18px;cursor:pointer;transition:all .18s}
+.ti-actions button:hover{color:var(--gold-bright);border-color:var(--gold);background:rgba(212,168,67,.1)}
 /* ══ 旅途影像：原版穹顶画廊 ══
    结构和样式整段搬自参考项目（assets/dome-gallery.css），逻辑一行没改。
    参考项目里它的高度由父级 .life-archive-layout（grid，height:100%）撑开，
@@ -892,7 +907,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 照搬参考项目：穹顶旅途影像 + 原版记忆书架';
+const GALLERY_BUILD='2026-10-18 · 内容区加宽 + 照搬年轮照片/照片墙/伞幕/年轮树';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1624,10 +1639,80 @@ function memAllPhotos(){
                            grayscale:false, overlayBlurColor:'#08182a' })
    唯一改动：images 用我自己照片的地址。
    ═══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   旅途影像的三个 3D 场景 —— 全部整包搬自参考项目 zwxll/Your-China-Travel：
+     assets/image-atlas/       年轮照片 / 照片墙   → window.ImageAtlasDocument(records)
+     assets/umbrella-canopy/   伞幕照片            → window.TravelCanopyDocument(records)
+     assets/travel-ring-tree/  旅行年轮树          → window.TravelRingTreeDocument(records)
+   三个 embedded.js 都是打包好的自包含应用，各自暴露一个 Document(records) 纯函数，
+   返回完整 HTML；这里只是把它塞进 iframe。数据换成我自己的照片记录。
+   ══════════════════════════════════════════════════════════════════ */
+function memAtlasRecords(){
+  return (GALLERY||[]).filter(p=>p&&(p.image||p.url)).map((p,i)=>({
+    id:(p.cityKey||'unknown')+':'+(p.id!=null?p.id:i),
+    kind:'image',
+    src:viewUrl(p.image||p.url),
+    cityKey:p.cityKey||'',
+    title:p.cityKey||'旅途',
+    aspect:4/3,
+    year:Number(String(p.date||'').slice(0,4))||undefined
+  }));
+}
+function memOpenFrame(title,html){
+  const layer=document.getElementById('memFrameLayer');
+  const host=document.getElementById('mflHost');
+  if(!layer||!host)return;
+  document.getElementById('mflTitle').textContent=title;
+  host.innerHTML='';
+  const f=document.createElement('iframe');
+  f.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;display:block';
+  f.title=title;
+  f.srcdoc=html;
+  host.appendChild(f);
+  layer.hidden=false;
+  try{ document.body.style.overflow='hidden'; }catch(e){}
+}
+function memCloseFrame(){
+  const layer=document.getElementById('memFrameLayer');
+  const host=document.getElementById('mflHost');
+  if(host)host.innerHTML='';
+  if(layer)layer.hidden=true;
+  try{ document.body.style.overflow=''; }catch(e){}
+}
+let __memFrameLoading=false;
+async function memOpenAtlas(){
+  if(__memFrameLoading)return; __memFrameLoading=true;
+  try{
+    if(!window.ImageAtlasDocument)await loadScript('assets/image-atlas/embedded.js?v=20261018');
+    memOpenFrame('年轮照片 · 照片墙', window.ImageAtlasDocument(memAtlasRecords()));
+  }catch(e){ toast('加载失败：'+e.message); }
+  finally{ __memFrameLoading=false; }
+}
+async function memOpenCanopy(){
+  if(__memFrameLoading)return; __memFrameLoading=true;
+  try{
+    if(!window.TravelCanopyDocument)await loadScript('assets/umbrella-canopy/embedded.js?v=20261018');
+    memOpenFrame('伞幕照片', window.TravelCanopyDocument(memAtlasRecords()));
+  }catch(e){ toast('加载失败：'+e.message); }
+  finally{ __memFrameLoading=false; }
+}
+async function memOpenTree(){
+  if(__memFrameLoading)return; __memFrameLoading=true;
+  try{
+    if(!window.TravelRingTreeDocument)await loadScript('assets/travel-ring-tree/embedded.js?v=20261018');
+    memOpenFrame('旅行年轮树', window.TravelRingTreeDocument(memAtlasRecords()));
+  }catch(e){ toast('加载失败：'+e.message); }
+  finally{ __memFrameLoading=false; }
+}
 let __domeGallery=null;
 function memImagesHTML(){
   const photos=memAllPhotos();
-  return '<div class="life-photo-dome" aria-label="旅途照片穹顶">'+
+return '<div class="ti-actions">'+
+      '<button type="button" onclick="memOpenAtlas()">◉ 年轮照片 / 照片墙</button>'+
+      '<button type="button" onclick="memOpenCanopy()">☂ 伞幕照片</button>'+
+      '<button type="button" onclick="memOpenTree()">🌳 旅行年轮树</button>'+
+    '</div>'+
+    '<div class="life-photo-dome" aria-label="旅途照片穹顶">'+
     '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
       '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em></div>'+
     '<div id="lifePhotoDome" class="life-photo-dome-stage">'+
@@ -2523,5 +2608,12 @@ addEventListener('keydown',e=>{
 /* ===== 启动 ===== */
 loadGallery();
 </script>
+<div class="mem-frame-layer" id="memFrameLayer" hidden>
+  <div class="mfl-bar">
+    <span class="mfl-title" id="mflTitle">旅途影像</span>
+    <button class="mfl-close" type="button" onclick="memCloseFrame()" aria-label="关闭">&times;</button>
+  </div>
+  <div class="mfl-host" id="mflHost"></div>
+</div>
 </body>
 </html>
