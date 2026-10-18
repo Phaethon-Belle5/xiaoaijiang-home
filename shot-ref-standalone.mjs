@@ -1,0 +1,18 @@
+import { openTab, connect, closeTab, sleep, evalJs } from './cdp-client.mjs';
+const t = await openTab('about:blank');
+const c = await connect(t.ws);
+const ws2 = new WebSocket(t.ws);
+await new Promise(r => ws2.addEventListener('open', r));
+ws2.send(JSON.stringify({ id: 1, method: 'Runtime.enable' }));
+await c.send('Network.enable');
+await c.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 760, deviceScaleFactor: 2, mobile: false });
+await c.send('Page.navigate', { url: 'file:///B:/dell/Documents/harness/ref-shelf-standalone.html' });
+await sleep(6000);
+console.log('书的数量: ' + await evalJs(c, 'document.querySelectorAll(".memory-book").length'));
+console.log('第一本尺寸: ' + await evalJs(c, '(function(){var b=document.querySelector(".memory-book");var r=b.getBoundingClientRect();return Math.round(r.width)+"x"+Math.round(r.height)})()'));
+console.log('封面文字: ' + await evalJs(c, '(function(){var b=document.querySelector(".memory-book-cover");return b?b.innerText.replace(/\\s+/g," ").slice(0,60):"无"})()'));
+const { data } = await c.send('Page.captureScreenshot', { format: 'png' });
+const fs = await import('node:fs/promises');
+await fs.writeFile('B:/dell/Documents/harness/shots/ref-book-real.png', Buffer.from(data, 'base64'));
+console.log('截图: shots/ref-book-real.png');
+ws2.close(); await closeTab(t.id);
