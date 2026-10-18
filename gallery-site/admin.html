@@ -56,6 +56,22 @@ a{color:var(--gold);text-decoration:none}
 .city-item .nm small{display:block;color:var(--text-muted);font-size:.72em}
 .city-item .cnt{font-size:.74em;color:var(--text-muted);background:var(--panel-2);padding:2px 8px;border-radius:var(--radius-pill)}
 .city-item .star{color:var(--gold);font-size:.72em}
+/* 城市列表：省份 → 城市 两级 */
+.prov-group{margin-bottom:4px}
+.prov-head{display:flex;align-items:center;gap:7px;width:100%;padding:8px 10px;border:none;border-radius:9px;
+  background:transparent;color:var(--text-secondary);font:inherit;font-size:.8em;cursor:pointer;text-align:left;transition:background .15s}
+.prov-head:hover{background:var(--panel-2)}
+.prov-caret{color:var(--gold-pale);width:10px;flex:none}
+.prov-name{font-weight:600;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prov-meta{font-size:.9em;color:var(--text-muted);white-space:nowrap;flex:none}
+.prov-body{padding-left:10px;border-left:1px solid var(--glass-border);margin-left:14px}
+/* 直接按网址添加照片 */
+.url-add{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.url-add input{flex:1;min-width:180px;padding:9px 12px;border-radius:9px;border:1px solid var(--glass-border);
+  background:var(--panel-2);color:var(--text-primary);outline:none;font-size:.85em}
+.url-add input:focus{border-color:var(--gold)}
+/* 封面选择器里的分节标题 */
+.pk-sec{grid-column:1/-1;font-size:.78em;color:var(--gold-pale);letter-spacing:.04em;margin:8px 0 2px;padding-bottom:4px;border-bottom:1px solid var(--glass-border)}
 .sec-label{padding:14px 18px 6px;font-size:.72em;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase}
 /* 主区 */
 .main{padding:26px 34px 80px;max-width:1080px}
@@ -280,14 +296,23 @@ function provPhotoCount(prov){return provPhotos(prov).length;}
 function openProvPicker(prov){
   provPicking=prov;
   document.getElementById('provPicker').style.display='';
-  document.getElementById('provPickTitle').textContent=prov+' · 从该省的 '+provPhotoCount(prov)+' 张照片里挑一张';
+  document.getElementById('provPickTitle').textContent=prov+' · 选封面';
   document.getElementById('provUrlInput').value=PROV_COVERS[prov]||'';
   const grid=document.getElementById('provGrid');
-  const uniq=provPhotos(prov).slice(0,60);
-  grid.innerHTML=uniq.length?uniq.map(u=>
-    '<button class="prov-pick'+(PROV_COVERS[prov]===u?' on':'')+'" type="button" onclick="saveProvinceCover(\''+esc(u).replace(/'/g,'&#39;')+'\')">'+
-    '<img loading="lazy" src="'+esc(u)+'" alt=""></button>').join('')
-    :'<p style="color:var(--text-muted);font-size:.85em">这个省份还没有照片 —— 先在左侧给该省的城市上传照片。</p>';
+  const mine=provPhotos(prov);
+  // 全站其它照片也列出来 —— 原来只能从"该省的照片"里挑，省份照片少时几乎没得选
+  const mineSet=new Set(mine);
+  const others=[...new Set((ALL_PHOTOS||[]).map(ph=>ph&&ph.url).filter(Boolean))].filter(u=>!mineSet.has(u));
+  const pick=u=>'<button class="prov-pick'+(PROV_COVERS[prov]===u?' on':'')+'" type="button" onclick="saveProvinceCover(\''+esc(u).replace(/'/g,'&#39;')+'\')">'+
+      '<img loading="lazy" src="'+esc(u)+'" alt="" onerror="this.parentNode.style.display=\'none\'"></button>';
+  let h='';
+  h+='<div class="pk-sec">该省的 '+mine.length+' 张</div>';
+  h+=mine.length?mine.slice(0,60).map(pick).join('')
+    :'<p style="color:var(--text-muted);font-size:.84em;margin:4px 0 10px">这个省份还没有照片 —— 可以直接在上面粘贴地址，或从下面全站照片里挑。</p>';
+  if(others.length){
+    h+='<div class="pk-sec">全站其它照片（'+others.length+' 张）</div>'+others.slice(0,180).map(pick).join('');
+  }
+  grid.innerHTML=h;
   document.getElementById('provPicker').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function closeProvPicker(){document.getElementById('provPicker').style.display='none';provPicking='';}
@@ -338,16 +363,38 @@ async function loadCities(){
   renderCityList();
   await loadUnlocated();
 }
+let PROV_OPEN={};   // 省份展开状态（默认展开）
+function provOrderKey(p){
+  for(const k of Object.keys(PROV_NAME_BY_ADCODE)){ if(PROV_NAME_BY_ADCODE[k]===p) return k; }
+  return '999999';
+}
 function renderCityList(){
   const el=document.getElementById('cityList');
-  el.innerHTML=CITIES.map(c=>
-    '<div class="city-item'+(curCity===c.cityKey?' on':'')+'" onclick="selectCity(\''+esc(c.cityKey)+'\')">'+
-      '<div class="nm">'+esc(c.name)+(c.isHometown?' <span class="star">★</span>':'')+
-        (c.rating?'<small>'+'★'.repeat(c.rating)+'</small>':'')+'</div>'+
-      '<div class="cnt">'+(c.photoCount||0)+'</div>'+
-    '</div>'
-  ).join('')||'<div style="padding:16px;color:var(--text-muted);font-size:.84em">还没有城市，点上方「+ 新增城市」</div>';
+  if(!CITIES.length){el.innerHTML='<div style="padding:16px;color:var(--text-muted);font-size:.84em">还没有城市，点上方「+ 新增城市」</div>';return;}
+  // 按省份归拢，再按 adcode 排成官方顺序
+  const groups={};
+  CITIES.forEach(c=>{const p=provOf(c);(groups[p]=groups[p]||[]).push(c);});
+  const provs=Object.keys(groups).sort((a,b)=>provOrderKey(a).localeCompare(provOrderKey(b)));
+  el.innerHTML=provs.map(p=>{
+    const cities=groups[p].slice().sort((a,b)=>(b.photoCount||0)-(a.photoCount||0)||a.name.localeCompare(b.name,'zh'));
+    const totalPhotos=cities.reduce((s,c)=>s+(c.photoCount||0),0);
+    const hasCurrent=cities.some(c=>c.cityKey===curCity);
+    const open=hasCurrent?true:PROV_OPEN[p]!==false;
+    return '<div class="prov-group">'+
+      '<button type="button" class="prov-head" onclick="toggleProv(\''+esc(p).replace(/'/g,'&#39;')+'\')">'+
+        '<span class="prov-caret">'+(open?'▾':'▸')+'</span>'+
+        '<span class="prov-name">'+esc(p)+'</span>'+
+        '<span class="prov-meta">'+cities.length+' 城 · '+totalPhotos+' 张</span>'+
+      '</button>'+
+      '<div class="prov-body" style="display:'+(open?'':'none')+'">'+cities.map(c=>
+        '<div class="city-item'+(curCity===c.cityKey?' on':'')+'" onclick="selectCity(\''+esc(c.cityKey)+'\')">'+
+          '<div class="nm">'+esc(c.name)+(c.isHometown?' <span class="star">★</span>':'')+
+            (c.rating?'<small>'+'★'.repeat(c.rating)+'</small>':'')+'</div>'+
+          '<div class="cnt">'+(c.photoCount||0)+'</div>'+
+        '</div>').join('')+'</div></div>';
+  }).join('');
 }
+function toggleProv(p){ PROV_OPEN[p]=(PROV_OPEN[p]===false)?true:false; renderCityList(); }
 async function loadUnlocated(){
   try{UNLOCATED=await api('/unlocated');}catch(e){UNLOCATED=[];}
   if(!curCity)renderMainEmpty();
@@ -392,6 +439,11 @@ function renderEditor(){
     '<div class="block"><h3>照片（'+photos.length+'）</h3>'+
       '<div class="up-drop" id="upDrop">拖照片到这里，或点击选择文件（可多选）<div class="up-item" id="upStatus"></div></div>'+
       '<input type="file" id="fileInput" accept="image/*" multiple hidden>'+
+      // 直接填图片地址添加：图床/CDN 上的照片不必再上传一遍
+      '<div class="url-add">'+
+        '<input type="text" id="photoUrlInput" placeholder="或者直接粘贴图片地址（https://…），回车即可添加" autocomplete="off">'+
+        '<button class="btn sm primary" type="button" onclick="addPhotoByUrl()">用地址添加</button>'+
+      '</div>'+
       '<div class="pgrid" id="pgrid"></div></div>'+
     '<div class="block"><h3>景点</h3>'+
       '<div class="tag-add" style="margin-bottom:14px"><input type="text" id="attrName" placeholder="景点名称">'+
@@ -432,6 +484,24 @@ async function delCity(){
 async function refreshCity(){curDetail=await api('/city/'+encodeURIComponent(curCity));await loadCities();renderEditor();}
 
 /* ===== 照片 ===== */
+// 直接按图片地址添加照片（不经过 R2）
+async function addPhotoByUrl(){
+  const inp=document.getElementById('photoUrlInput');
+  if(!inp)return;
+  const u=String(inp.value||'').trim();
+  if(!u){toast('请先粘贴图片地址','err');return;}
+  if(!/^https?:\/\//i.test(u)){toast('地址要以 http:// 或 https:// 开头','err');return;}
+  const btn=inp.nextElementSibling;
+  if(btn)btn.disabled=true;
+  try{
+    await api('/photo-url',{method:'POST',body:JSON.stringify({cityKey:curCity,url:u})});
+    inp.value='';
+    toast('已按地址添加照片','ok');
+    await selectCity(curCity);
+    if(typeof loadCities==='function'){ try{await loadCities();}catch(e){} }
+  }catch(e){ toast('添加失败：'+e.message,'err'); }
+  finally{ if(btn)btn.disabled=false; }
+}
 function renderPhotos(){
   const photos=curDetail.photos||[];
   const cover=curDetail.city&&curDetail.city.coverR2Key;

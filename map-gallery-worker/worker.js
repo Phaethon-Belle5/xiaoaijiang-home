@@ -211,6 +211,28 @@ export default {
         ]);
         return json({ ok: true });
       }
+      // 直接按图片网址添加照片（不上传文件、不进 R2）
+      // 有些照片本来就托管在图床或别的 CDN 上，没必要再传一遍。
+      // r2_key 留空，删除时不会去动 R2。
+      if (p === '/photo-url' && method === 'POST') {
+        const auth = await needAuth(); if (auth) return auth;
+        let b; try { b = await request.json(); } catch (e) { return json({ error: 'bad_request' }, 400); }
+        const ck = b.cityKey ? String(b.cityKey).trim() : null;
+        const u = String(b.url || '').trim().slice(0, 900);
+        if (!/^https?:\/\//i.test(u)) return json({ error: 'bad_url' }, 400);
+        if (ck) {
+          const cityExists = await env.DB.prepare('SELECT city_key FROM cities WHERE city_key=?').bind(ck).first();
+          if (!cityExists) return json({ error: 'city_not_found' }, 404);
+        }
+        const caption = String(b.caption || '').slice(0, 300);
+        const date = String(b.date || '').slice(0, 20);
+        const maxo = await env.DB.prepare('SELECT MAX(ord) AS mx FROM photos WHERE city_key IS ?').bind(ck).first();
+        const ord = ((maxo && maxo.mx) || 0) + 1;
+        const res = await env.DB.prepare(
+          'INSERT INTO photos(city_key,r2_key,url,caption,date,ord,created_at) VALUES(?,?,?,?,?,?,?)'
+        ).bind(ck, '', u, caption, date, ord, Date.now()).run();
+        return json({ ok: true, id: res.meta.last_row_id, url: u, cityKey: ck });
+      }
       // 上传照片：body=图片流，?cityKey=&name=&caption=&date=
       if (p === '/photo' && method === 'POST') {
         const auth = await needAuth(); if (auth) return auth;
