@@ -50,13 +50,13 @@ for (const [tab, label] of [['stats', '旅行统计'], ['time', '时间足迹'],
 console.log('\n════ 记忆书架 ════');
 await evalJs(c, 'setMemTab("shelf"), 1');
 await sleep(2200);
-ok('书数', await evalJs(c, 'document.querySelectorAll(".shelf3d").length') + ' 本', (await evalJs(c, 'document.querySelectorAll(".shelf3d").length')) > 0);
-ok('三层结构', await evalJs(c, '(function(){var b=document.querySelector(".shelf3d");return b&&b.querySelector(".shelf3d-cover")&&b.querySelector(".shelf3d-pages")&&b.querySelector(".shelf3d-back")?"完整":"缺"})()'), '完整' === await evalJs(c, '(function(){var b=document.querySelector(".shelf3d");return b&&b.querySelector(".shelf3d-cover")&&b.querySelector(".shelf3d-pages")&&b.querySelector(".shelf3d-back")?"完整":"缺"})()'));
+ok('书数', await evalJs(c, 'document.querySelectorAll(".memory-book").length') + ' 本', (await evalJs(c, 'document.querySelectorAll(".memory-book").length')) > 0);
+ok('三层结构', await evalJs(c, '(function(){var b=document.querySelector(".memory-book");return b&&b.querySelector(".memory-book-cover")&&b.querySelector(".memory-book-page-face")&&b.querySelector(".memory-book-back")?"完整":"缺"})()'), '完整' === await evalJs(c, '(function(){var b=document.querySelector(".memory-book");return b&&b.querySelector(".memory-book-cover")&&b.querySelector(".memory-book-page-face")&&b.querySelector(".memory-book-back")?"完整":"缺"})()'));
 // 封面照现在用 background-image 铺图（照参考项目），所以既要认 <img> 也要认背景图
-const coverProbe = '(function(){var b=document.querySelector(".shelf3d-cover");if(!b)return "名✗图✗";var name=b.querySelector(".sb-prov")?"名✓":"名✗";var ph=b.querySelector(".sb-photo");var hasImg=!!b.querySelector("img")||!!(ph&&/url\\(/.test(getComputedStyle(ph).backgroundImage));return name+(hasImg?"图✓":"图✗")})()';
+const coverProbe = '(function(){var b=document.querySelector(".memory-book-cover");if(!b)return "名✗图✗";var name=b.querySelector(".memory-book-title")?"名✓":"名✗";var ph=b.querySelector(".memory-book-photo");var hasImg=!!b.querySelector("img")||!!(ph&&/url\\(/.test(getComputedStyle(ph).backgroundImage));return name+(hasImg?"图✓":"图✗")})()';
 const coverOk = await evalJs(c, coverProbe);
 ok('封面有省份名与图', coverOk, coverOk === '名✓图✓');
-await evalJs(c, 'document.querySelector(".shelf3d").click(), 1');
+await evalJs(c, 'document.querySelector(".memory-book").click(), 1');
 await sleep(3500);
 ok('点击能翻开', await evalJs(c, '(function(){var l=document.getElementById("bookLayer");return l&&l.classList.contains("show")?"翻开了 "+document.querySelectorAll(".book-page,.bp-inner,.bk-book .page").length+" 页":"❌ 没开"})()'), (await evalJs(c, 'document.querySelectorAll(".book-page,.bp-inner,.bk-book .page").length')) > 0);
 await evalJs(c, 'try{closeBook()}catch(e){}; 1');

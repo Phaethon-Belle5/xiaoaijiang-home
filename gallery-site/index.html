@@ -496,6 +496,27 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   .shelf3d:hover,.shelf3d:focus-visible{--lift:0px;--liftz:0px}
   .shelf3d.opening .shelf3d-cover,.shelf3d.opening .shelf3d-inside{animation:none}
 }
+/* ══ 旅途影像：原版穹顶画廊 ══
+   结构和样式整段搬自参考项目（assets/dome-gallery.css），逻辑一行没改。
+   参考项目里它的高度由父级 .life-archive-layout（grid，height:100%）撑开，
+   我这边没有那层布局，所以补一条高度；其余全交给它自己的 CSS。 */
+#memPanel .life-photo-dome{height:min(72vh,600px)}
+/* 记忆书架：书本结构与样式全部来自 assets/memory-shelf.css（原样搬运）。
+   参考项目用一套 3D 布局 + WebGL 引擎把书排成弧形；我这边不搬那套引擎，
+   改为按 left 横向排开 + 横向滚动（书本本身仍是它那套 absolute 定位）。 */
+/* 书名的颜色：参考项目里 .memory-book-cover 只设了 --book-ink 变量，
+   而 color 是在 .memory-book 上就继承下来的，结果标题会沿用浅色墨，
+   在米色纸面上几乎看不见。这里直接把书名压成深墨。 */
+#memPanel .memory-book-cover{color:#253943}
+#memPanel .memory-book-title{color:#253943}
+#memPanel .memory-book-index{color:#3d525c}
+#memPanel .memory-book-spine-copy{color:var(--book-ink,#f3ecd7)}
+#memPanel .memory-shelf-viewport{height:620px;overflow-x:auto;overflow-y:hidden;cursor:grab}
+#memPanel .memory-shelf-viewport.dragging{cursor:grabbing}
+#memPanel .memory-shelf-track{position:relative;inset:auto;height:100%}
+#memPanel .memory-shelf-viewport::-webkit-scrollbar{height:7px}
+#memPanel .memory-shelf-viewport::-webkit-scrollbar-thumb{background:rgba(24,56,70,.24);border-radius:4px}
+@media (max-width:760px){#memPanel .memory-shelf-viewport{height:460px}}
 /* ══ 旅途影像：可拖动的照片环 ══ */
 .ti-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .ti-head b{font-family:'Songti SC','Noto Serif SC',serif;font-size:1.06em;color:var(--text-primary,#e9e4d8);letter-spacing:.03em}
@@ -862,10 +883,16 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
      带 ?v= 后每次改版都是新 URL，可绕开旧缓存。改版时同步更新 v 值即可。 -->
 <script src="assets/china-geo.js?v=20261001"></script>
 <script src="assets/cities-geo.js?v=20261001"></script>
+<!-- 旅途影像：穹顶照片画廊，整段搬自参考项目 Your-China-Travel
+     （其原注释：React Bits DomeGallery JS-CSS 的原生单页适配），逻辑未改 -->
+<link rel="stylesheet" href="assets/dome-gallery.css?v=20261018">
+<!-- 记忆书架：书本的六面结构、翻书关键帧，整段搬自参考项目 -->
+<link rel="stylesheet" href="assets/memory-shelf.css?v=20261018">
+<script src="assets/dome-gallery.js?v=20261018"></script>
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 真 3D 书 + 旅途影像 + 旅行年轮';
+const GALLERY_BUILD='2026-10-18 · 照搬参考项目：穹顶旅途影像 + 原版记忆书架';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1512,26 +1539,59 @@ function initShelf3D(){
   });
   panel.addEventListener('mouseleave',()=>{ if(cur){clear(cur);cur=null;} });
 }
-function memShelfHTML(){  const provs=memProvinceGroups();
-  if(!provs.length)return '<div class="mem-loading">还没有可以装订的省份记忆。</div>';
-  const nameCls=p=>p.length>6?'sb-prov xlong':(p.length>4?'sb-prov long':'sb-prov');
-  return '<div class="shelf-rail"><div class="shelf-wrap" id="shelfWrap">'+
-    provs.map((g,idx)=>
-      '<div class="shelf3d" onclick="openBook('+JSON.stringify(g.prov).replace(/"/g,'&quot;')+',this)" role="button" tabindex="0" title="翻开 '+escHtml(g.prov)+' 的记忆">'+
-        '<div class="shelf3d-scene"><div class="shelf3d-inner">'+
-          // 六个面：封底 → 书脊 → 书页 → 封内 → 封面（靠 translateZ 分层）
-          '<div class="shelf3d-back" aria-hidden="true"></div>'+
-          '<div class="shelf3d-spine" aria-hidden="true"><b>'+escHtml(g.prov)+'</b></div>'+
-          '<div class="shelf3d-pages" aria-hidden="true"></div>'+
-          '<div class="shelf3d-inside" aria-hidden="true"></div>'+
-          '<div class="shelf3d-cover">'+
-            '<span class="sb-index">'+String(idx+1).padStart(2,'0')+'</span>'+
-            '<span class="'+nameCls(g.prov)+'">'+escHtml(g.prov)+'</span>'+
-            '<span class="sb-photo" style="background-image:url(\''+escHtml(thumbUrl(g.cover||''))+'\')"></span>'+
-            '<span class="sb-meta"><span>'+g.cities.length+' 座城市</span><span>'+g.photos+' 张照片</span></span>'+
-          '</div></div>'+
-      '</div></div>').join('')+
-  '</div></div>'+
+/* ═══════════════════════════════════════════════════════════════════
+   记忆书架 —— 书本的 DOM 结构与样式类名，逐字照搬参考项目
+   Your-China-Travel 的 renderMemoryShelf()：
+     六面书（封底 / 书页 / 书口 / 书脊 / 封内 / 封面）+ 翻开后的城市章节页
+   唯一改动：数据来源换成我自己的省份分组（memProvinceGroups），
+            照片地址换成我自己的图床地址。
+   ═══════════════════════════════════════════════════════════════════ */
+const MEMORY_BOOK_PALETTE=[['#3d7285','#e9e2cf','#f3ecd7','#8fb9c6'],['#a4523a','#ece5d1','#f6efdb','#c98f76'],['#d5c5a0','#efe9d8','#513d28','#b5a077'],['#67754a','#eae3ce','#f2ecd8','#93a37a'],['#a07938','#ece5d1','#faf4e0','#c9a75e'],['#5c4a37','#e9e1cd','#f0e7d0','#8c7455']];
+function memoryBookPalette(i){return MEMORY_BOOK_PALETTE[i%MEMORY_BOOK_PALETTE.length];}
+function memShelfHTML(){
+  const provs=memProvinceGroups();
+  if(!provs.length)return '<div class="memory-empty"><strong>你的旅行故事还没有开始</strong><span>点亮第一座城市，它会成为书架上的第一本书。</span></div>';
+  return '<div class="memory-shelf-scene">'+
+    '<section class="memory-shelf-viewport" id="memoryShelfViewport" tabindex="0" aria-label="拖动浏览省份书籍">'+
+      '<div class="memory-shelf-floor" aria-hidden="true"></div>'+
+      '<div class="memory-shelf-track" id="memoryShelfTrack" style="width:'+(provs.length*232+160)+'px">'+
+        provs.map((group,index)=>{
+          const colors=memoryBookPalette(index);
+          const cover=group.cover?thumbUrl(group.cover):'';
+          const chapterPreview=group.cities.slice(0,5).map((city,cityIndex)=>
+            '<span class="memory-book-opening-entry"><span>'+String(cityIndex+1).padStart(2,'0')+'</span><b>'+escHtml(city.name)+'</b><small>'+city.photos.length+' 张</small></span>'
+          ).join('');
+          return '<button class="memory-book" type="button" data-memory-book="'+index+'" aria-label="打开'+escHtml(group.prov)+'旅行记忆" '+
+            'style="left:'+(index*232)+'px;--book-cover:'+colors[0]+';--book-edge:#e8dfd0;--book-ink:'+colors[2]+';--book-accent:'+colors[3]+'" '+
+            'onclick="openBook('+JSON.stringify(group.prov).replace(/"/g,'&quot;')+',this)">'+
+            '<span class="memory-book-shadow" aria-hidden="true"></span>'+
+            '<span class="memory-book-object">'+
+              '<span class="memory-book-back" aria-hidden="true"></span>'+
+              '<span class="memory-book-page-face" aria-hidden="true"><span class="memory-book-opening-page"><span class="memory-book-opening-page-label"><span>城市章节</span><span>'+escHtml(group.prov)+'</span></span>'+chapterPreview+'</span></span>'+
+              '<span class="memory-book-page-edge" aria-hidden="true"></span>'+
+              '<span class="memory-book-edge-top" aria-hidden="true"></span>'+
+              '<span class="memory-book-edge-bottom" aria-hidden="true"></span>'+
+              '<span class="memory-book-spine-face" aria-hidden="true"><span class="memory-book-spine-copy"><small>'+String(index+1).padStart(2,'0')+'</small><b>'+escHtml(group.prov)+'</b><i>旅行记忆</i></span></span>'+
+              '<span class="memory-book-cover-inside" aria-hidden="true">'+
+                '<span class="memory-book-opening-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
+                '<span class="memory-book-opening-summary"><small>省份旅行记忆</small><strong>'+escHtml(group.prov)+'</strong><span>'+escHtml(group.cities.map(c=>c.name).join('、'))+'</span><span class="memory-book-opening-totals">'+group.cities.length+' 个城市章节　'+group.photos+' 张旅行照片</span></span>'+
+              '</span>'+
+              '<span class="memory-book-cover">'+
+                '<span class="memory-book-mark" aria-hidden="true"></span>'+
+                '<span class="memory-book-index">旅行手册</span>'+
+                '<strong class="memory-book-title'+(group.prov.length>7?' extra-long':group.prov.length>4?' long':'')+'">'+escHtml(group.prov)+'</strong>'+
+                '<span class="memory-book-subtitle">私人旅行纪念册</span>'+
+                '<span class="memory-book-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
+                '<span class="memory-book-meta"><span>'+group.cities.length+' 座城市</span><span>'+group.photos+' 张照片</span></span>'+
+                '<span class="memory-book-open">打开旅程</span>'+
+              '</span>'+
+            '</span>'+
+          '</button>';
+        }).join('')+
+      '</div>'+
+      '<div class="memory-shelf-hint">拖动书架浏览，点一本书翻开</div>'+
+    '</section>'+
+  '</div>'+
   '<p class="mem-sub">共 '+provs.length+' 个省份 · 拖动可横向浏览 · 点一本书翻开它</p>'+
   '<div class="book-layer" id="bookLayer" aria-hidden="true">'+
     '<div class="bk-scrim" onclick="closeBook()"></div>'+
@@ -1553,64 +1613,42 @@ function memShelfHTML(){  const provs=memProvinceGroups();
 function memAllPhotos(){
   return (GALLERY||[]).filter(p=>p&&(p.image||p.url));
 }
+/* ═══════════════════════════════════════════════════════════
+   旅途影像 —— 穹顶照片画廊
+   DOM 结构与调用方式照搬参考项目 Your-China-Travel：
+     <div class="life-photo-dome">
+       <div class="life-photo-dome-head">…</div>
+       <div id="lifePhotoDome" class="life-photo-dome-stage"></div>
+     </div>
+     new DomeGallery(el, { images, segments:max(24,ceil(n/5)), minRadius:400,
+                           grayscale:false, overlayBlurColor:'#08182a' })
+   唯一改动：images 用我自己照片的地址。
+   ═══════════════════════════════════════════════════════════ */
+let __domeGallery=null;
 function memImagesHTML(){
   const photos=memAllPhotos();
-  if(!photos.length)return '<div class="mem-loading">还没有照片可以铺开。</div>';
-  return '<div class="ti-head"><b>旅途影像</b><span>'+photos.length+' 张照片 · 拖动或滚轮翻转 · 点一张看大图</span></div>'+
-    '<div class="ti-stage" id="tiStage" tabindex="0" aria-label="旅途影像环"><div class="ti-ring" id="tiRing"></div></div>'+
-    '<p class="mem-sub">照片按时间顺序绕成一圈，转到背面的那一半会被挡住 —— 转回来又是新的。</p>';
+  return '<div class="life-photo-dome" aria-label="旅途照片穹顶">'+
+    '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
+      '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em></div>'+
+    '<div id="lifePhotoDome" class="life-photo-dome-stage">'+
+      (photos.length?'':'<div class="life-photo-dome-empty"><strong>还没有旅途照片</strong><span>在管理后台添加照片后，这里会自动汇集。</span></div>')+
+    '</div>'+
+  '</div>';
 }
-let __tiRaf=null;
 function mountMemImages(){
-  const ring=document.getElementById('tiRing'), stage=document.getElementById('tiStage');
-  if(!ring||!stage)return;
-  const photos=memAllPhotos();
-  const n=photos.length||1;
-  // 半径按"一圈能看全多少张"算，不是按总张数 —— 按总张数会把 66 张撑成 1400px 的大环，
-  // 照片全被甩到视口外、看不见也点不到。经典轮播公式：R = (卡宽/2) / tan(π/可见数)。
-  const CARD_W=168, VISIBLE=Math.min(n,14);
-  const R=Math.max(300, Math.round((CARD_W/2)/Math.tan(Math.PI/VISIBLE)));
-  const step=360/n;
-  let rot=0;
-  ring.innerHTML=photos.map((p,i)=>
-    '<figure class="ti-card" style="transform:rotateY('+(step*i).toFixed(3)+'deg) translateZ('+R+'px)" data-i="'+i+'">'+
-      '<img loading="lazy" src="'+escHtml(thumbUrl(p.image||p.url))+'" alt="">'+
-      '<figcaption>'+escHtml((p.cityKey||'')+(p.date?' · '+String(p.date).slice(0,7):''))+'</figcaption>'+
-    '</figure>').join('');
-  const apply=()=>{ ring.style.transform='translateZ(-'+R+'px) rotateY('+rot.toFixed(2)+'deg)'; };
-  apply();
-  let px=0, down=false, moved=0, downCard=null;
-  const stop=e=>{ if(!down)return; down=false; stage.classList.remove('dragging'); };
-  stage.addEventListener('pointerdown',e=>{
-    down=true; px=e.clientX; moved=0; stage.classList.add('dragging');
-    // 记下按下时那张卡：setPointerCapture 之后，click 的 target 会变成 stage，
-    // 挂在环上的监听器根本收不到事件，所以必须在这里记、在 stage 上收。
-    downCard=e.target.closest?e.target.closest('.ti-card'):null;
-    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  const host=document.getElementById('lifePhotoDome');
+  if(!host)return;
+  if(__domeGallery){ try{__domeGallery.destroy();}catch(e){} __domeGallery=null; }
+  const images=memAllPhotos().map(p=>thumbUrl(p.image||p.url)).filter(Boolean);
+  if(!images.length||!window.DomeGallery)return;
+  // 参数与参考项目一致；overlayBlurColor 用深色，跟映像馆的深色底一致
+  __domeGallery=new window.DomeGallery(host,{
+    images:images,
+    segments:Math.max(24,Math.ceil(images.length/5)),
+    minRadius:400,
+    grayscale:false,
+    overlayBlurColor:'#08182a'
   });
-  stage.addEventListener('pointermove',e=>{
-    if(!down)return;
-    const dx=e.clientX-px; px=e.clientX; moved+=Math.abs(dx);
-    rot+=dx*0.22; apply();
-  });
-  ['pointerup','pointercancel','pointerleave'].forEach(t=>stage.addEventListener(t,stop));
-  stage.addEventListener('wheel',e=>{ e.preventDefault(); rot-=e.deltaY*0.12; apply(); },{passive:false});
-  stage.addEventListener('click',e=>{
-    const card=downCard; downCard=null;
-    if(!card||moved>8)return;   // 拖动过就不算点击
-    const p=photos[+card.dataset.i];
-    if(p)memPhotoBig(p.image||p.url,(p.cityKey||'')+(p.date?' · '+String(p.date).slice(0,10):''));
-  });
-  // 停下后缓慢自转
-  let last=performance.now();
-  if(__tiRaf){cancelAnimationFrame(__tiRaf);__tiRaf=null;}
-  const tick=t=>{
-    if(memTab!=='images'||!document.body.contains(ring)){__tiRaf=null;return;}
-    const dt=Math.min(64,t-last); last=t;
-    if(!down){ rot-=dt*0.004; apply(); }
-    __tiRaf=requestAnimationFrame(tick);
-  };
-  __tiRaf=requestAnimationFrame(tick);
 }
 /* 看大图的小灯箱 */
 function memPhotoBig(src,cap){
