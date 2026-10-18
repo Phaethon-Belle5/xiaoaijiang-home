@@ -398,37 +398,122 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
    参考主站次元柜的书籍效果：书由「封面 / 右侧书页边 / 封底」三片组成，
    书页边平时是 edge-on（几乎看不见），抽出来时才露出厚度。
    纸质配色沿用原来的米白纸纹，不动。 */
-.shelf-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:34px 26px;margin-bottom:var(--space-4)}
-.shelf3d{--book-depth:34px;position:relative;perspective:900px;cursor:pointer}
-.shelf3d-scene{position:relative;width:100%;aspect-ratio:5/6.4}
-.shelf3d-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .52s cubic-bezier(.22,.61,.36,1)}
-.shelf3d:hover .shelf3d-inner,.shelf3d:focus-visible .shelf3d-inner{transform:rotateY(-30deg) scale(1.06) translateX(-10px)}
+/* ── 记忆书架：真 3D 书 ──
+   结构参考 Your-China-Travel 的 memory-book：书脊、上下书口、书页、封面、封内各有独立的 3D 面。
+   交互三层：
+     ① 悬停 —— 整本书朝观者浮起（translateZ），并微微跟随鼠标倾斜
+     ② 点击 —— 先"抽出"：朝镜头推近、书身微仰，像从书架上被抽出来
+     ③ 随后封面绕左侧书脊翻开，露出封内纸背，再翻进内页 */
+.shelf-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:40px 26px;margin-bottom:var(--space-4)}
+.shelf3d{--book-depth:34px;--lift:0px;--liftz:0px;--ry:0deg;--rx:0deg;
+  position:relative;perspective:1000px;cursor:pointer;outline:none}
+.shelf3d-scene{position:relative;width:100%;aspect-ratio:5/6.4;transform-style:preserve-3d}
+.shelf3d-inner{position:absolute;inset:0;transform-style:preserve-3d;
+  transform:translate3d(0,var(--lift),var(--liftz)) rotateX(var(--rx)) rotateY(var(--ry));
+  transition:transform .36s cubic-bezier(.16,1,.3,1)}
+.shelf3d:hover,.shelf3d:focus-visible{--lift:-7px;--liftz:30px}
 .shelf3d.following .shelf3d-inner{transition:transform .16s ease-out}
-.shelf3d:focus-visible{outline:2px solid var(--gold);outline-offset:6px;border-radius:8px}
-/* 封面：米白纸纹 + 左侧书脊压痕 + 右侧圆角 + 分层投影（原来的样子，改成绝对定位填满） */
-.shelf3d-cover{position:absolute;inset:0;overflow:hidden;border:1px solid #c8c5bb;border-radius:3px 12px 12px 3px;color:#183846;
-  background:radial-gradient(#ae8f691a .6px,transparent .8px) 0 0/5px 5px,#f4f1e8;
-  box-shadow:0 1px 2px rgba(24,56,70,.22),0 10px 22px rgba(24,56,70,.22),
-             inset -2px 0 4px rgba(59,42,27,.22),inset 1px 0 1px rgba(255,255,255,.55)}
-.shelf3d-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:12px;z-index:4;pointer-events:none;
-  background:linear-gradient(to right,rgba(59,42,27,.20),rgba(59,42,27,.04) 55%,transparent)}
-/* 右侧书页边：绕 Y 转 90° 后正好连起封面与封底 */
-.shelf3d-pages{position:absolute;top:3px;left:calc(100% - var(--book-depth) / 2 - 3px);width:calc(var(--book-depth) - 2px);height:calc(100% - 12px);
+.shelf3d:focus-visible .shelf3d-cover{outline:2px solid var(--gold);outline-offset:3px}
+/* 书下的一小片落影 */
+.shelf3d-inner::after{content:'';position:absolute;left:2%;right:-2%;bottom:-22px;height:26px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(24,56,70,.30),rgba(24,56,70,.10) 48%,transparent 73%);
+  filter:blur(6px);transform:rotateX(74deg) translateZ(-20px);pointer-events:none;opacity:.85;transition:opacity .36s,transform .36s}
+.shelf3d:hover .shelf3d-inner::after{opacity:.5;transform:rotateX(74deg) translateZ(-20px) scale(1.12)}
+/* 各面共用 */
+.shelf3d-cover,.shelf3d-inside,.shelf3d-spine,.shelf3d-pages,.shelf3d-back{position:absolute;display:block;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* 封底 */
+.shelf3d-back{inset:0;border-radius:3px 12px 12px 3px;transform:translateZ(calc(-1 * var(--book-depth)));
+  background:linear-gradient(135deg,#e9e3d5,#d7cfbc);box-shadow:inset 0 0 12px rgba(59,42,27,.3)}
+/* 书脊：绕左边缘转 90°，竖排省份名 */
+.shelf3d-spine{left:-15px;top:0;width:30px;height:100%;transform-origin:right center;transform:rotateY(-90deg);
+  border-radius:11px 3px 3px 11px;overflow:hidden;
+  background:linear-gradient(90deg,#b3a78f,#d9cfba 42%,#bfb39c);
+  box-shadow:inset -3px 0 7px rgba(59,42,27,.32)}
+.shelf3d-spine b{position:absolute;inset:14px 1px 12px;display:flex;align-items:center;justify-content:center;
+  writing-mode:vertical-rl;font-family:'Songti SC','Noto Serif SC',serif;font-size:.6em;font-weight:700;
+  color:#3a2c1d;letter-spacing:.16em;overflow:hidden;white-space:nowrap}
+/* 右侧书口（书页边）：绕 Y 转 90° 连起封面与封底 */
+.shelf3d-pages{top:3px;left:calc(100% - var(--book-depth) / 2 - 3px);width:calc(var(--book-depth) - 2px);height:calc(100% - 12px);
   transform:rotateY(90deg) translateX(calc(var(--book-depth) / 2));
   background:repeating-linear-gradient(90deg,#fbf7ee,#ded7c7 1px,#fbf7ee 3px,#bdb5a3 2px)}
-/* 封底：硬纸板色，推到 Z 轴最后面 */
-.shelf3d-back{position:absolute;inset:0;border-radius:3px 12px 12px 3px;transform:translateZ(calc(-1 * var(--book-depth)));
-  background:linear-gradient(135deg,#e9e3d5,#d7cfbc);box-shadow:inset 0 0 12px rgba(59,42,27,.3),0 6px 14px rgba(24,56,70,.16)}
+/* 封面 */
+.shelf3d-cover{inset:0;overflow:hidden;border:1px solid #c8c5bb;border-radius:3px 12px 12px 3px;color:#183846;  transform-origin:left center;transform:translateZ(17px);
+  background:radial-gradient(#ae8f691a .6px,transparent .8px) 0 0/5px 5px,#f4f1e8;
+  box-shadow:0 1px 2px rgba(24,56,70,.22),0 14px 30px rgba(24,56,70,.26),
+             inset -2px 0 4px rgba(59,42,27,.22),inset 1px 0 1px rgba(255,255,255,.55)}
+.shelf3d-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:14px;z-index:4;pointer-events:none;
+  background:linear-gradient(to right,rgba(59,42,27,.24),rgba(59,42,27,.05) 55%,transparent)}
+/* 封内：翻开后看到的纸背 */
+.shelf3d-inside{inset:0;border-radius:3px 12px 12px 3px;transform:translateZ(16px) rotateY(180deg);transform-origin:left center;
+  background:linear-gradient(90deg,#e4dbcd,#f8f3e9 10%,#f3eee4 92%,#d8cdbd)}
+/* 抽出 + 翻开 */
+.shelf3d.opening{z-index:60}
+.shelf3d.opening .shelf3d-inner{transition:transform .5s cubic-bezier(.16,1,.3,1);
+  transform:translate3d(0,-12px,180px) rotateX(4deg) scale(1.05)}
+.shelf3d.opening .shelf3d-cover{animation:shelfCoverOpen .66s .2s cubic-bezier(.55,.06,.68,.19) both}
+.shelf3d.opening .shelf3d-inside{animation:shelfCoverInside .66s .2s cubic-bezier(.55,.06,.68,.19) both}
+@keyframes shelfCoverOpen{from{transform:translateZ(17px) rotateY(0deg)}to{transform:translateZ(17px) rotateY(-108deg)}}
+@keyframes shelfCoverInside{from{transform:translateZ(16px) rotateY(180deg)}to{transform:translateZ(16px) rotateY(72deg)}}
 @media (max-width:760px){
-  .shelf-wrap{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:26px 18px}
+  .shelf-wrap{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:30px 18px}
   .shelf3d{--book-depth:24px}
+  .shelf3d-spine{left:-11px;width:22px}
 }
 @media (prefers-reduced-motion: reduce){
   .shelf3d-inner{transition:none}
-  .shelf3d:hover .shelf3d-inner{transform:none}
+  .shelf3d:hover,.shelf3d:focus-visible{--lift:0px;--liftz:0px}
+  .shelf3d.opening .shelf3d-cover,.shelf3d.opening .shelf3d-inside{animation:none}
 }
-/* 下半：封面图，从 26% 开始（同参考项目 .shared-cover-art inset:26% 0 0） */
-.sb-bottom{position:absolute;left:0;right:0;bottom:0;top:26%;overflow:hidden}
+/* ══ 旅途影像：可拖动的照片环 ══ */
+.ti-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.ti-head b{font-family:'Songti SC','Noto Serif SC',serif;font-size:1.06em;color:var(--text-primary,#e9e4d8);letter-spacing:.03em}
+.ti-head span{font-size:.78em;color:var(--text-muted,#93a1ab)}
+.ti-stage{position:relative;height:min(58vh,440px);perspective:1300px;perspective-origin:50% 46%;
+  cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:hidden;
+  border-radius:14px;background:radial-gradient(ellipse at 50% 18%,rgba(255,255,255,.72),transparent 62%),
+             linear-gradient(180deg,rgba(232,238,238,.5),rgba(246,244,237,.18))}
+.ti-stage.dragging{cursor:grabbing}
+.ti-ring{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;
+  transition:transform .08s linear}
+.ti-card{position:absolute;left:-84px;top:-108px;width:168px;height:216px;margin:0;
+  transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:6px;overflow:hidden;background:#f4f1e8;cursor:pointer;
+  box-shadow:0 10px 26px rgba(24,56,70,.26),0 2px 5px rgba(24,56,70,.18);
+  transition:box-shadow .25s}
+.ti-card:hover{box-shadow:0 16px 38px rgba(24,56,70,.34),0 3px 8px rgba(24,56,70,.2)}
+.ti-card img{width:100%;height:100%;object-fit:cover;display:block}
+.ti-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;
+  font-size:.62em;color:#fffdf3;text-shadow:0 1px 3px rgba(0,0,0,.75);
+  background:linear-gradient(to top,rgba(13,34,43,.72),transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 看大图 */
+.mem-big{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
+  background:rgba(8,14,18,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:24px;cursor:zoom-out}
+.mem-big.show{display:flex;animation:memBigIn .22s ease-out}
+@keyframes memBigIn{from{opacity:0}to{opacity:1}}
+.mb-box{margin:0;max-width:min(92vw,1500px);max-height:88vh;display:flex;flex-direction:column;align-items:center;gap:10px}
+.mb-box img{max-width:100%;max-height:80vh;object-fit:contain;border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.mb-box figcaption{font-size:.82em;color:#e8e2d4;text-align:center}
+/* ══ 旅行年轮：一年一圈，月月一段 ══ */
+.ring-stage{position:relative;display:flex;justify-content:center;padding:6px 0 4px}
+.ring-svg{width:min(100%,580px);height:auto;overflow:visible}
+.ring-year{font-family:'Songti SC','Noto Serif SC',serif;font-size:13px;font-weight:700;fill:#cbb98e;letter-spacing:.06em}
+.ring-base{fill:none;stroke:rgba(212,190,150,.10);transition:stroke .25s}
+.ring-arc{fill:none;stroke:#8a6a3c;stroke-linecap:round;cursor:pointer;
+  transition:stroke .2s,stroke-opacity .2s;transform-box:fill-box}
+.ring-arc.hot{stroke:#b8862f;stroke-opacity:1!important}
+.ring-core{fill:rgba(212,168,67,.14);stroke:rgba(212,168,67,.5);stroke-width:1}
+.ring-core-t{font-family:'Songti SC','Noto Serif SC',serif;font-size:15px;font-weight:700;fill:#7a5a22}
+.ring-core-s{font-size:9px;fill:#8b97a0;letter-spacing:.08em}
+.ring-tip{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;
+  padding:6px 11px;border-radius:8px;font-size:.78em;color:#fffdf3;
+  background:rgba(24,40,48,.92);box-shadow:0 6px 18px rgba(0,0,0,.24)}
+.ring-tip[hidden]{display:none}
+@media (prefers-reduced-motion: reduce){
+  .ti-ring{transition:none}
+  .mem-big.show{animation:none}
+}
+/* 下半：封面图，从 26% 开始（同参考项目 .shared-cover-art inset:26% 0 0） */.sb-bottom{position:absolute;left:0;right:0;bottom:0;top:26%;overflow:hidden}
 .sb-bottom img{width:100%;height:100%;object-fit:cover;display:block}
 .sb-bottom::after{content:'';position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(to bottom,#f4f1e8,transparent 30%,transparent 68%,rgba(13,34,43,.60))}
@@ -539,6 +624,9 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 /* ===== 3D 地球开屏 ===== */
 #launch{position:fixed;inset:0;z-index:9000;background:radial-gradient(circle at 50% 42%,#0a1424 0%,#050810 55%,#02030a 100%);overflow:hidden;opacity:1;transition:opacity 1s var(--ease-out)}
 #launch.hide{opacity:0;pointer-events:none}
+/* 兜底：淡出后如果还没被移除，里面的 #launchGl 显式写了 pointer-events:auto，
+   会绕过父级的 none 继续挡住整站点击 —— 这里一并关掉。 */
+#launch.hide,#launch.hide *{pointer-events:none!important}
 #launchStars,#launchGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
 #launchGlobe{z-index:2}
 /* 可选增强：写实 3D 地球。默认 opacity:0 不显示，只有设备真跑得起「写实」档时才淡入盖上来；
@@ -667,6 +755,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
           <button class="mp-tab on" type="button" data-mem="stats"  onclick="setMemTab('stats')"  role="tab">旅行统计</button>
           <button class="mp-tab"    type="button" data-mem="time"   onclick="setMemTab('time')"   role="tab">时间足迹</button>
           <button class="mp-tab"    type="button" data-mem="shelf"  onclick="setMemTab('shelf')"  role="tab">记忆书架</button>
+          <button class="mp-tab"    type="button" data-mem="images" onclick="setMemTab('images')" role="tab">旅途影像</button>
+          <button class="mp-tab"    type="button" data-mem="rings"  onclick="setMemTab('rings')"  role="tab">旅行年轮</button>
           <button class="mp-tab"    type="button" data-mem="stream" onclick="setMemTab('stream')" role="tab">照片流</button>
         </div>
         <button class="mp-close" type="button" onclick="closeMemPop()" aria-label="关闭">&times;</button>
@@ -1217,9 +1307,13 @@ function renderMemZone(){
     if(memTab==='stats')box.innerHTML=memStatsHTML();
     else if(memTab==='time')box.innerHTML=(typeof memTimeHTML==='function')?memTimeHTML():'<div class="mem-loading">时间足迹</div>';
     else if(memTab==='shelf')box.innerHTML=(typeof memShelfHTML==='function')?memShelfHTML():'<div class="mem-loading">记忆书架</div>';
+    else if(memTab==='images')box.innerHTML=(typeof memImagesHTML==='function')?memImagesHTML():'<div class="mem-loading">旅途影像</div>';
+    else if(memTab==='rings')box.innerHTML=(typeof memRingsHTML==='function')?memRingsHTML():'<div class="mem-loading">旅行年轮</div>';
     else if(memTab==='stream')box.innerHTML=(typeof memStreamHTML==='function')?memStreamHTML():'<div class="mem-loading">照片流</div>';
     if(memTab==='stream'&&typeof memStreamMount==='function')memStreamMount();
     if(memTab==='shelf'&&typeof initShelf3D==='function')initShelf3D();
+    if(memTab==='images'&&typeof mountMemImages==='function')mountMemImages();
+    if(memTab==='rings'&&typeof mountMemRings==='function')mountMemRings();
   }catch(e){
     box.innerHTML='<div class="mem-loading">这部分渲染出错了：'+escHtml(e.message)+'</div>';
     console.error('[记忆区]',e);
@@ -1334,7 +1428,6 @@ function initShelf3D(){
   if(!panel||panel.__shelf3dBound)return;
   panel.__shelf3dBound=true;
   const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const BASE_Y=-30, SHIFT_X=-10, SCALE=1.06;
   let cur=null;
   const clear=card=>{
     if(!card)return;
@@ -1342,6 +1435,8 @@ function initShelf3D(){
     const inner=card.querySelector('.shelf3d-inner');
     if(inner){inner.style.transform='';inner.style.transition='';}
   };
+  // 鼠标在书上时：书朝观者浮起（由 CSS 的 --lift/--liftz 负责），再叠加一点跟随倾斜。
+  // 这里只给额外的 rotateX/rotateY，浮起量交给 CSS，鼠标移开就自动归位。
   panel.addEventListener('mousemove',e=>{
     const card=(e.target&&e.target.closest)?e.target.closest('.shelf3d'):null;
     if(!card){ if(cur){clear(cur);cur=null;} return; }
@@ -1350,7 +1445,7 @@ function initShelf3D(){
     if(!inner)return;
     if(card!==cur){
       clear(cur); cur=card;
-      card.classList.add('following');   // 这一帧仍走 CSS 的 0.52s：抽出这段要有质感
+      card.classList.add('following');   // 第一帧走 CSS 的 .36s，抽出要有质感
     }else{
       inner.style.transition='transform .16s ease-out';   // 之后切成跟手的快过渡
     }
@@ -1358,7 +1453,8 @@ function initShelf3D(){
     if(!r.width||!r.height)return;
     const nx=Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width)*2-1));
     const ny=Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height)*2-1));
-    inner.style.transform='rotateY('+(BASE_Y+nx*6).toFixed(2)+'deg) rotateX('+(-ny*5).toFixed(2)+'deg) scale('+SCALE+') translateX('+SHIFT_X+'px)';
+    // 只叠加倾斜，浮起量（translateZ）由 CSS 的 :hover 提供
+    inner.style.transform='translate3d(0,-7px,30px) rotateX('+(-ny*4.5).toFixed(2)+'deg) rotateY('+(nx*4.5).toFixed(2)+'deg)';
   });
   panel.addEventListener('mouseleave',()=>{ if(cur){clear(cur);cur=null;} });
 }
@@ -1366,15 +1462,18 @@ function memShelfHTML(){  const provs=memProvinceGroups();
   if(!provs.length)return '<div class="mem-loading">还没有可以装订的省份记忆。</div>';
   return '<div class="shelf-wrap">'+
     provs.map(g=>
-      '<div class="shelf3d" onclick="openBook('+JSON.stringify(g.prov).replace(/"/g,'&quot;')+')" role="button" tabindex="0" title="翻开 '+escHtml(g.prov)+' 的记忆">'+
+      '<div class="shelf3d" onclick="openBook('+JSON.stringify(g.prov).replace(/"/g,'&quot;')+',this)" role="button" tabindex="0" title="翻开 '+escHtml(g.prov)+' 的记忆">'+
         '<div class="shelf3d-scene"><div class="shelf3d-inner">'+
+          // 书的六个面：封底 → 书脊 → 书页 → 封内 → 封面（顺序无所谓，靠 translateZ 分层）
+          '<div class="shelf3d-back" aria-hidden="true"></div>'+
+          '<div class="shelf3d-spine" aria-hidden="true"><b>'+escHtml(g.prov)+'</b></div>'+
+          '<div class="shelf3d-pages" aria-hidden="true"></div>'+
+          '<div class="shelf3d-inside" aria-hidden="true"></div>'+
           '<div class="shelf3d-cover">'+
             '<div class="sb-top"><span class="sb-prov">'+escHtml(g.prov)+'</span></div>'+
             '<div class="sb-bottom">'+(g.cover?'<img loading="lazy" src="'+escHtml(thumbUrl(g.cover))+'" alt="">':'')+
               '<span class="sb-badge">'+g.cities.length+' 城 · '+g.photos+' 张</span></div>'+
           '</div>'+
-          '<div class="shelf3d-pages" aria-hidden="true"></div>'+
-          '<div class="shelf3d-back" aria-hidden="true"></div>'+
         '</div></div>'+
       '</div>').join('')+
   '</div>'+
@@ -1391,8 +1490,167 @@ function memShelfHTML(){  const provs=memProvinceGroups();
     '</div>'+
   '</div>';
 }
-let __book=null,__bookPages=0,__bookIdx=0,__flip=null,__bookCityPage={};
-async function openBook(prov){
+/* ═══════════════════════════════════════════════════════════
+   旅途影像 —— 把全部照片铺成一个可以拖动的环
+   参考 Your-China-Travel 的「旅途影像」：照片沿圆环排开，拖动 / 滚轮让它转，
+   像走进一条光带。停下后缓慢自转，转到背面的照片会被环挡住看不见。
+   ═══════════════════════════════════════════════════════════ */
+function memAllPhotos(){
+  return (GALLERY||[]).filter(p=>p&&(p.image||p.url));
+}
+function memImagesHTML(){
+  const photos=memAllPhotos();
+  if(!photos.length)return '<div class="mem-loading">还没有照片可以铺开。</div>';
+  return '<div class="ti-head"><b>旅途影像</b><span>'+photos.length+' 张照片 · 拖动或滚轮翻转 · 点一张看大图</span></div>'+
+    '<div class="ti-stage" id="tiStage" tabindex="0" aria-label="旅途影像环"><div class="ti-ring" id="tiRing"></div></div>'+
+    '<p class="mem-sub">照片按时间顺序绕成一圈，转到背面的那一半会被挡住 —— 转回来又是新的。</p>';
+}
+let __tiRaf=null;
+function mountMemImages(){
+  const ring=document.getElementById('tiRing'), stage=document.getElementById('tiStage');
+  if(!ring||!stage)return;
+  const photos=memAllPhotos();
+  const n=photos.length||1;
+  // 半径按"一圈能看全多少张"算，不是按总张数 —— 按总张数会把 66 张撑成 1400px 的大环，
+  // 照片全被甩到视口外、看不见也点不到。经典轮播公式：R = (卡宽/2) / tan(π/可见数)。
+  const CARD_W=168, VISIBLE=Math.min(n,14);
+  const R=Math.max(300, Math.round((CARD_W/2)/Math.tan(Math.PI/VISIBLE)));
+  const step=360/n;
+  let rot=0;
+  ring.innerHTML=photos.map((p,i)=>
+    '<figure class="ti-card" style="transform:rotateY('+(step*i).toFixed(3)+'deg) translateZ('+R+'px)" data-i="'+i+'">'+
+      '<img loading="lazy" src="'+escHtml(thumbUrl(p.image||p.url))+'" alt="">'+
+      '<figcaption>'+escHtml((p.cityKey||'')+(p.date?' · '+String(p.date).slice(0,7):''))+'</figcaption>'+
+    '</figure>').join('');
+  const apply=()=>{ ring.style.transform='translateZ(-'+R+'px) rotateY('+rot.toFixed(2)+'deg)'; };
+  apply();
+  let px=0, down=false, moved=0, downCard=null;
+  const stop=e=>{ if(!down)return; down=false; stage.classList.remove('dragging'); };
+  stage.addEventListener('pointerdown',e=>{
+    down=true; px=e.clientX; moved=0; stage.classList.add('dragging');
+    // 记下按下时那张卡：setPointerCapture 之后，click 的 target 会变成 stage，
+    // 挂在环上的监听器根本收不到事件，所以必须在这里记、在 stage 上收。
+    downCard=e.target.closest?e.target.closest('.ti-card'):null;
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  stage.addEventListener('pointermove',e=>{
+    if(!down)return;
+    const dx=e.clientX-px; px=e.clientX; moved+=Math.abs(dx);
+    rot+=dx*0.22; apply();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>stage.addEventListener(t,stop));
+  stage.addEventListener('wheel',e=>{ e.preventDefault(); rot-=e.deltaY*0.12; apply(); },{passive:false});
+  stage.addEventListener('click',e=>{
+    const card=downCard; downCard=null;
+    if(!card||moved>8)return;   // 拖动过就不算点击
+    const p=photos[+card.dataset.i];
+    if(p)memPhotoBig(p.image||p.url,(p.cityKey||'')+(p.date?' · '+String(p.date).slice(0,10):''));
+  });
+  // 停下后缓慢自转
+  let last=performance.now();
+  if(__tiRaf){cancelAnimationFrame(__tiRaf);__tiRaf=null;}
+  const tick=t=>{
+    if(memTab!=='images'||!document.body.contains(ring)){__tiRaf=null;return;}
+    const dt=Math.min(64,t-last); last=t;
+    if(!down){ rot-=dt*0.004; apply(); }
+    __tiRaf=requestAnimationFrame(tick);
+  };
+  __tiRaf=requestAnimationFrame(tick);
+}
+/* 看大图的小灯箱 */
+function memPhotoBig(src,cap){
+  let el=document.getElementById('memBig');
+  if(!el){
+    el=document.createElement('div'); el.id='memBig'; el.className='mem-big';
+    el.innerHTML='<figure class="mb-box"><img alt=""><figcaption></figcaption></figure>';
+    document.body.appendChild(el);
+    el.addEventListener('click',()=>el.classList.remove('show'));
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape')el.classList.remove('show'); });
+  }
+  el.querySelector('img').src=viewUrl(src);
+  el.querySelector('figcaption').textContent=cap||'';
+  el.classList.add('show');
+}
+/* ═══════════════════════════════════════════════════════════
+   旅行年轮 —— 一年一圈，月月一段
+   像树的年轮：一圈是一年，由内向外按年份长出来；
+   每一圈按 12 个月切成弧段，弧越粗 = 那个月拍得越多，
+   颜色越亮 = 那个月占全年比例越高。鼠标停上去看是哪年哪月。
+   ═══════════════════════════════════════════════════════════ */
+function memRingYears(){
+  const by={};
+  (GALLERY||[]).forEach(p=>{
+    const y=memPhotoYear(p);
+    if(!y)return;
+    const g=by[y]=by[y]||{year:String(y),months:Array(12).fill(0),total:0,cities:{}};
+    const m=String(p.date||'').slice(5,7);
+    const mi=parseInt(m,10);
+    if(mi>=1&&mi<=12)g.months[mi-1]++;
+    g.total++;
+    if(p.cityKey)g.cities[p.cityKey]=(g.cities[p.cityKey]||0)+1;
+  });
+  return Object.values(by).sort((a,b)=>a.year.localeCompare(b.year));
+}
+function memRingsHTML(){
+  const years=memRingYears();
+  if(!years.length)return '<div class="mem-loading">还没有带日期的照片，年轮还长不出来。</div>';
+  const total=years.reduce((s,y)=>s+y.total,0);
+  return '<div class="ti-head"><b>旅行年轮</b><span>'+years.length+' 圈 · 共 '+total+' 张 · 由内向外按年份生长，每一段是一个月</span></div>'+
+    '<div class="ring-stage" id="ringStage"></div>'+
+    '<p class="mem-sub">弧段越粗，那个月拍得越多。鼠标停在某段上，看它是哪年哪月、去过哪些城市。</p>';
+}
+function mountMemRings(){
+  const host=document.getElementById('ringStage');
+  if(!host)return;
+  const years=memRingYears();
+  if(!years.length)return;
+  const maxMonth=Math.max(1,...years.reduce((a,y)=>a.concat(y.months),[]));
+  const S=580, C=S/2, r0=64, gap=Math.min(40,Math.round((C-r0-40)/Math.max(1,years.length)));
+  let svg='<svg viewBox="0 0 '+S+' '+S+'" class="ring-svg" role="img" aria-label="旅行年轮：每年一圈，每段一个月">';
+  // 底圈（年轮的"木质"底色）
+  years.forEach((y,i)=>{
+    svg+='<circle class="ring-base" cx="'+C+'" cy="'+C+'" r="'+(r0+i*gap)+'" stroke-width="'+(gap-6)+'" data-y="'+y.year+'"></circle>';
+  });
+  years.forEach((y,i)=>{
+    const r=r0+i*gap;
+    for(let m=0;m<12;m++){
+      const v=y.months[m];
+      if(!v)continue;
+      const a0=(m/12)*Math.PI*2-Math.PI/2, a1=((m+1)/12)*Math.PI*2-Math.PI/2-0.05;
+      const w=2.5+(v/maxMonth)*(gap-8);          // 弧粗 = 那个月的张数
+      const x0=C+Math.cos(a0)*r, y0=C+Math.sin(a0)*r;
+      const x1=C+Math.cos(a1)*r, y1=C+Math.sin(a1)*r;
+      const op=(0.32+0.68*Math.min(1,v/maxMonth)).toFixed(2);
+      const cities=Object.keys(y.cities).slice(0,5).join('、');
+      svg+='<path class="ring-arc" d="M'+x0.toFixed(1)+' '+y0.toFixed(1)+' A'+r+' '+r+' 0 0 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+'" '+
+        'stroke-width="'+w.toFixed(1)+'" stroke-opacity="'+op+'" '+
+        'data-tip="'+y.year+' 年 '+m+' 月 · '+v+' 张'+(cities?' · '+escHtml(cities):'')+'"></path>';
+    }
+    svg+='<text class="ring-year" x="'+C+'" y="'+(C-r-gap/2+5)+'" text-anchor="middle">'+y.year+'</text>';
+  });
+  svg+='<circle class="ring-core" cx="'+C+'" cy="'+C+'" r="'+(r0-16)+'"></circle>'+
+       '<text class="ring-core-t" x="'+C+'" y="'+(C-2)+'" text-anchor="middle">'+years[0].year+'</text>'+
+       '<text class="ring-core-s" x="'+C+'" y="'+(C+16)+'" text-anchor="middle">到 '+years[years.length-1].year+'</text>';
+  svg+='</svg>';
+  host.innerHTML=svg+'<div class="ring-tip" id="ringTip" hidden></div>';
+  const tip=document.getElementById('ringTip');
+  const stage=host;
+  const showTip=(e,text)=>{
+    if(!tip)return;
+    tip.textContent=text; tip.hidden=false;
+    const rb=stage.getBoundingClientRect();
+    tip.style.left=(e.clientX-rb.left+14)+'px';
+    tip.style.top=(e.clientY-rb.top+14)+'px';
+  };
+  stage.addEventListener('pointermove',e=>{
+    const arc=e.target.closest?e.target.closest('.ring-arc'):null;
+    if(arc){ showTip(e, arc.dataset.tip||''); arc.classList.add('hot'); }
+    else { if(tip)tip.hidden=true; stage.querySelectorAll('.ring-arc.hot').forEach(x=>x.classList.remove('hot')); }
+  });
+  stage.addEventListener('pointerleave',()=>{ if(tip)tip.hidden=true; });
+}
+
+let __book=null,__bookPages=0,__bookIdx=0,__flip=null,__bookCityPage={};async function openBook(prov, el){
   const g=memProvinceGroups().find(x=>x.prov===prov);
   if(!g)return;
   const layer=document.getElementById('bookLayer');
@@ -1449,6 +1707,17 @@ async function openBook(prov){
     });
   });
   book.innerHTML=pages.join('');
+  // ── 抽书动画 ──
+  // 参考 Your-China-Travel 的 memory-book.opening：书先朝镜头推近、书身微仰，
+  // 随后封面绕左侧书脊翻开（.66s，延迟 .2s），露一下封内纸背，再淡入阅读层。
+  // 读屏/省电模式下直接跳过，不做等待。
+  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const card=el||document.querySelector('.shelf3d');
+  if(card&&!reduced){
+    document.querySelectorAll('.shelf3d.opening').forEach(x=>{if(x!==card)x.classList.remove('opening');});
+    card.classList.add('opening');
+    await new Promise(r=>setTimeout(r,760));
+  }
   layer.classList.add('show');layer.setAttribute('aria-hidden','false');
   __bookPages=pages.length;__bookIdx=0;
   updateBookFoot();
@@ -1476,6 +1745,8 @@ function bookGotoCity(cityKey){                      // 目录里点城市 → �
   if(el&&el.scrollIntoView)el.scrollIntoView({block:'start',behavior:'smooth'});
 }
 function closeBook(){
+  // 收起任何还在"抽出"状态的书
+  document.querySelectorAll('.shelf3d.opening').forEach(x=>x.classList.remove('opening'));
   const layer=document.getElementById('bookLayer');
   if(layer){layer.classList.remove('show');layer.setAttribute('aria-hidden','true');}
   document.body.style.overflow='';
