@@ -952,11 +952,14 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <link rel="stylesheet" href="assets/dome-gallery.css?v=20261018">
 <!-- 记忆书架：书本的六面结构、翻书关键帧，整段搬自参考项目 -->
 <link rel="stylesheet" href="assets/memory-shelf.css?v=20261018">
+<!-- 记忆书架：Three.js 书架 rig（整段搬自参考项目），按需懒加载 -->
+<script src="assets/three.min.js?v=20261018b"></script>
+<script src="assets/shelf-three.js?v=20261018e"></script>
 <script src="assets/dome-gallery.js?v=20261018"></script>
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 书架左侧信息面板 + 书脊厚度';
+const GALLERY_BUILD='2026-10-18 · 书架接入 Three.js 抽出效果';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1428,7 +1431,13 @@ function renderMemZone(){
   try{
     if(memTab==='stats')box.innerHTML=memStatsHTML();
     else if(memTab==='time')box.innerHTML=(typeof memTimeHTML==='function')?memTimeHTML():'<div class="mem-loading">时间足迹</div>';
-    else if(memTab==='shelf')box.innerHTML=(typeof memShelfHTML==='function')?memShelfHTML():'<div class="mem-loading">记忆书架</div>';
+    else if(memTab==='shelf'){
+      // 优先用搬来的 Three.js 书架 rig 渲染；它没准备好时退回旧实现
+      box.innerHTML='';
+      if(!(typeof mountMemShelf==='function'&&mountMemShelf())){
+        box.innerHTML=(typeof memShelfHTML==='function')?memShelfHTML():'<div class="mem-loading">记忆书架</div>';
+      }
+    }
     else if(memTab==='images')box.innerHTML=(typeof memImagesHTML==='function')?memImagesHTML():'<div class="mem-loading">旅途影像</div>';
     else if(memTab==='rings')box.innerHTML=(typeof memRingsHTML==='function')?memRingsHTML():'<div class="mem-loading">旅行年轮</div>';
     else if(memTab==='stream')box.innerHTML=(typeof memStreamHTML==='function')?memStreamHTML():'<div class="mem-loading">照片流</div>';
@@ -1667,6 +1676,51 @@ function memInfoUpdate(index){
   wrap.innerHTML=memInfoHtml(provs,index);
   const next=wrap.firstElementChild;
   if(next)host.replaceWith(next);
+}
+/* ═══════════════════════════════════════════════════════════════
+   记忆书架：接到搬来的 Three.js rig 上
+   参考项目的 renderMemoryShelf() 会往 memoryShelfBodyEl 里写整块书架，
+   依赖这几个全局：$ / escapeHtml / memorySetHeader / memoryShelfTitleEl /
+   memoryShelfIntroEl / memoryShelfState。这里把它们补齐，
+   再把数据换成我自己的省份分组，其余一行不改。
+   ═══════════════════════════════════════════════════════════════ */
+if(typeof window.$!=='function')window.$=function(id){return typeof id==='string'?document.getElementById(id):id;};
+if(typeof window.escapeHtml!=='function')window.escapeHtml=function(v){return escHtml(v);};
+window.memoryShelfTitleEl=window.memoryShelfTitleEl||document.createElement('span');
+window.memoryShelfIntroEl=window.memoryShelfIntroEl||document.createElement('span');
+window.memoryShelfBodyEl=window.memoryShelfBodyEl||document.getElementById('memPanel');
+if(typeof window.memorySetHeader!=='function')window.memorySetHeader=function(t,i){memoryShelfTitleEl.textContent=t;memoryShelfIntroEl.textContent=i;};
+
+/* 参考项目的 memoryProvinceDateText 会调 formatMonth()，它是「2026-08 → 2026年8月」的那种格式化。
+   这里补一个同名实现（原版叫 formatMonthShort，切函数时切错了对象）。 */
+if(typeof window.formatMonth!=='function')window.formatMonth=function(ym){
+  const m=String(ym||'').match(/^(\d{4})-(\d{1,2})$/);
+  return m?(m[1]+'年'+Number(m[2])+'月'):String(ym||'');
+};
+
+/* 我的省份分组 → 参考项目 CollectMemoryShelfData 的省份结构 */
+function memShelfProvinces(){
+  return (typeof memProvinceGroups==='function'?memProvinceGroups():[]).map((g,gi)=>({
+    name:g.prov,
+    cover:g.cover?thumbUrl(g.cover):'',
+    photoCount:g.photos,
+    cities:g.cities.map(c=>({
+      name:c.name,
+      photoCount:(c.photos||[]).length,
+      cityKey:c.cityKey||c.name
+    })),
+    firstMonth:memProvinceDateText(g)==='时间尚未记录'?'':memProvinceDateText(g),
+    latestMonth:'',
+    review:''
+  }));
+}
+function mountMemShelf(){
+  const host=document.getElementById('memPanel');
+  if(!host||typeof renderMemoryShelf!=='function')return false;
+  window.memoryShelfBodyEl=host;
+  memoryShelfState.provinces=memShelfProvinces();
+  memoryShelfState.active=0;
+  try{ renderMemoryShelf(); return true; }catch(e){ console.error('[书架] 渲染失败',e); return false; }
 }
 function memShelfHTML(){
   const provs=memProvinceGroups();
