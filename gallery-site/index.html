@@ -959,7 +959,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-18 · 书架接入 Three.js 抽出效果';
+const GALLERY_BUILD='2026-10-22 · 年轮树照片修复';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1843,7 +1843,7 @@ let __memFrameLoading=false;
 async function memOpenAtlas(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
-    if(!window.ImageAtlasDocument)await loadScript('assets/image-atlas/embedded.js?v=20261018');
+    if(!window.ImageAtlasDocument)await loadScript('assets/image-atlas/embedded.js?v=20261022a');
     memOpenFrame('年轮照片 · 照片墙', window.ImageAtlasDocument(memAtlasRecords()));
   }catch(e){ toast('加载失败：'+e.message); }
   finally{ __memFrameLoading=false; }
@@ -1870,16 +1870,28 @@ function memDomeExit(){
 async function memOpenCanopy(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
-    if(!window.TravelCanopyDocument)await loadScript('assets/umbrella-canopy/embedded.js?v=20261018');
+    if(!window.TravelCanopyDocument)await loadScript('assets/umbrella-canopy/embedded.js?v=20261022a');
     memOpenFrame('伞幕照片', window.TravelCanopyDocument(memAtlasRecords()));
   }catch(e){ toast('加载失败：'+e.message); }
   finally{ __memFrameLoading=false; }
 }
+/* 年轮树的照片会先画到 canvas 再贴成 Three.js 纹理。
+   模块加载图片时没设 crossOrigin，canvas 就被跨域污染，贴图全黑。
+   这里在【生成的 HTML 字符串】上补一行 —— 不碰 765 KB 的压缩包本身，避免转义事故。 */
+function memTreeHtml(records){
+  let html=window.TravelRingTreeDocument(records);
+  try{
+    if(html.includes('let t=new Image,i=!1')){
+      html=html.replace('let t=new Image,i=!1','let t=new Image;t.crossOrigin="anonymous";let i=!1');
+    }
+  }catch(e){ console.warn('[年轮树] 图片补丁失败',e); }
+  return html;
+}
 async function memOpenTree(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
-    if(!window.TravelRingTreeDocument)await loadScript('assets/travel-ring-tree/embedded.js?v=20261018');
-    memOpenFrame('旅行年轮树', window.TravelRingTreeDocument(memAtlasRecords()));
+    if(!window.TravelRingTreeDocument)await loadScript('assets/travel-ring-tree/embedded.js?v=20261022b');
+    memOpenFrame('旅行年轮树', memTreeHtml(memAtlasRecords()));
   }catch(e){ toast('加载失败：'+e.message); }
   finally{ __memFrameLoading=false; }
 }
@@ -1963,12 +1975,12 @@ function mountMemRings(){
   host.dataset.loaded='1';
   (async()=>{
     try{
-      if(!window.TravelRingTreeDocument)await loadScript('assets/travel-ring-tree/embedded.js?v=20261018');
+      if(!window.TravelRingTreeDocument)await loadScript('assets/travel-ring-tree/embedded.js?v=20261022b');
       if(memTab!=='rings'||!document.body.contains(host))return;
       const f=document.createElement('iframe');
       f.title='旅行年轮树';
       f.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:0;display:block';
-      f.srcdoc=window.TravelRingTreeDocument(memAtlasRecords());
+      f.srcdoc=memTreeHtml(memAtlasRecords());
       host.innerHTML='';
       host.appendChild(f);
     }catch(e){ host.innerHTML='<div class="mem-loading">加载失败：'+escHtml(e.message)+'</div>'; }
