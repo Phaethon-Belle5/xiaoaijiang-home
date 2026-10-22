@@ -798,7 +798,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 
 }
 /* ══ 时间足迹：蛇形走线时间轴 + 角色 ══ */
-#memPanel .tl-wrap{overflow:auto;padding:10px 0 30px;cursor:grab}
+#memPanel .tl-wrap{overflow:auto;padding:10px 0 30px;display:flex;justify-content:center}
+#memPanel .tl-wrap::after,#memPanel .tl-wrap::before{content:"";flex:0 0 auto;margin:auto}
 #memPanel .tl-wrap::-webkit-scrollbar{height:8px;width:8px}
 #memPanel .tl-wrap::-webkit-scrollbar-thumb{background:rgba(120,170,250,.3);border-radius:4px}
 #memPanel .tl-track{position:relative;margin:0 auto}
@@ -806,8 +807,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 #memPanel .tl-rail line{stroke:#e8943c;stroke-width:3;stroke-linecap:round;opacity:.9}
 /* 每个城市节点：圆点在线上，城市名在上、日期在下 */
 #memPanel .tl-node{position:absolute;width:150px;margin-left:-75px;margin-top:-46px;
-  text-align:center;pointer-events:none}
-#memPanel .tl-name{display:block;font-size:14px;font-weight:700;color:#e2eeff;
+  text-align:center;cursor:pointer;pointer-events:auto}
+#memPanel .tl-name{display:block;font-size:14px;font-weight:700;color:#e2eeff;transition:color .18s;
   line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.7);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 #memPanel .tl-date{display:block;margin-top:3px;font-size:11.5px;font-weight:700;color:#e8943c;
@@ -815,15 +816,18 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 #memPanel .tl-dot{position:absolute;left:50%;top:52px;width:12px;height:12px;margin-left:-6px;
   border-radius:50%;background:#0d1a26;border:2.5px solid #e8943c;
   box-shadow:0 0 0 4px rgba(232,148,60,.12);transition:all .3s}
+#memPanel .tl-node:hover .tl-name{color:#ffd08a}
 #memPanel .tl-node.tl-shown .tl-dot{background:#e8943c;box-shadow:0 0 0 5px rgba(232,148,60,.2),0 0 16px rgba(232,148,60,.75)}
 /* 照片默认完全隐藏，角色走到才弹出 */
-#memPanel .tl-photo{position:absolute;left:50%;top:74px;width:118px;height:118px;margin-left:-59px;
+#memPanel .tl-photo{position:absolute;left:50%;top:74px;width:118px;height:118px;margin-left:-59px;cursor:pointer;
   margin:0 0 0 -59px;border-radius:10px;overflow:hidden;background:#0d1a26;
   box-shadow:0 10px 26px rgba(0,0,0,.45);
   opacity:0;transform:translateY(10px) scale(.86);pointer-events:none;
   transition:opacity .32s ease,transform .42s cubic-bezier(.16,1,.3,1)}
 #memPanel .tl-photo img{width:100%;height:100%;object-fit:cover;display:block}
-#memPanel .tl-node.tl-shown .tl-photo{opacity:1;transform:translateY(0) scale(1)}
+#memPanel .tl-node.tl-shown .tl-photo{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+#memPanel .tl-node.tl-shown .tl-photo:hover img{transform:scale(1.06)}
+#memPanel .tl-photo img{transition:transform .35s}
 #memPanel .tl-count{position:absolute;left:50%;top:198px;transform:translateX(-50%);
   font-size:11px;color:#9fb6d4;white-space:nowrap;
   opacity:0;transition:opacity .3s ease .1s}
@@ -1020,7 +1024,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 时间足迹蛇形折线 + 逐城弹出照片';
+const GALLERY_BUILD='2026-10-22 · 时间足迹居中 + 点城市进详情';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1579,12 +1583,12 @@ function memTimeStops(){
 /* 蛇形排版：每 PER_ROW 个城市一行，奇数行反向走，
    第 PER_ROW 个之后线向下折到下一行行首。
    日期放在城市名下面。照片默认隐藏，角色走到才弹出来。 */
-var TL_PER_ROW=7, TL_COL=196, TL_ROW=228, TL_START_Y=46;
+var TL_PER_ROW=7, TL_COL=196, TL_ROW=228, TL_START_Y=46, TL_PAD=96;
 function memTimeLayout(n){
   var pts=[];
   for(var i=0;i<n;i++){
     var row=Math.floor(i/TL_PER_ROW), col=i%TL_PER_ROW;
-    var x=(row%2===0)?col*TL_COL:(TL_PER_ROW-1-col)*TL_COL;
+    var x=TL_PAD+((row%2===0)?col*TL_COL:(TL_PER_ROW-1-col)*TL_COL);
     var y=TL_START_Y+row*TL_ROW;
     pts.push({x:x,y:y,row:row,col:col});
   }
@@ -1595,7 +1599,7 @@ function memTimeHTML(){
   if(!stops.length)return '<div class="mem-loading">还没有带日期的照片。</div>';
   var pts=memTimeLayout(stops.length);
   var rows=Math.ceil(stops.length/TL_PER_ROW);
-  var width=TL_PER_ROW*TL_COL;
+  var width=TL_PER_ROW*TL_COL+TL_PAD*2-40;
   var height=TL_START_Y+rows*TL_ROW;
   var svgParts=[];
   // 每一行一条横线
@@ -1698,6 +1702,20 @@ function mountMemTime(){
     raf=requestAnimationFrame(step);
   }
   requestAnimationFrame(function(t){ last=t; raf=requestAnimationFrame(step); });
+  // 点城市名或照片 → 直接进城市详情
+  nodes.forEach(function(el){
+    el.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var i=parseInt(el.dataset.i,10)||0;
+      var name=el.querySelector('.tl-name');
+      name=name?name.textContent.trim():'';
+      var city=(typeof mapCityPoints!=='undefined'?mapCityPoints:[]).find(function(c){
+        return (c.cityKey&&c.cityKey===name)||(c.name&&c.name===name);
+      });
+      if(city&&typeof openCityDetail==='function'){ openCityDetail(city); return; }
+      if(typeof toast==='function')toast('没有找到「'+name+'」的城市详情');
+    });
+  });
   var wrap=track.parentElement;
   if(wrap)wrap.scrollLeft=0;
 }
