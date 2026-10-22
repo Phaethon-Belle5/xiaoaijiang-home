@@ -952,6 +952,9 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <link rel="stylesheet" href="assets/dome-gallery.css?v=20261018">
 <!-- 记忆书架：书本的六面结构、翻书关键帧，整段搬自参考项目 -->
 <link rel="stylesheet" href="assets/memory-shelf.css?v=20261018">
+<!-- 照片墙：分层堆叠相册，样式整段搬自参考项目 -->
+<link rel="stylesheet" href="assets/photo-wall.css?v=20261022c">
+<script src="assets/photo-wall.js?v=20261022b"></script>
 <!-- 记忆书架：Three.js 书架 rig（整段搬自参考项目），按需懒加载 -->
 <script src="assets/three.min.js?v=20261018b"></script>
 <script src="assets/shelf-three.js?v=20261018j"></script>
@@ -959,7 +962,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 年轮树照片修复';
+const GALLERY_BUILD='2026-10-22 · 照片墙（分层堆叠相册）';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1867,6 +1870,13 @@ function memDomeExit(){
   const b=dome.querySelector('.dome-full-close'); if(b)b.remove();
   try{ document.body.style.overflow=''; }catch(e){}
 }
+/* 照片墙 —— 用搬来的堆叠相册样式（photo-wall.css），数据用我的照片 */
+function memOpenWall(){
+  if(typeof window.PhotoWall!=='object'){ toast('照片墙还没加载'); return; }
+  const list=memAllPhotos().map(p=>({src:viewUrl(p.image||p.url), title:(p.cityKey||'')+(p.date?' · '+String(p.date).slice(0,10):'')}));
+  if(!list.length){ toast('还没有照片'); return; }
+  window.PhotoWall.open(list,0);
+}
 async function memOpenCanopy(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
@@ -1900,6 +1910,7 @@ function memImagesHTML(){
   const photos=memAllPhotos();
 return '<div class="ti-actions">'+
       '<button type="button" onclick="memOpenAtlas()">◉ 年轮照片</button>'+
+      '<button type="button" onclick="memOpenWall()">▦ 照片墙</button>'+
       '<button type="button" onclick="memOpenCanopy()">☂ 伞幕照片</button>'+
       '<button type="button" onclick="memDomeFull()">⛶ 穹顶全屏</button>'+
     '</div>'+
