@@ -795,6 +795,32 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   .img-viewer .nav-btn{width:44px;height:44px;font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ══ 时间足迹：横向时间轴 + 角色走线 ══ */
+#memPanel .tl-wrap{overflow-x:auto;overflow-y:hidden;padding:26px 0 40px;cursor:grab}
+#memPanel .tl-wrap::-webkit-scrollbar{height:8px}
+#memPanel .tl-wrap::-webkit-scrollbar-thumb{background:rgba(120,170,250,.3);border-radius:4px}
+#memPanel .tl-track{position:relative;height:330px;padding-top:20px}
+#memPanel .tl-rail{position:absolute;left:0;right:0;top:104px;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(232,148,60,0),#e8943c 6%,#e8943c 94%,rgba(232,148,60,0))}
+#memPanel .tl-node{position:absolute;top:26px;width:170px;text-align:center}
+#memPanel .tl-node[data-left]{left:0}
+#memPanel .tl-date{display:block;font-size:12px;font-weight:700;color:#e8943c;letter-spacing:.04em}
+#memPanel .tl-name{display:block;margin-top:2px;font-size:15px;font-weight:700;color:#e2eeff}
+#memPanel .tl-dot{position:absolute;left:50%;top:76px;width:11px;height:11px;margin-left:-5.5px;
+  border-radius:50%;background:#e8943c;box-shadow:0 0 0 4px rgba(232,148,60,.14),0 0 14px rgba(232,148,60,.6)}
+#memPanel .tl-photo{position:absolute;left:50%;top:118px;width:118px;height:118px;margin-left:-59px;
+  margin-top:0;border-radius:10px;overflow:hidden;background:#0d1a26;
+  box-shadow:0 10px 26px rgba(0,0,0,.45);transition:transform .22s,box-shadow .22s}
+#memPanel .tl-photo img{width:100%;height:100%;object-fit:cover;display:block}
+#memPanel .tl-node:hover .tl-photo{transform:translateY(-4px) scale(1.04);box-shadow:0 16px 34px rgba(0,0,0,.55)}
+#memPanel .tl-count{position:absolute;left:50%;top:242px;transform:translateX(-50%);
+  font-size:11px;color:#9fb6d4;white-space:nowrap}
+#memPanel .tl-walker{position:absolute;left:0;top:52px;height:96px;width:auto;
+  transform-origin:50% 100%;pointer-events:none;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5));
+  transition:none;z-index:5}
+#memPanel .tl-walker.walking{animation:tlBob .52s ease-in-out infinite alternate}
+@keyframes tlBob{from{translate:0 0}to{translate:0 -5px}}
 </style>
 </head>
 <body>
@@ -981,7 +1007,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 穹顶支持全屏展示';
+const GALLERY_BUILD='2026-10-22 · 时间足迹改成走线时间轴 + 波奇酱';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1469,6 +1495,7 @@ function renderMemZone(){
     if(memTab==='shelf'&&typeof memShelfBindActive==='function')memShelfBindActive();
     if(memTab==='images'&&typeof mountMemImages==='function'){mountMemImages();}
     if(memTab==='images'&&typeof memBindJourneyCities==='function')memBindJourneyCities();
+    if(memTab==='time'&&typeof mountMemTime==='function')mountMemTime();
     if(memTab==='rings'&&typeof mountMemRings==='function')mountMemRings();
   }catch(e){
     box.innerHTML='<div class="mem-loading">这部分渲染出错了：'+escHtml(e.message)+'</div>';
@@ -1517,28 +1544,76 @@ function memMonthGroups(){                        // 按年月倒序分组，附
     .map(([k,v])=>({key:k,photos:v.photos,cities:[...v.cities]}))
     .sort((a,b)=>(a.key==='未标日期'?1:0)-(b.key==='未标日期'?1:0)||b.key.localeCompare(a.key));
 }
-function memTimeHTML(){
-  const groups=memMonthGroups();
-  if(!groups.length)return '<div class="mem-loading">还没有带日期的照片。</div>';
-  let html='<div class="mem-time">',curYear=null;
-  groups.forEach(g=>{
-    const y=g.key.slice(0,4);
-    if(y!==curYear){curYear=y;html+='<div class="mem-year">'+escHtml(y==='未标'?'未标日期':y)+'</div>';}
-    const show=g.photos.slice(0,6),rest=g.photos.length-show.length;
-    html+='<div class="mem-node">'+
-      '<div class="mem-node-h">'+
-        '<span class="mem-node-m">'+escHtml(g.key==='未标日期'?g.key:g.key.slice(5)+' 月')+'</span>'+
-        '<span class="mem-node-city" title="'+escHtml(g.cities.join(' · '))+'">'+escHtml(g.cities.slice(0,5).join(' · '))+(g.cities.length>5?' 等 '+g.cities.length+' 城':'')+'</span>'+
-        '<span class="mem-node-n">'+g.photos.length+' 张</span>'+
-      '</div>'+
-      '<div class="mem-thumbs">'+show.map((p,i)=>
-        '<img class="mem-thumb" loading="lazy" src="'+escHtml(thumbUrl(p.url||p.image))+'" alt="" '+
-        'onclick="openMemMonth('+JSON.stringify(g.key).replace(/"/g,'&quot;')+','+p.id+')">').join('')+
-        (rest>0?'<div class="mem-more" onclick="openMemMonth('+JSON.stringify(g.key).replace(/"/g,'&quot;')+',-1)">+' +rest+'</div>':'')+
-      '</div></div>';
+/* ═══════════════════════════════════════════════════════════════
+   时间足迹 —— 横向时间轴 + 角色走线（照参考项目第三张图的样子）
+   每个节点是一个「年月 + 城市」，线上一个圆点，线下挂该市的照片，
+   角色（波奇酱）沿着线走：往右走时朝向不变，往左走时水平镜像，
+   保证脸永远朝着前进方向。
+   ═══════════════════════════════════════════════════════════════ */
+function memTimeStops(){
+  const map=new Map();
+  (GALLERY||[]).forEach(function(p){
+    const d0=String(p.date||'').slice(0,7);
+    if(!/^\d{4}-\d{2}$/.test(d0))return;
+    const key=d0+'|'+(p.cityKey||'未归类');
+    if(!map.has(key))map.set(key,{month:d0,city:p.cityKey||'未归类',photos:[]});
+    map.get(key).photos.push(p);
   });
-  return html+'</div><p class="mem-sub">点缩略图放大 · 点「+N」从这张开始看整月</p>';
+  return [...map.values()].sort(function(a,b){
+    return a.month===b.month?a.city.localeCompare(b.city):a.month.localeCompare(b.month);
+  });
 }
+function memTimeHTML(){
+  const stops=memTimeStops();
+  if(!stops.length)return '<div class="mem-loading">还没有带日期的照片。</div>';
+  const nodes=stops.map(function(st,i){
+    const mm=st.month.slice(5).replace(/^0/,'');
+    const cover=st.photos[0];
+    const src=thumbUrl(cover.image||cover.url);
+    return '<div class="tl-node" data-i="'+i+'" data-left="'+(i*190)+'" style="left:'+(i*190)+'px">'+
+      '<span class="tl-date">'+st.month.slice(0,4)+'.'+mm+'</span>'+
+      '<span class="tl-name">'+escHtml(st.city)+'</span>'+
+      '<i class="tl-dot"></i>'+
+      '<figure class="tl-photo"><img alt="" loading="lazy" src="'+escHtml(src)+'"></figure>'+
+      '<span class="tl-count">共'+st.photos.length+'张</span>'+
+    '</div>';
+  }).join('');
+  const width=Math.max(760, stops.length*190+160);
+  return '<div class="tl-wrap"><div class="tl-track" id="tlTrack" style="width:'+width+'px">'+
+    '<div class="tl-rail"></div>'+
+    nodes+
+    '<img class="tl-walker" id="tlWalker" src="assets/bochijiang.webp" alt="" draggable="false">'+
+  '</div></div>';
+}
+/* 角色沿时间线来回走：向右保持朝向，向左镜像 */
+function mountMemTime(){
+  const track=document.getElementById('tlTrack');
+  const walker=document.getElementById('tlWalker');
+  if(!track||!walker)return;
+  const nodes=[...track.querySelectorAll('.tl-node')];
+  if(!nodes.length)return;
+  const ends=nodes.map(function(n){return parseInt(n.dataset.left,10)||0;});
+  const x0=ends[0], x1=ends[ends.length-1];
+  let raf=0, dir=1, pos=x0, paused=0, last=performance.now();
+  const SPEED=58;   // px/秒
+  function step(t){
+    const dt=Math.min(64,t-last); last=t;
+    if(paused>0){ paused-=dt; }
+    else{
+      pos+=dir*SPEED*dt/1000;
+      if(pos>=x1){ pos=x1; dir=-1; paused=700; }
+      if(pos<=x0){ pos=x0; dir=1; paused=700; }
+    }
+    walker.style.transform='translate('+pos+'px,0) scaleX('+dir+')';
+    walker.classList.toggle('walking', paused<=0);
+    raf=requestAnimationFrame(step);
+  }
+  // 滚到第一个节点
+  requestAnimationFrame(function(){ raf=requestAnimationFrame(step); });
+  const wrap=track.parentElement;
+  if(wrap)wrap.scrollLeft=Math.max(0,x0-40);
+}
+
 function memNormByld(){                            // id -> 归一化后的照片（查看器需要 .index/.image）
   const m=new Map();
   mapCityPoints.forEach(c=>(c.photos||[]).forEach(p=>m.set(p.index,p)));
