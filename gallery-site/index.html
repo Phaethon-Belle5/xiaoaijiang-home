@@ -965,7 +965,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 穹顶瓦片 1:1（48×52）';
+const GALLERY_BUILD='2026-10-22 · 旅途影像穹顶照搬参考项目参数';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1972,13 +1972,10 @@ function mountMemImages(){
   const images=memAllPhotos().map(p=>thumbUrl(p.image||p.url)).filter(Boolean);
   if(!images.length||!window.DomeGallery)return;
   // 参数与参考项目一致；overlayBlurColor 用深色，跟映像馆的深色底一致
-  const SEG=Math.max(50,Math.ceil(images.length/2.4));
   __domeGallery=new window.DomeGallery(host,{
     images:images,
-    segments:SEG,
-    segmentsY:SEG,
-    minRadius:220,
-    fit:1.55,
+    segments:Math.max(24,Math.ceil(images.length/5)),
+    minRadius:400,
     grayscale:false,
     overlayBlurColor:'#08182a'
   });
