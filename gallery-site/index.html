@@ -520,7 +520,11 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
    结构和样式整段搬自参考项目（assets/dome-gallery.css），逻辑一行没改。
    参考项目里它的高度由父级 .life-archive-layout（grid，height:100%）撑开，
    我这边没有那层布局，所以补一条高度；其余全交给它自己的 CSS。 */
+/* 穹顶容器只留「头部 + 球面可见带」的高度，避免上下各挂一条大空白。
+   DomeGallery 的球面在透视下必然只露出一条带（半径被内部 height*1.35 封顶），
+   与其让容器空着，不如把容器收到贴合照片的高度。 */
 #memPanel .life-photo-dome{height:min(76vh,660px)}
+#memPanel .life-photo-dome-stage{flex:1 1 auto!important;min-height:0!important}
 /* 记忆书架：书本结构与样式全部来自 assets/memory-shelf.css（原样搬运）。
    参考项目用一套 3D 布局 + WebGL 引擎把书排成弧形；我这边不搬那套引擎，
    改为按 left 横向排开 + 横向滚动（书本本身仍是它那套 absolute 定位）。 */
