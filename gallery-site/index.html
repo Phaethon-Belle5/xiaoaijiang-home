@@ -1024,7 +1024,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 时间线按容器等比缩放';
+const GALLERY_BUILD='2026-10-22 · 时间线水平居中（两边留白相等）';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1583,7 +1583,7 @@ function memTimeStops(){
 /* 蛇形排版：每 PER_ROW 个城市一行，奇数行反向走，
    第 PER_ROW 个之后线向下折到下一行行首。
    日期放在城市名下面。照片默认隐藏，角色走到才弹出来。 */
-var TL_PER_ROW=7, TL_COL=196, TL_ROW=228, TL_START_Y=46, TL_PAD=168;
+var TL_PER_ROW=7, TL_COL=190, TL_ROW=228, TL_START_Y=46, TL_PAD=75;
 function memTimeLayout(n){
   var pts=[];
   for(var i=0;i<n;i++){
@@ -1599,7 +1599,9 @@ function memTimeHTML(){
   if(!stops.length)return '<div class="mem-loading">还没有带日期的照片。</div>';
   var pts=memTimeLayout(stops.length);
   var rows=Math.ceil(stops.length/TL_PER_ROW);
-  var width=TL_PER_ROW*TL_COL+TL_PAD*2;
+  // 宽度刚好包住第一行：第一个节点左边缘 → 第七个节点右边缘。
+  // 这样 .tl-track 的 margin:0 auto 才能让它真正水平居中，两边留白相等。
+  var width=(TL_PER_ROW-1)*TL_COL+150;
   var height=TL_START_Y+rows*TL_ROW;
   var svgParts=[];
   // 每一行一条横线
@@ -1716,20 +1718,19 @@ function mountMemTime(){
       if(typeof toast==='function')toast('没有找到「'+name+'」的城市详情');
     });
   });
-  // 整条时间线按容器宽度等比缩放，保证一行放得下、不出现横向滚动
+  /* 整条时间线水平居中：两边留白一样大。
+     这里不做任何缩放 —— 排版宽度已经按第一行算好（见 TL_PAD / TL_COL / width），
+     轨道本身有 margin:0 auto，容器比它宽时自然左右各留一半。 */
   var wrap=track.parentElement;
   if(wrap){
     wrap.scrollLeft=0;
-    var fit=function(){
-      var need=track.scrollWidth, have=wrap.clientWidth;
+    var center=function(){
+      var need=track.offsetWidth, have=wrap.clientWidth;
       if(!need||!have)return;
-      var k=Math.min(1, have/need);
-      track.style.transformOrigin='0 0';
-      track.style.transform=(k<0.999)?('scale('+k.toFixed(4)+')'):'';
-      wrap.style.height=(track.scrollHeight*k+36)+'px';
+      track.style.marginLeft=Math.max(0,Math.round((have-need)/2))+'px';
     };
-    fit();
-    if(window.ResizeObserver){ var __ro=new ResizeObserver(fit); __ro.observe(wrap); }
+    center();
+    if(window.ResizeObserver){ var __ro=new ResizeObserver(center); __ro.observe(wrap); }
   }
 }
 
