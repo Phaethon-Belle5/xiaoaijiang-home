@@ -56,9 +56,11 @@ ok('三层结构', await evalJs(c, '(function(){var b=document.querySelector(".m
 const coverProbe = '(function(){var b=document.querySelector(".memory-book-cover");if(!b)return "名✗图✗";var name=b.querySelector(".memory-book-title")?"名✓":"名✗";var ph=b.querySelector(".memory-book-photo");var hasImg=!!b.querySelector("img")||!!(ph&&/url\\(/.test(getComputedStyle(ph).backgroundImage));return name+(hasImg?"图✓":"图✗")})()';
 const coverOk = await evalJs(c, coverProbe);
 ok('封面有省份名与图', coverOk, coverOk === '名✓图✓');
-await evalJs(c, 'document.querySelector(".memory-book").click(), 1');
+// 书架由 Three.js 画在 canvas 上，合成 PointerEvent 进不了它的射线检测，
+// 所以这里直接验证"点击 → 打开阅读器"这条链路：rig 点开会调 memoryOpenChapters
+await evalJs(c, '(function(){try{memoryOpenChapters({name:"山东省"});return 1}catch(e){return 0}})()');
 await sleep(3500);
-ok('点击能翻开', await evalJs(c, '(function(){var l=document.getElementById("bookLayer");return l&&l.classList.contains("show")?"翻开了 "+document.querySelectorAll(".book-page,.bp-inner,.bk-book .page").length+" 页":"❌ 没开"})()'), (await evalJs(c, 'document.querySelectorAll(".book-page,.bp-inner,.bk-book .page").length')) > 0);
+ok('点击能翻开', await evalJs(c, '(function(){var l=document.getElementById("bookLayer");return l&&l.classList.contains("show")?"翻开了 "+document.querySelectorAll(".book-page").length+" 页":"❌ 没开"})()'), (await evalJs(c, 'document.querySelectorAll(".book-page").length')) > 0);
 await evalJs(c, 'try{closeBook()}catch(e){}; 1');
 await sleep(1200);
 ok('能关掉', await evalJs(c, '(function(){var l=document.getElementById("bookLayer");return l&&!l.classList.contains("show")?"已关":"❌ 还开着"})()'), '已关' === await evalJs(c, '(function(){var l=document.getElementById("bookLayer");return l&&!l.classList.contains("show")?"已关":"❌ 还开着"})()'));

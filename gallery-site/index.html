@@ -962,7 +962,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 照片墙（分层堆叠相册）';
+const GALLERY_BUILD='2026-10-22 · 书架点开桥接 + 照片墙';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1692,6 +1692,16 @@ if(typeof window.escapeHtml!=='function')window.escapeHtml=function(v){return es
 window.memoryShelfTitleEl=window.memoryShelfTitleEl||document.createElement('span');
 window.memoryShelfIntroEl=window.memoryShelfIntroEl||document.createElement('span');
 window.memoryShelfBodyEl=window.memoryShelfBodyEl||document.getElementById('memPanel');
+/* rig 里点开一本书，最后会调 memoryOpenChapters(province) —— 那是参考项目的章节弹窗，
+   我没搬那个弹窗。这里把它桥接到映像馆自己的翻书阅读器（openBook）。
+   同时补一个 memoryShelfOverlayEl 壳：rig 用它判断"书架还开着吗"。 */
+window.memoryShelfOverlayEl=window.memoryShelfOverlayEl||{classList:{contains:function(){return true;},add:function(){},remove:function(){}},setAttribute:function(){},appendChild:function(){}};
+window.memoryOpenChapters=function(province){
+  try{
+    const name=province&&(province.name||province);
+    if(name&&typeof openBook==='function') openBook(String(name));
+  }catch(e){ console.warn('[书架] 打开章节失败',e); }
+};
 if(typeof window.memorySetHeader!=='function')window.memorySetHeader=function(t,i){memoryShelfTitleEl.textContent=t;memoryShelfIntroEl.textContent=i;};
 
 /* 参考项目的 memoryProvinceDateText 会调 formatMonth()，它是「2026-08 → 2026年8月」的那种格式化。
@@ -2784,6 +2794,19 @@ loadGallery();
     <button class="mfl-close" type="button" onclick="memCloseFrame()" aria-label="返回上一级">← 返回</button>
   </div>
   <div class="mfl-host" id="mflHost"></div>
+</div>
+
+<!-- 翻书阅读器：书架改由 Three.js rig 渲染后，这块不再由字符串拼，改成静态元素 -->
+<div class="book-layer" id="bookLayer" aria-hidden="true">
+  <div class="bk-scrim" onclick="closeBook()"></div>
+  <div class="bk-wrap">
+    <div class="bk-bar"><span class="bk-title" id="bkTitle"></span>
+      <button class="bk-close" type="button" onclick="closeBook()">&times;</button></div>
+    <div class="bk-book" id="bkBook"></div>
+    <div class="bk-foot"><button class="bk-nav" type="button" onclick="bookPrev()">&lsaquo; 上一页</button>
+      <span class="bk-page" id="bkPage"></span>
+      <button class="bk-nav" type="button" onclick="bookNext()">下一页 &rsaquo;</button></div>
+  </div>
 </div>
 </body>
 </html>
