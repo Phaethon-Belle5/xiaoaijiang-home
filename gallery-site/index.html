@@ -796,29 +796,42 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* ══ 时间足迹：横向时间轴 + 角色走线 ══ */
-#memPanel .tl-wrap{overflow-x:auto;overflow-y:hidden;padding:26px 0 40px;cursor:grab}
-#memPanel .tl-wrap::-webkit-scrollbar{height:8px}
+}
+/* ══ 时间足迹：蛇形走线时间轴 + 角色 ══ */
+#memPanel .tl-wrap{overflow:auto;padding:10px 0 30px;cursor:grab}
+#memPanel .tl-wrap::-webkit-scrollbar{height:8px;width:8px}
 #memPanel .tl-wrap::-webkit-scrollbar-thumb{background:rgba(120,170,250,.3);border-radius:4px}
-#memPanel .tl-track{position:relative;height:330px;padding-top:20px}
-#memPanel .tl-rail{position:absolute;left:0;right:0;top:104px;height:3px;border-radius:2px;
-  background:linear-gradient(90deg,rgba(232,148,60,0),#e8943c 6%,#e8943c 94%,rgba(232,148,60,0))}
-#memPanel .tl-node{position:absolute;top:26px;width:170px;text-align:center}
-#memPanel .tl-node[data-left]{left:0}
-#memPanel .tl-date{display:block;font-size:12px;font-weight:700;color:#e8943c;letter-spacing:.04em}
-#memPanel .tl-name{display:block;margin-top:2px;font-size:15px;font-weight:700;color:#e2eeff}
-#memPanel .tl-dot{position:absolute;left:50%;top:76px;width:11px;height:11px;margin-left:-5.5px;
-  border-radius:50%;background:#e8943c;box-shadow:0 0 0 4px rgba(232,148,60,.14),0 0 14px rgba(232,148,60,.6)}
-#memPanel .tl-photo{position:absolute;left:50%;top:118px;width:118px;height:118px;margin-left:-59px;
-  margin-top:0;border-radius:10px;overflow:hidden;background:#0d1a26;
-  box-shadow:0 10px 26px rgba(0,0,0,.45);transition:transform .22s,box-shadow .22s}
+#memPanel .tl-track{position:relative;margin:0 auto}
+#memPanel .tl-rail{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+#memPanel .tl-rail line{stroke:#e8943c;stroke-width:3;stroke-linecap:round;opacity:.9}
+/* 每个城市节点：圆点在线上，城市名在上、日期在下 */
+#memPanel .tl-node{position:absolute;width:150px;margin-left:-75px;margin-top:-46px;
+  text-align:center;pointer-events:none}
+#memPanel .tl-name{display:block;font-size:14px;font-weight:700;color:#e2eeff;
+  line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.7);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+#memPanel .tl-date{display:block;margin-top:3px;font-size:11.5px;font-weight:700;color:#e8943c;
+  letter-spacing:.04em;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#memPanel .tl-dot{position:absolute;left:50%;top:52px;width:12px;height:12px;margin-left:-6px;
+  border-radius:50%;background:#0d1a26;border:2.5px solid #e8943c;
+  box-shadow:0 0 0 4px rgba(232,148,60,.12);transition:all .3s}
+#memPanel .tl-node.tl-shown .tl-dot{background:#e8943c;box-shadow:0 0 0 5px rgba(232,148,60,.2),0 0 16px rgba(232,148,60,.75)}
+/* 照片默认完全隐藏，角色走到才弹出 */
+#memPanel .tl-photo{position:absolute;left:50%;top:74px;width:118px;height:118px;margin-left:-59px;
+  margin:0 0 0 -59px;border-radius:10px;overflow:hidden;background:#0d1a26;
+  box-shadow:0 10px 26px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(10px) scale(.86);pointer-events:none;
+  transition:opacity .32s ease,transform .42s cubic-bezier(.16,1,.3,1)}
 #memPanel .tl-photo img{width:100%;height:100%;object-fit:cover;display:block}
-#memPanel .tl-node:hover .tl-photo{transform:translateY(-4px) scale(1.04);box-shadow:0 16px 34px rgba(0,0,0,.55)}
-#memPanel .tl-count{position:absolute;left:50%;top:242px;transform:translateX(-50%);
-  font-size:11px;color:#9fb6d4;white-space:nowrap}
-#memPanel .tl-walker{position:absolute;left:0;top:52px;height:96px;width:auto;
-  transform-origin:50% 100%;pointer-events:none;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5));
-  transition:none;z-index:5}
+#memPanel .tl-node.tl-shown .tl-photo{opacity:1;transform:translateY(0) scale(1)}
+#memPanel .tl-count{position:absolute;left:50%;top:198px;transform:translateX(-50%);
+  font-size:11px;color:#9fb6d4;white-space:nowrap;
+  opacity:0;transition:opacity .3s ease .1s}
+#memPanel .tl-node.tl-shown .tl-count{opacity:1}
+/* 角色 */
+#memPanel .tl-walker{position:absolute;left:0;top:0;height:92px;width:auto;
+  transform-origin:50% 100%;pointer-events:none;z-index:6;
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.55))}
 #memPanel .tl-walker.walking{animation:tlBob .52s ease-in-out infinite alternate}
 @keyframes tlBob{from{translate:0 0}to{translate:0 -5px}}
 </style>
@@ -1007,7 +1020,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 时间足迹改成走线时间轴 + 波奇酱';
+const GALLERY_BUILD='2026-10-22 · 时间足迹蛇形折线 + 逐城弹出照片';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1563,56 +1576,132 @@ function memTimeStops(){
     return a.month===b.month?a.city.localeCompare(b.city):a.month.localeCompare(b.month);
   });
 }
+/* 蛇形排版：每 PER_ROW 个城市一行，奇数行反向走，
+   第 PER_ROW 个之后线向下折到下一行行首。
+   日期放在城市名下面。照片默认隐藏，角色走到才弹出来。 */
+var TL_PER_ROW=7, TL_COL=196, TL_ROW=228, TL_START_Y=46;
+function memTimeLayout(n){
+  var pts=[];
+  for(var i=0;i<n;i++){
+    var row=Math.floor(i/TL_PER_ROW), col=i%TL_PER_ROW;
+    var x=(row%2===0)?col*TL_COL:(TL_PER_ROW-1-col)*TL_COL;
+    var y=TL_START_Y+row*TL_ROW;
+    pts.push({x:x,y:y,row:row,col:col});
+  }
+  return pts;
+}
 function memTimeHTML(){
   const stops=memTimeStops();
   if(!stops.length)return '<div class="mem-loading">还没有带日期的照片。</div>';
-  const nodes=stops.map(function(st,i){
-    const mm=st.month.slice(5).replace(/^0/,'');
-    const cover=st.photos[0];
-    const src=thumbUrl(cover.image||cover.url);
-    return '<div class="tl-node" data-i="'+i+'" data-left="'+(i*190)+'" style="left:'+(i*190)+'px">'+
-      '<span class="tl-date">'+st.month.slice(0,4)+'.'+mm+'</span>'+
+  var pts=memTimeLayout(stops.length);
+  var rows=Math.ceil(stops.length/TL_PER_ROW);
+  var width=TL_PER_ROW*TL_COL;
+  var height=TL_START_Y+rows*TL_ROW;
+  var svgParts=[];
+  // 每一行一条横线
+  for(var r=0;r<rows;r++){
+    var y=TL_START_Y+r*TL_ROW;
+    var first=r*TL_PER_ROW, last=Math.min(stops.length-1,(r+1)*TL_PER_ROW-1);
+    var x1=pts[first].x, x2=pts[last].x;
+    svgParts.push('<line x1="'+Math.min(x1,x2)+'" y1="'+y+'" x2="'+Math.max(x1,x2)+'" y2="'+y+'"/>');
+  }
+  // 行与行之间的竖直折线
+  for(var r2=0;r2<rows-1;r2++){
+    var a2=pts[Math.min(stops.length-1,(r2+1)*TL_PER_ROW-1)];
+    var b2=pts[Math.min(stops.length-1,(r2+1)*TL_PER_ROW)];
+    if(a2&&b2)svgParts.push('<line x1="'+a2.x+'" y1="'+a2.y+'" x2="'+b2.x+'" y2="'+b2.y+'"/>');
+  }
+  var nodes=stops.map(function(st,i){
+    var pt=pts[i];
+    var mm=st.month.slice(5).replace(/^0/,'');
+    var cover=st.photos[0];
+    var src=thumbUrl(cover.image||cover.url);
+    return '<div class="tl-node" data-i="'+i+'" style="left:'+pt.x+'px;top:'+pt.y+'px">'+
       '<span class="tl-name">'+escHtml(st.city)+'</span>'+
+      '<span class="tl-date">'+st.month.slice(0,4)+'.'+mm+'</span>'+
       '<i class="tl-dot"></i>'+
       '<figure class="tl-photo"><img alt="" loading="lazy" src="'+escHtml(src)+'"></figure>'+
       '<span class="tl-count">共'+st.photos.length+'张</span>'+
     '</div>';
   }).join('');
-  const width=Math.max(760, stops.length*190+160);
-  return '<div class="tl-wrap"><div class="tl-track" id="tlTrack" style="width:'+width+'px">'+
-    '<div class="tl-rail"></div>'+
+  return '<div class="tl-wrap"><div class="tl-track" id="tlTrack" style="width:'+width+'px;height:'+height+'px">'+
+    '<svg class="tl-rail" viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none">'+svgParts.join('')+'</svg>'+
     nodes+
     '<img class="tl-walker" id="tlWalker" src="assets/bochijiang.webp" alt="" draggable="false">'+
   '</div></div>';
 }
-/* 角色沿时间线来回走：向右保持朝向，向左镜像 */
+/* 角色沿蛇形折线走：每到一个城市就弹出那格的照片；脸始终朝前进方向 */
 function mountMemTime(){
-  const track=document.getElementById('tlTrack');
-  const walker=document.getElementById('tlWalker');
+  var track=document.getElementById('tlTrack');
+  var walker=document.getElementById('tlWalker');
   if(!track||!walker)return;
-  const nodes=[...track.querySelectorAll('.tl-node')];
+  var nodes=[...track.querySelectorAll('.tl-node')];
   if(!nodes.length)return;
-  const ends=nodes.map(function(n){return parseInt(n.dataset.left,10)||0;});
-  const x0=ends[0], x1=ends[ends.length-1];
-  let raf=0, dir=1, pos=x0, paused=0, last=performance.now();
-  const SPEED=58;   // px/秒
+  var pts=nodes.map(function(n){return {x:parseFloat(n.style.left)||0, y:parseFloat(n.style.top)||0, el:n};});
+  // 串联路径：点位 + 换行时的拐点
+  var path=[];
+  for(var i=0;i<pts.length;i++){
+    path.push({x:pts[i].x,y:pts[i].y,node:i});
+    var next=pts[i+1];
+    if(next && Math.abs(next.y-pts[i].y)>1){
+      path.push({x:pts[i].x,y:pts[i].y,node:-1});       // 先竖直向下
+      path.push({x:next.x,y:pts[i].y,node:-1});
+    }
+  }
+  if(path.length<2)return;
+  var seg=[]; var total=0;
+  for(var k=0;k<path.length-1;k++){
+    var d=Math.hypot(path[k+1].x-path[k].x, path[k+1].y-path[k].y);
+    if(d<0.5)continue;
+    seg.push({a:path[k],b:path[k+1],d:d,start:total});
+    total+=d;
+  }
+  if(!seg.length)return;
+  var revealed=0, raf=0, last=performance.now(), dist=0, dirSign=1, paused=0;
+  var SPEED=105;   // px/秒
+  function at(d){
+    for(var i=0;i<seg.length;i++){
+      var s0=seg[i];
+      if(d<=s0.start+s0.d){
+        var t=(d-s0.start)/s0.d;
+        return {x:s0.a.x+(s0.b.x-s0.a.x)*t, y:s0.a.y+(s0.b.y-s0.a.y)*t, dx:s0.b.x-s0.a.x, dy:s0.b.y-s0.a.y};
+      }
+    }
+    var L=seg[seg.length-1];
+    return {x:L.b.x,y:L.b.y,dx:L.b.x-L.a.x,dy:L.b.y-L.a.y};
+  }
+  function reveal(nodeIdx){
+    if(nodeIdx<revealed)return;
+    for(var i=revealed;i<=nodeIdx;i++){
+      if(pts[i])pts[i].el.classList.add('tl-shown');
+    }
+    revealed=Math.max(revealed,nodeIdx+1);
+  }
   function step(t){
-    const dt=Math.min(64,t-last); last=t;
+    var dt=Math.min(64,t-last); last=t;
     if(paused>0){ paused-=dt; }
     else{
-      pos+=dir*SPEED*dt/1000;
-      if(pos>=x1){ pos=x1; dir=-1; paused=700; }
-      if(pos<=x0){ pos=x0; dir=1; paused=700; }
+      dist+=SPEED*dt/1000;
+      if(dist>=total){ dist=total; paused=900; }
     }
-    walker.style.transform='translate('+pos+'px,0) scaleX('+dir+')';
+    var p=at(dist);
+    // 朝向：按这一段的水平方向；竖直段沿用上一次的方向
+    if(Math.abs(p.dx)>0.5) dirSign=p.dx>0?1:-1;
+    walker.style.transform='translate('+p.x+'px,'+(p.y-42)+'px) scaleX('+dirSign+')';
     walker.classList.toggle('walking', paused<=0);
+    // 走到哪个城市就点亮哪个
+    for(var i=0;i<pts.length;i++){
+      var d=Math.hypot(pts[i].x-p.x, pts[i].y-p.y);
+      if(d<26) reveal(i);
+    }
+    if(dist>=total){ reveal(pts.length-1); }
     raf=requestAnimationFrame(step);
   }
-  // 滚到第一个节点
-  requestAnimationFrame(function(){ raf=requestAnimationFrame(step); });
-  const wrap=track.parentElement;
-  if(wrap)wrap.scrollLeft=Math.max(0,x0-40);
+  requestAnimationFrame(function(t){ last=t; raf=requestAnimationFrame(step); });
+  var wrap=track.parentElement;
+  if(wrap)wrap.scrollLeft=0;
 }
+
 
 function memNormByld(){                            // id -> 归一化后的照片（查看器需要 .index/.image）
   const m=new Map();
