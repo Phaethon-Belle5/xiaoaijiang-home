@@ -497,6 +497,22 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   .shelf3d.opening .shelf3d-cover,.shelf3d.opening .shelf3d-inside{animation:none}
 }
 .mem-tree-inline{position:relative;height:min(70vh,620px);border-radius:14px;overflow:hidden;background:#f6f1e6}
+/* ══ 穹顶全屏 / 按钮 ══ */
+.dome-fs-btn{font:inherit;font-size:.78em;color:#dbeaff;background:rgba(130,179,250,.14);
+  border:1px solid rgba(130,179,250,.34);border-radius:999px;padding:6px 14px;cursor:pointer;
+  white-space:nowrap;transition:all .18s;flex:none}
+.dome-fs-btn:hover{background:rgba(130,179,250,.28);border-color:rgba(130,179,250,.6)}
+.life-photo-dome-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.life-photo-dome-head>div{flex:1;min-width:0}
+/* 全屏：只切类，不搬 DOM */
+#memPanel .life-photo-dome.dome-fs{position:fixed!important;inset:0!important;z-index:1400!important;
+  width:100vw!important;height:100vh!important;max-height:none!important;border-radius:0!important;
+  border:0!important;margin:0!important;align-self:auto!important;flex:none!important}
+#memPanel .life-photo-dome.dome-fs .life-photo-dome-stage{height:calc(100vh - 54px)!important;max-height:none!important}
+/* 返回按钮避开站点导航栏（导航高约 64px），并加底色保证在任何背景上都看得清 */
+#memPanel .life-photo-dome.dome-fs .dome-fs-btn{position:fixed;top:78px;right:26px;z-index:1600;
+  font-size:13px;padding:9px 18px;background:rgba(12,22,34,.86);border-color:rgba(130,179,250,.5);
+  box-shadow:0 6px 20px rgba(0,0,0,.5);backdrop-filter:blur(8px)}
 /* ══ 全屏影像层（年轮照片 / 照片墙 / 伞幕照片 / 旅行年轮树 都在这里打开）══ */
 
 
@@ -965,7 +981,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 旅途影像穹顶照搬参考项目参数';
+const GALLERY_BUILD='2026-10-22 · 穹顶支持全屏展示';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1857,6 +1873,27 @@ function memCloseFrame(){
   try{ document.body.style.overflow=''; }catch(e){}
 }
 let __memFrameLoading=false;
+/* 穹顶全屏：只切一个 CSS 类，不搬 DOM（搬 DOM 那条路之前踩过坑，退出时会归位失败） */
+function memDomeFullscreen(){
+  const sel=document.querySelector('#memPanel .life-photo-dome');
+  if(!sel)return;
+  if(sel.classList.contains('dome-fs')){memDomeExit();return;}
+  const dome=sel;
+  dome.classList.add('dome-fs');
+  dome.querySelector('.dome-fs-btn').textContent='← 返回';
+  dome.querySelector('.dome-fs-btn').setAttribute('aria-label','返回上一级');
+  dome.querySelector('.dome-fs-btn').onclick=memDomeFullscreen;
+  try{document.body.style.overflow='hidden';}catch(e){}
+}
+/* 退出全屏（点「← 返回」或 Esc） */
+function memDomeExit(){
+  const dome=document.querySelector('#memPanel .life-photo-dome.dome-fs');
+  if(!dome)return;
+  dome.classList.remove('dome-fs');
+  const b=dome.querySelector('.dome-fs-btn');
+  if(b){b.textContent='⛶ 全屏';b.setAttribute('aria-label','全屏展示');b.onclick=memDomeFullscreen;}
+  try{document.body.style.overflow='';}catch(e){}
+}
 async function memOpenAtlas(){
   if(__memFrameLoading)return; __memFrameLoading=true;
   try{
@@ -1943,7 +1980,8 @@ function memImagesHTML(){
       '<div class="life-timeline-pane" aria-label="旅程时间轴"><div class="life-year-list">'+timeline+'</div></div>'+
       '<section class="life-photo-dome" aria-label="旅途照片穹顶">'+
         '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
-          '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em></div>'+
+          '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em>'+
+          '<button class="dome-fs-btn" type="button" onclick="memDomeFullscreen()" aria-label="全屏展示">⛶ 全屏</button></div>'+
         '<div id="lifePhotoDome" class="life-photo-dome-stage">'+
           (photos.length?'':'<div class="life-photo-dome-empty"><strong>还没有旅途照片</strong><span>在管理后台添加照片后，这里会自动汇集。</span></div>')+
         '</div>'+
@@ -1988,7 +2026,7 @@ function memPhotoBig(src,cap){
     el.innerHTML='<figure class="mb-box"><img alt=""><figcaption></figcaption></figure>';
     document.body.appendChild(el);
     el.addEventListener('click',()=>el.classList.remove('show'));
-    document.addEventListener('keydown',e=>{ if(e.key==='Escape')el.classList.remove('show'); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape')el.classList.remove('show'); if(e.key==='Escape'&&typeof memDomeExit==='function')memDomeExit(); });
   }
   el.querySelector('img').src=viewUrl(src);
   el.querySelector('figcaption').textContent=cap||'';
