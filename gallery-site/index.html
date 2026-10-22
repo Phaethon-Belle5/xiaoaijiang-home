@@ -520,7 +520,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
    结构和样式整段搬自参考项目（assets/dome-gallery.css），逻辑一行没改。
    参考项目里它的高度由父级 .life-archive-layout（grid，height:100%）撑开，
    我这边没有那层布局，所以补一条高度；其余全交给它自己的 CSS。 */
-#memPanel .life-photo-dome{height:min(72vh,600px)}
+#memPanel .life-photo-dome{height:min(76vh,660px)}
 /* 记忆书架：书本结构与样式全部来自 assets/memory-shelf.css（原样搬运）。
    参考项目用一套 3D 布局 + WebGL 引擎把书排成弧形；我这边不搬那套引擎，
    改为按 left 横向排开 + 横向滚动（书本本身仍是它那套 absolute 定位）。 */
@@ -950,10 +950,10 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <!-- 记忆书架：书本的六面结构、翻书关键帧，整段搬自参考项目 -->
 <link rel="stylesheet" href="assets/memory-shelf.css?v=20261018">
 <!-- 照片墙：分层堆叠相册，样式整段搬自参考项目 -->
-<link rel="stylesheet" href="assets/photo-wall.css?v=20261022d">
+<link rel="stylesheet" href="assets/photo-wall.css?v=20261022f">
 <!-- 旅途影像左侧旅程时间轴，样式整段搬自参考项目 -->
-<link rel="stylesheet" href="assets/life-timeline.css?v=20261022b">
-<script src="assets/photo-wall.js?v=20261022e"></script>
+<link rel="stylesheet" href="assets/life-timeline.css?v=20261022f">
+<script src="assets/photo-wall.js?v=20261022f"></script>
 <!-- 记忆书架：Three.js 书架 rig（整段搬自参考项目），按需懒加载 -->
 <script src="assets/three.min.js?v=20261018b"></script>
 <script src="assets/shelf-three.js?v=20261018j"></script>
@@ -961,7 +961,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 旅途影像：左旅程时间轴 + 右穹顶（穹顶全屏已删）';
+const GALLERY_BUILD='2026-10-22 · 照片墙与穹顶缩图，一屏更多';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1970,7 +1970,7 @@ function mountMemImages(){
   // 参数与参考项目一致；overlayBlurColor 用深色，跟映像馆的深色底一致
   __domeGallery=new window.DomeGallery(host,{
     images:images,
-    segments:Math.max(24,Math.ceil(images.length/5)),
+    segments:Math.max(34,Math.ceil(images.length/3.2)),
     minRadius:400,
     fit:0.82,
     grayscale:false,
