@@ -1,0 +1,60 @@
+/* ══════════════════════════════════════════════════════════════
+   旅途影像 · 左侧旅程时间轴
+   样式整段搬自参考项目 zwxll/Your-China-Travel 的 .life-archive-layout /
+   .life-year-* / .life-city-* 规则，一行未改（深色配色，正好配映像馆的深底）。
+   ══════════════════════════════════════════════════════════════ */
+.life-archive-layout{height:100%;min-height:0;display:grid;grid-template-columns:minmax(380px,.78fr) minmax(520px,1.35fr);gap:18px;}
+.life-timeline-pane{min-width:0;min-height:0;overflow:auto;padding:4px 12px 20px 0;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:rgba(122,171,255,.38) rgba(255,255,255,.04);}
+.life-timeline-pane::-webkit-scrollbar{width:6px}
+.life-timeline-pane::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:6px}
+.life-timeline-pane::-webkit-scrollbar-thumb{background:rgba(122,171,255,.38);border-radius:6px}
+.life-year-list{width:100%;margin:0;padding:0;}
+.life-year{display:grid;grid-template-columns:84px 24px minmax(0,1fr);position:relative;min-height:150px;}
+.life-year:last-child{min-height:0;}
+.life-year-label{font:600 26px/1.2 'Playfair Display','Microsoft YaHei',serif;color:#edf5ff;padding-top:0;padding-right:12px;text-align:right;}
+.life-year-spine{position:relative;min-height:100%;border-left:1px solid rgba(255,255,255,.16);}
+.life-year-spine i{position:absolute;z-index:1;left:-5px;top:0;width:9px;height:9px;border-radius:50%;background:#7aabff;box-shadow:0 0 13px #5e9cff;}
+.life-year-content{min-width:0;padding:0 0 30px 20px;}
+.life-year-summary{color:#7da8eb;font-size:12px;letter-spacing:2px;}
+.life-year-note{margin:10px 0 15px;font:14px/1.9 'Microsoft YaHei',sans-serif;color:#8da1bd;}
+.life-year-cities{display:grid;gap:7px;margin:4px 0 0;position:relative;}
+.life-year-cities::before{content:"";position:absolute;left:5px;top:12px;bottom:12px;width:1px;background:linear-gradient(rgba(113,167,250,.5),rgba(113,167,250,.09));}
+.life-city-stop{display:flex;align-items:center;gap:11px;position:relative;}
+.life-city-stop>i{z-index:1;position:relative;flex:0 0 auto;width:11px;height:11px;border:2px solid #8cb8fa;border-radius:50%;background:#0c1c31;box-shadow:0 0 10px #5c9cff;}
+.life-city-entry{width:min(100%,300px);min-height:58px;padding:10px 14px;border:1px solid rgba(255,255,255,.1);border-radius:10px;
+    background:rgba(255,255,255,.06);display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px;
+    color:#dbe7f7;text-align:left;cursor:pointer;transition:border-color .2s ease,background .2s ease,transform .2s ease;}
+.life-city-entry:hover{border-color:rgba(113,167,250,.48);background:rgba(79,140,255,.13);transform:translateX(3px);}
+.life-city-entry:focus-visible{outline:2px solid #7dacff;outline-offset:2px;}
+.life-city-entry b{font:500 14px 'Microsoft YaHei',sans-serif;color:#edf5ff;}
+.life-city-entry em{font-style:normal;font-size:11px;color:#7289a9;white-space:nowrap;justify-self:end;}
+.life-city-entry span{grid-column:1/-1;display:block;font-size:11px;color:#6f86a5;}
+body.light-theme .journey-archive-head h2,body.light-theme .journey-empty strong,body.light-theme .life-year-label,body.light-theme .life-city-entry b,body.light-theme .journey-stat-tile strong,body.light-theme .journey-chart h3{color:#183044;}
+body.light-theme .journey-archive-head p,body.light-theme .journey-empty,body.light-theme .life-city-entry span,body.light-theme .journey-stat-tile span,body.light-theme .journey-stat-tile small,body.light-theme .journey-chart>p,body.light-theme .city-rank-row{color:#587287;}
+body.light-theme .life-city-entry,body.light-theme .journey-stat-tile,body.light-theme .journey-chart{background:rgba(255,255,255,.58);border-color:rgba(2,132,199,.14);}
+body.light-theme .life-year-spine{border-color:rgba(2,132,199,.22);}
+body.light-theme .life-year-note,body.light-theme .life-city-entry span{color:#587287;}
+.life-archive-layout{height:auto;display:flex;flex-direction:column}
+.life-timeline-pane{order:1;overflow:visible;padding-right:0}
+.life-year{grid-template-columns:68px 22px minmax(0,1fr);min-height:132px}
+.life-year-label{font-size:20px;padding-right:8px}
+.life-year-content{padding:0 0 24px 10px}
+.life-city-entry{width:100%;min-height:50px}
+.life-city-entry{transition:none;}
+.life-city-entry:hover{transform:none;}
+/* 我这边补两处布局适配：让左栏可滚动、高度撑满面板 */
+#memPanel .life-archive-layout{height:min(72vh,600px)}
+
+/* ── 我这边补的强制两栏 ──
+   参考项目那套栏目依赖它自己的外层容器与 JS 切状态；这里直接钉死：
+   左栏放时间轴（可滚），右栏放穹顶（撑满高度），互不重叠。 */
+#memPanel .life-archive-layout{display:grid!important;align-items:stretch!important;
+  grid-template-columns:minmax(320px,36%) minmax(0,1fr)!important;
+  gap:16px!important;height:min(72vh,600px)!important;min-height:0!important}
+#memPanel .life-timeline-pane{grid-column:1!important;grid-row:1!important;
+  min-width:0!important;min-height:0!important;overflow:auto!important;padding:4px 6px 20px 0!important}
+#memPanel .life-photo-dome{grid-column:2!important;grid-row:1!important;
+  position:relative!important;order:0!important;flex:none!important;
+  height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important}
+#memPanel .life-photo-dome-stage{flex:1 1 auto!important;min-height:0!important}
+#memPanel .life-year-list{padding-right:10px}

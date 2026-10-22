@@ -498,13 +498,10 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 }
 .mem-tree-inline{position:relative;height:min(70vh,620px);border-radius:14px;overflow:hidden;background:#f6f1e6}
 /* ══ 全屏影像层（年轮照片 / 照片墙 / 伞幕照片 / 旅行年轮树 都在这里打开）══ */
-/* 穹顶全屏 */
-.life-photo-dome.dome-fullscreen{position:fixed!important;inset:0!important;z-index:1400!important;
-  height:100vh!important;width:100vw!important;border-radius:0!important;margin:0!important}
-.dome-full-close{position:absolute;top:16px;right:20px;z-index:20;font:inherit;font-size:.9em;
-  color:#e9e2d0;background:rgba(10,16,24,.82);border:1px solid rgba(212,168,67,.4);
-  border-radius:999px;padding:9px 20px;cursor:pointer;backdrop-filter:blur(6px)}
-.dome-full-close:hover{background:rgba(212,168,67,.24)}
+
+
+
+
 .mem-frame-layer{position:fixed;inset:0;z-index:1300;display:flex;flex-direction:column;background:#0b1018}
 .mem-frame-layer[hidden]{display:none}
 .mfl-bar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -954,6 +951,8 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <link rel="stylesheet" href="assets/memory-shelf.css?v=20261018">
 <!-- 照片墙：分层堆叠相册，样式整段搬自参考项目 -->
 <link rel="stylesheet" href="assets/photo-wall.css?v=20261022d">
+<!-- 旅途影像左侧旅程时间轴，样式整段搬自参考项目 -->
+<link rel="stylesheet" href="assets/life-timeline.css?v=20261022b">
 <script src="assets/photo-wall.js?v=20261022e"></script>
 <!-- 记忆书架：Three.js 书架 rig（整段搬自参考项目），按需懒加载 -->
 <script src="assets/three.min.js?v=20261018b"></script>
@@ -962,7 +961,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 照片墙网格/堆叠双形态';
+const GALLERY_BUILD='2026-10-22 · 旅途影像：左旅程时间轴 + 右穹顶（穹顶全屏已删）';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1448,7 +1447,8 @@ function renderMemZone(){
     if(memTab==='shelf'&&typeof initShelf3D==='function')initShelf3D();
     if(memTab==='shelf'&&typeof initShelfRail==='function')initShelfRail();
     if(memTab==='shelf'&&typeof memShelfBindActive==='function')memShelfBindActive();
-    if(memTab==='images'&&typeof mountMemImages==='function')mountMemImages();
+    if(memTab==='images'&&typeof mountMemImages==='function'){mountMemImages();}
+    if(memTab==='images'&&typeof memBindJourneyCities==='function')memBindJourneyCities();
     if(memTab==='rings'&&typeof mountMemRings==='function')mountMemRings();
   }catch(e){
     box.innerHTML='<div class="mem-loading">这部分渲染出错了：'+escHtml(e.message)+'</div>';
@@ -1861,25 +1861,7 @@ async function memOpenAtlas(){
   }catch(e){ toast('加载失败：'+e.message); }
   finally{ __memFrameLoading=false; }
 }
-/* 穹顶全屏：不搬 DOM，直接给穹顶挂一个 fixed 全屏类，关闭时摘掉 —— 简单且一定能归位 */
-function memDomeFull(){
-  const dome=document.querySelector('#memPanel .life-photo-dome');
-  if(!dome)return;
-  if(dome.classList.contains('dome-fullscreen')){ memDomeExit(); return; }
-  dome.classList.add('dome-fullscreen');
-  const btn=document.createElement('button');
-  btn.type='button'; btn.className='dome-full-close'; btn.textContent='← 返回';
-  btn.onclick=memDomeExit;
-  dome.appendChild(btn);
-  try{ document.body.style.overflow='hidden'; }catch(e){}
-}
-function memDomeExit(){
-  const dome=document.querySelector('.life-photo-dome.dome-fullscreen');
-  if(!dome)return;
-  dome.classList.remove('dome-fullscreen');
-  const b=dome.querySelector('.dome-full-close'); if(b)b.remove();
-  try{ document.body.style.overflow=''; }catch(e){}
-}
+
 /* 照片墙 —— 用搬来的堆叠相册样式（photo-wall.css），数据用我的照片 */
 function memOpenWall(){
   if(typeof window.PhotoWall!=='object'){ toast('照片墙还没加载'); return; }
@@ -1916,21 +1898,68 @@ async function memOpenTree(){
   finally{ __memFrameLoading=false; }
 }
 let __domeGallery=null;
+/* ═══════════════════════════════════════════════════════════════
+     旅途影像 —— 左边旅程时间轴、右边球形照片（照参考项目的
+     .life-archive-layout 两栏布局：左时间轴 → 点城市进城市详情，
+     右穹顶画廊）
+     ═══════════════════════════════════════════════════════════════ */
+function memJourneyYears(){
+  const by={};
+  (GALLERY||[]).forEach(p=>{
+    const y=String(p.date||'').slice(0,4);
+    if(!/^\d{4}$/.test(y))return;
+    const key=p.cityKey||'未归类';
+    if(!by[y])by[y]={year:y,cities:new Map(),total:0};
+    by[y].cities.set(key,(by[y].cities.get(key)||0)+1);
+    by[y].total++;
+  });
+  return Object.values(by).sort((a,b)=>b.year.localeCompare(a.year));
+}
 function memImagesHTML(){
   const photos=memAllPhotos();
-return '<div class="ti-actions">'+
+  const years=memJourneyYears();
+  const timeline=years.length?years.map(y=>{
+    const cities=[...y.cities.entries()].sort((a,b)=>b[1]-a[1]);
+    return '<section class="life-year">'+
+      '<div class="life-year-label">'+y.year+'</div>'+
+      '<div class="life-year-spine"><i></i></div>'+
+      '<div class="life-year-content"><div class="life-year-summary">'+y.total+' 张照片 · '+cities.length+' 座城市</div>'+
+        '<div class="life-year-cities">'+cities.map(([name,cnt])=>
+          '<div class="life-city-stop"><i></i><button class="life-city-entry" type="button" data-city="'+escHtml(name)+'" aria-label="查看'+escHtml(name)+'的城市详情">'+
+            '<b>'+escHtml(name)+'</b><em>'+cnt+' 张</em></button></div>'
+        ).join('')+'</div></div>'+
+    '</section>';
+  }).join(''):'<div class="life-year-note">还没有带日期的照片。</div>';
+  return '<div class="ti-actions">'+
       '<button type="button" onclick="memOpenAtlas()">◉ 年轮照片</button>'+
       '<button type="button" onclick="memOpenWall()">▦ 照片墙</button>'+
       '<button type="button" onclick="memOpenCanopy()">☂ 伞幕照片</button>'+
-      '<button type="button" onclick="memDomeFull()">⛶ 穹顶全屏</button>'+
     '</div>'+
-    '<div class="life-photo-dome" aria-label="旅途照片穹顶">'+
-    '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
-      '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em></div>'+
-    '<div id="lifePhotoDome" class="life-photo-dome-stage">'+
-      (photos.length?'':'<div class="life-photo-dome-empty"><strong>还没有旅途照片</strong><span>在管理后台添加照片后，这里会自动汇集。</span></div>')+
-    '</div>'+
-  '</div>';
+    '<div class="life-archive-layout">'+
+      '<div class="life-timeline-pane" aria-label="旅程时间轴"><div class="life-year-list">'+timeline+'</div></div>'+
+      '<section class="life-photo-dome" aria-label="旅途照片穹顶">'+
+        '<div class="life-photo-dome-head"><div><b>旅途影像</b><span>按时间轴城市顺序汇集</span></div>'+
+          '<em>'+(photos.length?photos.length+' 张照片 · 拖动浏览':'暂无照片')+'</em></div>'+
+        '<div id="lifePhotoDome" class="life-photo-dome-stage">'+
+          (photos.length?'':'<div class="life-photo-dome-empty"><strong>还没有旅途照片</strong><span>在管理后台添加照片后，这里会自动汇集。</span></div>')+
+        '</div>'+
+      '</section>'+
+    '</div>';
+}
+/* 点时间轴里的城市 → 打开城市详情 */
+function memBindJourneyCities(){
+  document.querySelectorAll('#memPanel .life-city-entry').forEach(function(btn){
+    if(btn.dataset.bound==='1')return;
+    btn.dataset.bound='1';
+    btn.addEventListener('click',function(){
+      const name=btn.dataset.city||'';
+      const city=(typeof mapCityPoints!=='undefined'?mapCityPoints:[]).find(function(c){
+        return (c.cityKey&&c.cityKey===name)||(c.name&&c.name===name);
+      });
+      if(city&&typeof openCityDetail==='function'){ openCityDetail(city); return; }
+      if(typeof toast==='function')toast('没有找到「'+name+'」的城市详情');
+    });
+  });
 }
 function mountMemImages(){
   const host=document.getElementById('lifePhotoDome');
