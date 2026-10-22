@@ -961,7 +961,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-22 · 照片墙与穹顶缩图，一屏更多';
+const GALLERY_BUILD='2026-10-22 · 穹顶铺满 + 照片更小更多';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1970,9 +1970,9 @@ function mountMemImages(){
   // 参数与参考项目一致；overlayBlurColor 用深色，跟映像馆的深色底一致
   __domeGallery=new window.DomeGallery(host,{
     images:images,
-    segments:Math.max(34,Math.ceil(images.length/3.2)),
-    minRadius:400,
-    fit:0.82,
+    segments:Math.max(50,Math.ceil(images.length/2.4)),
+    minRadius:260,
+    fit:1.32,
     grayscale:false,
     overlayBlurColor:'#08182a'
   });
