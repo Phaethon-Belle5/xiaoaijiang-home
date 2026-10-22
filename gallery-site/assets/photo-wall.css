@@ -216,3 +216,20 @@
 @media (max-width:760px){
   #pwViewer .photo-card{margin:-160px 0 0 -120px}
 }
+
+/* ── 我这边加的两块：网格态的墙 + 形态切换按钮 ──
+   相框与挂杆本身用的是上面搬来的 .curtain-panel / .curtain-rod，样式未改。 */
+#pwViewer .pw-wall{position:absolute;inset:0;overflow-y:auto;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:26px 22px;
+  padding:42px 44px 54px;background:linear-gradient(180deg,#fbf6ea,#f1e9d8);align-content:start}
+#pwViewer .pw-wall::-webkit-scrollbar{width:8px}
+#pwViewer .pw-wall::-webkit-scrollbar-thumb{background:rgba(120,105,80,.3);border-radius:4px}
+#pwViewer .curtain-panel{cursor:pointer;transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s}
+#pwViewer .curtain-panel:hover{transform:translateY(-4px) rotate(-.6deg);box-shadow:0 14px 30px rgba(60,50,30,.26)}
+#pwViewer .curtain-panel img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#201d1a}
+#pwViewer .pw-toggle{position:absolute;top:18px;right:20px;z-index:40;font:inherit;font-size:.84em;
+  color:#fff;background:rgba(20,24,30,.72);border:1px solid rgba(255,255,255,.22);border-radius:999px;
+  padding:9px 18px;cursor:pointer;backdrop-filter:blur(6px)}
+#pwViewer .pw-toggle:hover{background:rgba(212,168,67,.28);border-color:rgba(212,168,67,.6)}
+#pwViewer.pw-grid-mode .nav-btn{display:none}
+#pwViewer.reveal .pw-count{bottom:14px}

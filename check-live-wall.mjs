@@ -1,0 +1,10 @@
+const UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36';
+const js = await (await fetch('https://map.231060101.xyz/assets/photo-wall.js?v='+Date.now(),{headers:{'User-Agent':UA}})).text();
+console.log('  photo-wall.js: ' + (js.length/1024).toFixed(1) + ' KB');
+console.log('  含 pw-grid-mode: ' + (js.includes('pw-grid-mode')?'✅':'❌'));
+console.log('  含 setMode: ' + (js.includes('function setMode')?'✅':'❌'));
+console.log('  show 不再被冲掉: ' + (js.includes(".contains('show')?' show':''")?'✅':'❌'));
+const css = await (await fetch('https://map.231060101.xyz/assets/photo-wall.css?v='+Date.now(),{headers:{'User-Agent':UA}})).text();
+console.log('  photo-wall.css: ' + (css.length/1024).toFixed(1) + ' KB  含 .pw-wall: ' + (css.includes('.pw-wall{')?'✅':'❌'));
+const html = await (await fetch('https://map.231060101.xyz/?cb='+Date.now(),{headers:{'User-Agent':UA}})).text();
+console.log('  线上版本: ' + (html.match(/const GALLERY_BUILD='([^']+)'/)||[])[1]);
