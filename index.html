@@ -1376,6 +1376,36 @@ main#main{position:relative;z-index:1}
 .dim-rail .memory-book-title{color:#253943}
 .dim-rail .memory-book-index{color:#3d525c}
 .dim-rail .memory-book-spine-copy{color:var(--book-ink,#f3ecd7)}
+/* ★ 封面：只放封面图，铺满整本书 —— 不放书名/编号/作者，免得盖住用户的图 */
+.dim-rail .memory-book-cover{padding:0;background:#EFEBE2}
+.dim-rail .memory-book-cover .memory-book-photo{position:absolute;inset:0;margin:0;min-height:0;
+  z-index:1;background-size:cover;background-position:center;background-repeat:no-repeat}
+.dim-rail .memory-book-cover .memory-book-photo::after{display:none}
+.dim-rail .dim-cover-empty{display:flex;align-items:center;justify-content:center;
+  color:#A79F8C;background:linear-gradient(160deg,#FBFAF6,#F0EDE6)}
+/* ★ 翻开后两页里的正文 */
+.dim-rail .dim-page-text{display:block;font-size:11px;line-height:1.9;color:#2b4250;
+  white-space:pre-wrap;word-break:break-word;max-height:60%;overflow:auto}
+.dim-rail .dim-page-list{display:block;font-size:10px;line-height:1.9;color:#3d5a68;max-height:34%;overflow:auto}
+.dim-rail .dim-page-list span{display:block}
+/* 翻开时让这本书浮到最前，别被其它书压住 */
+.dim-rail .memory-book.opening{z-index:70}
+/* ★ 翻开动画：自己写一套，不依赖 memory-shelf.css 里那两条
+   （实测那两条的 animationName 一直是 none，规则在却不生效）。
+   封面绕左侧书脊翻到 -105°，同时封内页翻出来 —— 就是视频里"书摊成两页"的动作。 */
+@keyframes dimCoverOpen{from{transform:translateZ(20px) rotateY(0deg)}to{transform:translateZ(20px) rotateY(-180deg)}}
+@keyframes dimInsideOpen{from{transform:translateZ(19px) rotateY(180deg)}to{transform:translateZ(1px) translateX(-100%) rotateY(0deg)}}
+.dim-rail .memory-book.opening .memory-book-cover{
+  transform-origin:left center;
+  animation:dimCoverOpen .72s .12s cubic-bezier(.55,.06,.68,.19) both !important}
+.dim-rail .memory-book.opening .memory-book-cover-inside{
+  transform-origin:left center;
+  animation:dimInsideOpen .72s .12s cubic-bezier(.55,.06,.68,.19) both !important}
+.dim-rail .memory-book.opening .memory-book-opening-page{opacity:1 !important;transition:opacity .3s .3s}
+@media (prefers-reduced-motion: reduce){
+  .dim-rail .memory-book.opening .memory-book-cover,
+  .dim-rail .memory-book.opening .memory-book-cover-inside{animation:none !important}
+}
 /* ★ 立体感：映像馆的这三条是关键 —— 选中的书微微侧转（露出左侧书脊的布面厚度）、
    书脊面显形、封底隐去。没有这三条，书就是一张平贴的纸，一点 3D 都没有。 */
 .dim-rail .memory-book.active .memory-book-object{transform:rotateY(-7deg) translateZ(6px)}
@@ -4867,11 +4897,14 @@ function bookCard(it,idx,pos){
       '<span class="memory-book-shadow" aria-hidden="true"></span>'+
       '<span class="memory-book-object">'+
         '<span class="memory-book-back" aria-hidden="true"></span>'+
+        // 右页（翻开后）：简介与评价的正文
         '<span class="memory-book-page-face" aria-hidden="true"><span class="memory-book-opening-page">'+
-          '<span class="memory-book-opening-page-label"><span>档案</span><span>'+escHtml(kindLabel)+'</span></span>'+
-          '<span class="memory-book-opening-entry"><span>01</span><b>简介</b><small>'+(review?'已写':'未写')+'</small></span>'+
-          '<span class="memory-book-opening-entry"><span>02</span><b>评价</b><small>'+lines.length+' 条</small></span>'+
-          '<span class="memory-book-opening-entry"><span>03</span><b>编码</b><small>'+no+'</small></span>'+
+          '<span class="memory-book-opening-page-label"><span>简介</span><span>'+escHtml(kindLabel)+'</span></span>'+
+          '<span class="dim-page-text">'+escHtml(review||'还没有写简介。')+'</span>'+
+          (lines.length?
+            '<span class="memory-book-opening-page-label" style="margin-top:16px"><span>评价</span><span>'+lines.length+' 条</span></span>'+
+            '<span class="dim-page-list">'+lines.map(l=>'<span>· '+escHtml(l)+'</span>').join('')+'</span>'
+            :'')+
         '</span></span>'+
         '<span class="memory-book-page-edge" aria-hidden="true"></span>'+
         '<span class="memory-book-edge-top" aria-hidden="true"></span>'+
@@ -4881,22 +4914,22 @@ function bookCard(it,idx,pos){
         '<span class="memory-book-cover-inside" aria-hidden="true">'+
           '<span class="memory-book-opening-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
           '<span class="memory-book-opening-summary">'+
-            '<small>次元柜档案</small>'+
+            '<small>'+escHtml(kindLabel)+(sub?' · '+escHtml(sub):'')+'</small>'+
             '<strong>'+escHtml(title)+'</strong>'+
-            '<span>'+escHtml(creator||kindLabel)+'</span>'+
-            '<span class="memory-book-opening-totals">'+escHtml(kindLabel)+'　'+(review?'已写简介':'暂无简介')+'</span>'+
+            '<span>'+escHtml([creator,String(it.date||'')].filter(Boolean).join(' · ')||'—')+'</span>'+
+            '<span class="memory-book-opening-totals">'+
+              (Number(it.rating)?('★ '+String(it.rating))+'　':'')+(lines.length?lines.length+' 条评价':'暂无评价')+
+            '</span>'+
           '</span>'+
         '</span>'+
-        // 封面：结构照抄映像馆的 7 个元素，只把数据换成次元柜的
-        //   index=分类名  title=书名  photo=封面图  meta=作者/日期
+        // 封面：只放封面图本身，铺满整本书。不放书名 / 编号 / 作者 / 城市数 ——
+        // 那些会盖住用户自己的封面图（用户明确要求：封面就只要显示封面）。
         '<span class="memory-book-cover">'+
           '<span class="memory-book-mark" aria-hidden="true"></span>'+
-          '<span class="memory-book-index">'+escHtml(kindLabel)+'</span>'+
-          '<strong class="memory-book-title'+(title.length>7?' extra-long':title.length>4?' long':'')+'">'+escHtml(title)+'</strong>'+
-          '<span class="memory-book-subtitle">'+escHtml(sub||creator||'私人档案')+'</span>'+
-          '<span class="memory-book-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
-          '<span class="memory-book-meta"><span>'+escHtml(creator||'未填作者')+'</span><span>'+escHtml(String(it.date||''))+'</span></span>'+
-          '<span class="memory-book-open">'+escHtml(sub||kindLabel)+'</span>'+
+          (cover
+            ? '<span class="memory-book-photo" style="background-image:url(\''+escHtml(cover)+'\')"></span>'
+            : '<span class="memory-book-photo dim-cover-empty">'+dimIconSvg(it.kind,46)+'</span>')+
+        '</span>'+
         '</span>'+
       '</span>'+
     '</button>';
@@ -4982,6 +5015,22 @@ function dimShelfSetActive(el){
   dimHover(idx,pos);
   try{dimCenterBook(el);}catch(e){}
 }
+// 翻开 / 合上这本书 —— 对应映像馆 openBook 的观感，但不跳到阅读器：
+// 书本身翻开成左右两页（左页封面与档案、右页简介与评价），其余书退到画面外。
+function dimBookToggle(b){
+  const shelf=document.getElementById('dim-grid');
+  if(!shelf||!b)return;
+  const wasOpen=b.classList.contains('opening');
+  shelf.querySelectorAll('.memory-book.opening').forEach(x=>x.classList.remove('opening'));
+  if(wasOpen){
+    shelf.classList.remove('opening');
+    return;
+  }
+  b.classList.add('opening');
+  shelf.classList.add('opening');
+  // 翻开时把它滑到中间，别贴着边
+  try{dimCenterBook(b);}catch(e){}
+}
 function dimShelfBind(){
   const shelf=document.getElementById('dim-grid');
   if(!shelf)return;
@@ -5004,7 +5053,8 @@ function dimShelfBind(){
       return;
     }
     if(shelf.__justDragged){shelf.__justDragged=false;return;}
-    openDimDetail(+b.dataset.dimBook,+b.dataset.pos,b);
+    // 再点已选中的书 → 书自己翻开成左右两页（照映像馆），再点合上
+    dimBookToggle(b);
   },true);
 
   // 拖动（映像馆 initShelfRail 同款）
