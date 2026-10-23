@@ -176,263 +176,187 @@
 .memo-gbtn.on{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
 .memo-arch-taggroup .memo-arch-label{color:var(--gold-bright)}
 .memo-arch-taggroup .memo-arch-label::before{content:'#';opacity:.55;margin-right:1px}
-/* ============ 次元柜（书籍 / 影视 / 游戏）：奶白玻璃 · 档案式 · 立体书架 ============ */
-/* ============================================================
-   次元柜 · 奶白玻璃 / 档案式排版 / 立体书架
-   参考 mikufoxxx/Wenku8_Flutter 的「奶白玻璃、档案式排版与立体书架」
-   · 奶白玻璃：暖奶白底 + 细描边 + 轻微透出页面壁纸的模糊
-   · 档案式排版：01 / CATALOG 编号小标、大写拉丁、等宽编码、发丝线端点
-   · 立体书架：书脊竖立带编号、整排透视、悬停把书抽出翻成封面
-   这一块用自己的一份配色变量，不随站点主题改变（深色站里像一块嵌上去的纸架）。
-   ============================================================ */
-.dim-paper,.dim-modal{
-  --dp-bg:#F6F4EF;
-  --dp-surface:#FCFBF7;
-  --dp-surface2:#F2F0E9;
-  --dp-ink:#23221E;
-  --dp-ink2:#8A806B;
-  --dp-ink3:#A79F8C;
-  --dp-line:rgba(35,34,30,.14);
-  --dp-line2:rgba(35,34,30,.075);
-  --dp-dark:#20201D;
-  --dp-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
-.dim-paper{position:relative;border-radius:22px;padding:32px 30px 24px;color:var(--dp-ink);
-  background:linear-gradient(180deg,rgba(252,251,247,.95),rgba(242,240,234,.97));
-  border:1px solid var(--dp-line);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 26px 70px -34px rgba(0,0,0,.6);
-  backdrop-filter:blur(20px) saturate(1.05);-webkit-backdrop-filter:blur(20px) saturate(1.05);
-  overflow:hidden}
-/* 档案式页眉 */
-.dim-ahead{margin-bottom:4px}
-.dim-kicker{display:flex;align-items:center;gap:7px;font-family:var(--dp-mono);font-size:.64em;letter-spacing:.16em;color:var(--dp-ink2);text-transform:uppercase}
-.dim-k-num{color:var(--dp-ink)}
-.dim-k-slash{opacity:.4}
-.dim-k-line{flex:1;height:1px;background:var(--dp-line);margin:0 5px}
-.dim-k-dot{width:5px;height:5px;border-radius:50%;background:var(--dp-ink);opacity:.5;flex:none}
-.dim-h2{font-family:var(--font-display,inherit);font-size:clamp(1.85rem,3vw,2.4rem);font-weight:600;letter-spacing:.01em;margin:13px 0 5px;color:var(--dp-ink);line-height:1.15}
-.dim-en{font-family:var(--dp-mono);font-size:.62em;letter-spacing:.2em;color:var(--dp-ink2);margin:0 0 4px}
-/* 工具条 */
-.dim-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-  margin:20px 0 0;padding-bottom:14px;border-bottom:1px solid var(--dp-line2)}
-.dim-tabs{display:flex;gap:3px;background:rgba(35,34,30,.055);border:1px solid var(--dp-line2);border-radius:999px;padding:3px;flex:none}
-.dim-tab{font:inherit;font-size:.77em;color:var(--dp-ink2);background:transparent;border:none;border-radius:999px;padding:6px 15px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .22s var(--ease-out);white-space:nowrap}
-.dim-tab:hover{color:var(--dp-ink)}
-.dim-tab:active{transform:scale(.96)}
-.dim-tab.active{color:#FCFBF7;background:var(--dp-dark);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+/* ============ 次元柜（书籍 / 影视 / 游戏）============ */
+.dim-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-6)}
+.dim-tabs{display:flex;gap:5px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:999px;padding:4px;flex:none}
+.dim-tab{font:inherit;font-size:.82em;color:var(--text-secondary);background:transparent;border:none;border-radius:999px;padding:7px 18px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .22s var(--ease-out);white-space:nowrap}
+.dim-tab:hover{color:var(--text-primary)}
+.dim-tab.active{color:#1a1408;background:linear-gradient(135deg,var(--gold-bright),var(--gold));box-shadow:0 2px 10px var(--gold-glow)}
 .dim-tab-ic{display:block;flex:none;transition:transform .26s var(--ease-out)}
-.dim-tab:hover .dim-tab-ic{transform:translateY(-1px) scale(1.08)}
-.dim-subs{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-.dim-sub{font:inherit;font-size:.71em;color:var(--dp-ink2);background:transparent;border:1px solid var(--dp-line);border-radius:999px;padding:3px 11px;cursor:pointer;display:flex;gap:5px;align-items:center;transition:all .2s}
-.dim-sub:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.32)}
-.dim-sub.on{color:var(--dp-ink);border-color:var(--dp-ink);background:rgba(35,34,30,.06)}
-.dim-sub span{font-size:.9em;opacity:.6;font-variant-numeric:tabular-nums}
-/* ============ 立体书架 ============ */
-.dim-shelf{display:flex;align-items:flex-end;gap:0;min-height:280px;
-  padding:40px 10px 34px;perspective:1300px;
-  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
-  scroll-behavior:smooth;overscroll-behavior-x:contain}
-.dim-shelf::-webkit-scrollbar{display:none}
-.dim-shelf::after{content:'';position:sticky;right:0;left:0;align-self:flex-end;height:1px;background:var(--dp-line);margin-bottom:-20px;pointer-events:none;flex:none;width:100%}
-.spine-book{position:relative;flex:none;width:34px;height:212px;margin-right:2px;
-  transform:rotateY(-20deg);transform-origin:0% 100%;
-  transition:width .5s cubic-bezier(.22,.61,.36,1),transform .5s cubic-bezier(.22,.61,.36,1),
-             margin .5s cubic-bezier(.22,.61,.36,1),opacity .3s;
-  cursor:pointer;will-change:transform,width}
-.spine-book:last-child{margin-right:0}
-.sp-spine{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:9px;
-  padding:11px 0 13px;overflow:hidden;
-  background:linear-gradient(90deg,#E3DFD3 0%,#F7F3EA 20%,#FFF9F2 56%,#F2F0E9 84%,#DED9CC 100%);
-  border:1px solid rgba(35,34,30,.15);border-radius:3px 4px 4px 3px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 1px 0 0 rgba(255,255,255,.6);
-  color:var(--dp-ink);transition:opacity .24s ease-out}
-.sp-no{font-family:var(--dp-mono);font-size:.56em;letter-spacing:.06em;color:var(--dp-ink2);flex:none}
-.sp-title{writing-mode:vertical-rl;text-orientation:mixed;font-size:.74em;line-height:1.2;
-  letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-height:calc(100% - 44px);color:var(--dp-ink)}
-/* 书脊底部的小圆点（参考源码里的 Icon(CupertinoIcons.circle, size:6)） */
-.sp-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--dp-ink3);opacity:.7;margin-top:auto}
-/* 封面：整张照片铺满，不再有上下黑边与编号 */
-.sp-cover{position:absolute;left:0;top:0;bottom:0;width:152px;background:transparent;
-  border-radius:3px 5px 5px 3px;overflow:hidden;opacity:0;pointer-events:none;
-  transform-origin:0% 50%;transform-style:preserve-3d;backface-visibility:hidden;
-  transition:opacity .28s ease-out;
-  box-shadow:0 20px 44px -16px rgba(0,0,0,.55)}
-.sp-cover>.sp-img{width:100%;height:100%;display:block;object-fit:cover}
-.sp-img-broken{display:none}
-.sp-cover>.sp-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  color:var(--dp-ink2);background:linear-gradient(160deg,#FBFAF6,#EFEBE2)}
-/* 翻开后露出的内页（记忆书架那种"书被打开"的效果） */
-.sp-inside{position:absolute;left:0;top:0;bottom:0;width:152px;display:flex;flex-direction:column;
-  align-items:flex-start;justify-content:center;gap:7px;padding:18px 14px;pointer-events:none;
-  background:linear-gradient(160deg,#FCFBF7,#F2EFE8);border-radius:3px 5px 5px 3px;
-  border:1px solid var(--dp-line);opacity:0;transition:opacity .3s ease-out;overflow:hidden}
-.sp-inside b{font-size:.78em;font-weight:600;color:var(--dp-ink);line-height:1.4;
-  writing-mode:vertical-rl;text-orientation:mixed;max-height:100%;overflow:hidden}
-.sp-inside i{font-style:normal;font-family:var(--dp-mono);font-size:.52em;letter-spacing:.08em;
-  color:var(--dp-ink2);writing-mode:vertical-rl}
-.sp-shadow{position:absolute;left:1px;right:-7px;bottom:-10px;height:16px;pointer-events:none;
-  border-radius:50%;
-  background:radial-gradient(50% 100% at 50% 0%,rgba(35,34,30,.26),rgba(35,34,30,0) 72%);
-  filter:blur(2px);transition:opacity .4s}
-/* 悬停 / 键盘聚焦：把书抽出来、翻成封面 */
-.spine-book:hover,.spine-book:focus-visible{width:152px;transform:rotateY(0deg);margin-left:5px;margin-right:9px;z-index:6}
-.spine-book:hover .sp-spine,.spine-book:focus-visible .sp-spine{opacity:0}
-.spine-book:hover .sp-cover,.spine-book:focus-visible .sp-cover{opacity:1;transition-delay:.08s;pointer-events:auto}
-.spine-book:focus-visible{outline:2px solid var(--dp-ink);outline-offset:4px;border-radius:4px}
-/* 点击：像从记忆书架上抽出一本、封面绕书脊翻开、露出内页 ——
-   和映像馆 .shelf3d.opening 的弹出手感一致 */
-.spine-book.opening{width:152px;transform:rotateY(0deg) translate3d(0,-8px,70px);
-  margin-left:5px;margin-right:9px;z-index:60;cursor:default}
-.spine-book.opening .sp-spine{opacity:0}
-.spine-book.opening .sp-cover{opacity:1;pointer-events:auto;
-  animation:spCoverOpen .62s .1s cubic-bezier(.55,.06,.68,.19) both}
-.spine-book.opening .sp-inside{opacity:1;transition-delay:.34s}
-@keyframes spCoverOpen{from{transform:rotateY(0deg)}to{transform:rotateY(-108deg)}}
-@media (prefers-reduced-motion: reduce){
-  .spine-book.opening .sp-cover{animation:none;opacity:0}
-  .spine-book.opening .sp-inside{opacity:1;transition:none}
-}
-/* 书架下方那条「档案条目」 */
-.dim-feat{display:flex;align-items:center;gap:14px;min-height:54px;margin-top:4px;padding:16px 2px 0;
-  border-top:1px solid var(--dp-line2)}
-.df-l{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;flex:1;min-width:0}
-.df-no{flex:none;font-family:var(--dp-mono);font-size:.6em;letter-spacing:.1em;color:var(--dp-ink2);
-  border:1px solid var(--dp-line);border-radius:3px;padding:1px 5px}
-.df-title{font-size:1.02em;font-weight:600;color:var(--dp-ink);letter-spacing:.01em;word-break:break-word}
-.df-meta{font-size:.73em;color:var(--dp-ink2)}
-.df-star{flex:none}
-.df-arrow{flex:none;color:var(--dp-ink2);font-size:1.02em}
-/* 计数行 */
-.dim-count{text-align:center;font-family:var(--dp-mono);font-size:.62em;letter-spacing:.16em;
-  color:var(--dp-ink3);margin:14px 0 0;text-transform:uppercase;min-height:1em}
-.dim-empty{width:100%;text-align:center;color:var(--dp-ink2);font-size:.86em;padding:48px 16px;line-height:2}
-.dim-svg{display:block}
-.dim-empty .dim-svg{margin:0 auto 12px;opacity:.45;color:var(--dp-ink3)}
-/* 星级（书架下方的深色版） */
-.dim-stars{display:inline-flex;align-items:center;gap:1px;font-size:.92em;line-height:1}
-.dim-star{color:rgba(35,34,30,.2)}
-.dim-star.full{color:#C9A961}
-.dim-star.half{background:linear-gradient(90deg,#C9A961 50%,rgba(35,34,30,.2) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.dim-score{margin-left:6px;font-family:var(--dp-mono);font-size:.82em;color:var(--dp-ink2);font-variant-numeric:tabular-nums}
-/* 切换分类时的错落入场 */
-@keyframes dimIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.dim-anim .spine-book{animation:dimIn .42s var(--ease-out) both}
-.dim-anim .spine-book:nth-child(1){animation-delay:0s}
-.dim-anim .spine-book:nth-child(2){animation-delay:.03s}
-.dim-anim .spine-book:nth-child(3){animation-delay:.06s}
-.dim-anim .spine-book:nth-child(4){animation-delay:.09s}
-.dim-anim .spine-book:nth-child(5){animation-delay:.12s}
-.dim-anim .spine-book:nth-child(6){animation-delay:.15s}
-.dim-anim .spine-book:nth-child(n+7){animation-delay:.18s}
-@media (max-width:820px){
-  .dim-paper{padding:26px 20px 20px;border-radius:18px}
-  .dim-toolbar{flex-direction:column;align-items:stretch;gap:10px}
-  .dim-tabs{justify-content:center}
-  .dim-subs{justify-content:center}
-  .dim-shelf{min-height:250px;padding:34px 4px 30px}
-  .spine-book{width:30px;height:186px}
-  .spine-book:hover,.spine-book:focus-visible{width:136px}
-  .sp-cover{width:136px}
-}
+.dim-tab:hover .dim-tab-ic{transform:translateY(-1px) scale(1.1)}
+.dim-tab:active{transform:scale(.95)}
+.dim-tab.active .dim-tab-ic{transform:scale(1.06)}
+.dim-subs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dim-sub{font:inherit;font-size:.74em;color:var(--text-muted);background:transparent;border:1px solid var(--surface-border);border-radius:999px;padding:4px 12px;cursor:pointer;display:flex;gap:6px;align-items:center;transition:all .2s}
+.dim-sub:hover{color:var(--text-secondary);border-color:var(--gold-pale)}
+.dim-sub.on{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
+.dim-sub span{font-size:.9em;opacity:.72;font-variant-numeric:tabular-nums}
+.dim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:var(--space-5);align-items:start}
+.dim-grid.games{grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}
+.dim-card{display:flex;flex-direction:column;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);overflow:hidden;transition:transform .28s var(--ease-out),border-color .28s,box-shadow .28s}
+.dim-card:hover{transform:translateY(-4px);border-color:var(--gold-pale);box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.dim-thumb{position:relative;width:100%;aspect-ratio:3/4;background:rgba(0,0,0,.22);overflow:hidden;flex:none}
+.dim-poster{width:100%;height:100%;object-fit:cover;display:block}
+.dim-img-none{display:flex;align-items:center;justify-content:center;font-size:2.4em;opacity:.5}
+.dim-img-broken{background:rgba(0,0,0,.2)}
+/* 游戏：小图标 + 横向排布 */
+.dim-card.is-game{flex-direction:row;align-items:flex-start}
+.dim-card.is-game .dim-thumb{width:64px;height:64px;aspect-ratio:auto;margin:14px 0 14px 14px;border-radius:12px}
+.dim-icon{width:100%;height:100%;object-fit:cover;display:block}
+.dim-card.is-game .dim-body{padding:14px 14px 14px 12px}
+.dim-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.dim-head{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
+.dim-title{font-size:.98em;color:var(--text-primary);margin:0;line-height:1.35;font-weight:600;word-break:break-word}
+.dim-chip{font-size:.68em;color:var(--gold-pale);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:1px 8px;white-space:nowrap;flex:none;line-height:1.6}
+.dim-meta{font-size:.74em;color:var(--text-muted);margin:0;line-height:1.5}
+.dim-stars{display:flex;align-items:center;gap:1px;font-size:.88em;line-height:1}
+.dim-star{color:var(--surface-border)}
+.dim-star.full{color:var(--gold-bright)}
+.dim-star.half{background:linear-gradient(90deg,var(--gold-bright) 50%,var(--surface-border) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dim-score{margin-left:6px;font-size:.82em;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.dim-review{font-size:.82em;color:var(--text-secondary);line-height:1.68;margin:0;white-space:pre-wrap;word-break:break-word}
+/* 整张卡片点击展开：详情（简介 / 评价 / 链接）默认收起 */
+.dim-card.clickable{cursor:pointer}
+.dim-card.clickable:hover{border-color:var(--gold)}
+.dim-card.clickable:active{transform:translateY(-1px) scale(.995)}
+.dim-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.dim-toggle{display:flex;align-items:center;gap:6px;font-size:.74em;color:var(--gold);margin-top:3px;user-select:none;transition:color .2s}
+.dim-card:hover .dim-toggle{color:var(--gold-bright)}
+.dim-chev{transition:transform .28s var(--ease-out);display:inline-block;font-size:1.1em;line-height:1}
+/* ============ 书籍：立体书（参考博客书架的抽书效果）============ */
+.dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:30px 22px;perspective:1400px}
+.book3d{--book-depth:34px;position:relative;background:none;border:none;border-radius:0;overflow:visible;padding:0;
+  perspective:900px;cursor:default;transition:none}
+.book3d.clickable{cursor:pointer}
+.book3d:hover,.book3d:focus-visible{transform:none;box-shadow:none;border-color:transparent}
+.book3d:focus-visible{outline:2px solid var(--gold);outline-offset:6px;border-radius:4px}
+.book3d-scene{position:relative;width:100%;aspect-ratio:25/36}
+.book3d-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .52s cubic-bezier(.22,.61,.36,1)}
+.book3d:hover .book3d-inner{transform:rotateY(-30deg) scale(1.09) translateX(-14px)}
+.book3d.following .book3d-inner{transition:transform .16s ease-out}
+.book3d-cover{position:absolute;inset:0;border-radius:3px 5px 5px 3px;overflow:hidden;background:#1c1a16;
+  box-shadow:0 1px 2px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.32),
+             inset -2px 0 3px rgba(0,0,0,.35),inset 1px 0 1px rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.25)}
+.book3d-art{position:absolute;inset:0;overflow:hidden;background:linear-gradient(135deg,#2a2721,#1b1915)}
+.book3d-img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.book3d-img-broken{display:none}
+.book3d-fallback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:16px 11px;text-align:center;
+  background:linear-gradient(150deg,#3d3628,#221e17);color:var(--gold-pale)}
+.book3d-fb-ic{opacity:.55;margin-bottom:2px}
+.book3d-fb-title{font-size:.84em;line-height:1.55;font-weight:600;color:#f2e8d2;word-break:break-word}
+.book3d-fb-author{font-size:.68em;opacity:.72}
+/* 影视：海报是 2:3，书薄一点，网格也稍宽 */
+.dim-grid.films{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:30px 24px}
+.book3d.film3d{--book-depth:30px}
+.book3d.film3d .book3d-scene{aspect-ratio:2/3}
+.book3d.film3d .book3d-cover{border-radius:4px 7px 7px 4px}
+.book3d.film3d .book3d-back{border-radius:4px 7px 7px 4px}
+/* 书脊高光/暗部，让封面有"被装订过"的立体感 */
+.book3d-bind{position:absolute;left:0;top:0;bottom:0;width:10%;z-index:2;pointer-events:none;mix-blend-mode:overlay;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.26) 26%,rgba(255,255,255,0) 52%,rgba(0,0,0,.3) 84%,rgba(0,0,0,.12))}
+.book3d-tag{position:absolute;top:6px;left:6px;z-index:3;font-size:.6em;color:#fff;background:rgba(0,0,0,.58);border-radius:4px;padding:2px 6px;line-height:1.5;pointer-events:none;letter-spacing:.02em}
+.book3d-score{position:absolute;top:6px;right:6px;z-index:3;font-size:.63em;font-weight:700;color:#fbbf24;background:rgba(0,0,0,.58);border-radius:4px;padding:2px 6px;line-height:1.5;pointer-events:none}
+/* 右侧书页边：绕 Y 转 90° 后正好连起封面与封底，抽出来时才看得见 */
+.book3d-pages{position:absolute;top:3px;left:calc(100% - var(--book-depth) / 2 - 3px);width:calc(var(--book-depth) - 2px);height:calc(100% - 12px);
+  transform:rotateY(90deg) translateX(calc(var(--book-depth) / 2));
+  background:repeating-linear-gradient(90deg,#f6f2e8,#ded9cc 1px,#f6f2e8 3px,#bab4a5 2px)}
+.book3d-back{position:absolute;inset:0;border-radius:3px 5px 5px 3px;transform:translateZ(calc(-1 * var(--book-depth)));
+  background:linear-gradient(135deg,#2b2822,#191714);box-shadow:inset 0 0 12px rgba(0,0,0,.55)}
+@media (max-width:820px){ .dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:24px 16px} }
 @media (max-width:520px){
-  .dim-h2{font-size:1.7rem}
-  .dim-tab{padding:5px 12px;font-size:.73em}
-  .spine-book{width:27px;height:168px}
-  .spine-book:hover,.spine-book:focus-visible{width:124px}
-  .sp-cover{width:124px}
-  .df-title{font-size:.95em}
+  .dim-grid.books{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:20px 12px}
+  .book3d{--book-depth:22px}
+  .book3d-tag{font-size:.54em;top:4px;left:4px;padding:1px 4px}
+  .book3d-score{font-size:.56em;top:4px;right:4px;padding:1px 4px}
 }
 @media (prefers-reduced-motion: reduce){
-  .spine-book{transition:none}
-  .dim-anim .spine-book{animation:none}
+  .book3d-inner{transition:none}
+  .book3d:hover .book3d-inner{transform:none}
 }
-/* ============ 详情弹窗：照 App 详情页的排版（顶栏 / 大封面 / 编号分节 / 底栏）============ */
+.dim-svg{display:block}
+.dim-empty .dim-svg{margin:0 auto 10px;opacity:.55;color:var(--text-muted)}
+/* ============ 次元柜详情弹窗 ============ */
 body.dim-modal-open{overflow:hidden}
-.dim-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;
-  opacity:0;pointer-events:none;transition:opacity .26s var(--ease-out)}
+.dim-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .26s var(--ease-out)}
 .dim-modal.show{opacity:1;pointer-events:auto}
-.dim-modal-mask{position:absolute;inset:0;background:rgba(16,15,13,.55);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-/* 弹出动画：面板从被点的那本书的位置长出来（transform-origin 由 JS 设在书的中心） */
-.dim-modal-box{position:relative;width:min(680px,100%);max-height:min(90vh,940px);display:flex;flex-direction:column;
-  background:#FCFBF7;border:1px solid var(--dp-line);color:var(--dp-ink);border-radius:22px;overflow:hidden;
-  box-shadow:0 46px 110px -40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.9);
-  transform:scale(.55);opacity:0;
-  transition:transform .5s cubic-bezier(.18,1.18,.32,1),opacity .26s ease-out}
-.dim-modal.show .dim-modal-box{transform:scale(1);opacity:1}
-.dim-modal-x{position:absolute;top:13px;right:14px;z-index:5;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
-  background:rgba(252,251,247,.86);color:var(--dp-ink2);border:1px solid var(--dp-line);border-radius:50%;cursor:pointer;
-  transition:all .2s;backdrop-filter:blur(8px);font-size:15px;line-height:1}
-.dim-modal-x:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.35);background:#fff}
-.dim-modal-x:active{transform:scale(.93)}
-.dim-modal-scroll{padding:0;overflow-y:auto;overscroll-behavior:contain}
-/* 顶部档案条（对齐参考详情页的 AppBar） */
-.dm-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:17px 56px 13px 24px;
-  border-bottom:1px solid var(--dp-line2)}
-.dm-bar-lb{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.2em;color:var(--dp-ink2);text-transform:uppercase}
-.dm-code{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3);
-  border:1px solid var(--dp-line);border-radius:3px;padding:1px 6px;white-space:nowrap}
-/* 大封面 */
-.dm-hero{position:relative;height:300px;overflow:hidden;background:var(--dp-dark);
+.dim-modal-mask{position:absolute;inset:0;background:rgba(6,8,14,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.dim-modal-box{position:relative;width:min(640px,100%);max-height:min(86vh,860px);display:flex;flex-direction:column;
+  background:linear-gradient(160deg,rgba(28,26,22,.98),rgba(18,17,15,.99));border:1px solid var(--gold-pale);
+  border-radius:18px;box-shadow:0 28px 80px rgba(0,0,0,.6);
+  transform:translateY(26px) scale(.93);opacity:0;
+  transition:transform .36s cubic-bezier(.16,1,.3,1),opacity .26s ease-out;
+  overflow:hidden}
+.dim-modal.show .dim-modal-box{transform:none;opacity:1}
+/* 弹窗内容依次淡入，开起来有层次 */
+@keyframes dimMIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.dim-modal-scroll>*{animation:dimMIn .44s var(--ease-out) both}
+.dim-modal-scroll>*:nth-child(1){animation-delay:.04s}
+.dim-modal-scroll>*:nth-child(2){animation-delay:.09s}
+.dim-modal-scroll>*:nth-child(3){animation-delay:.13s}
+.dim-modal-scroll>*:nth-child(4){animation-delay:.17s}
+.dim-modal-scroll>*:nth-child(5){animation-delay:.21s}
+.dim-modal-scroll>*:nth-child(6){animation-delay:.25s}
+.dim-modal-scroll>*:nth-child(n+7){animation-delay:.28s}
+@media (prefers-reduced-motion: reduce){
+  .dim-modal-box{transition:opacity .2s}
+  .dim-modal-scroll>*{animation:none}
+}
+.dim-modal-x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.42);color:var(--text-secondary);border:1px solid var(--glass-border);border-radius:50%;cursor:pointer;transition:all .2s}
+.dim-modal-x:hover{color:var(--gold-bright);border-color:var(--gold);background:rgba(0,0,0,.62)}
+.dim-modal-x:active{transform:scale(.92)}
+.dim-modal-scroll{padding:26px 28px 28px;overflow-y:auto;overscroll-behavior:contain}
+.dim-m-cover{position:relative;margin:-26px -28px 18px;height:280px;overflow:hidden;background:rgba(0,0,0,.4);
   display:flex;align-items:center;justify-content:center}
-.dm-hero-bg{position:absolute;inset:-30px;background-size:cover;background-position:center;
-  filter:blur(34px) saturate(1.15) brightness(.55);transform:scale(1.16)}
-.dm-hero-img{position:relative;z-index:1;max-width:70%;max-height:calc(100% - 38px);width:auto;height:auto;
-  object-fit:contain;display:block;border-radius:3px;
-  box-shadow:0 20px 44px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1)}
-/* 主信息 */
-.dm-main{padding:20px 26px 0}
-.dm-kicker{display:flex;align-items:center;gap:6px;font-family:var(--dp-mono);font-size:.59em;
-  letter-spacing:.14em;color:var(--dp-ink2);text-transform:uppercase}
-.dm-kicker svg{opacity:.72;flex:none}
-.dm-kicker i{font-style:normal;opacity:.4}
-.dm-title{font-family:var(--font-display,inherit);font-size:1.45em;font-weight:600;color:var(--dp-ink);
-  margin:9px 0 7px;line-height:1.35;word-break:break-word}
-.dm-meta{font-family:var(--dp-mono);font-size:.73em;letter-spacing:.04em;color:var(--dp-ink2);margin:0 0 9px}
-.dm-stars{font-size:1em;margin-bottom:2px}
-/* 档案式分节：编号 + 发丝线 + 小标题 */
-.dm-sec{padding:0 26px;margin-top:21px}
-.dm-sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px}
-.dm-sec-h span{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3)}
-.dm-sec-h i{flex:1;height:1px;background:var(--dp-line2)}
-.dm-sec-h b{font-weight:500;font-size:.71em;letter-spacing:.16em;color:var(--dp-ink2);white-space:nowrap}
-.dm-text{font-size:.92em;line-height:1.95;color:var(--dp-ink);margin:0;white-space:pre-wrap;word-break:break-word}
-.dm-list{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:9px}
-.dm-list li{font-size:.9em;line-height:1.8;color:var(--dp-ink)}
-.dm-none{font-size:.85em;color:var(--dp-ink2);margin:0}
-/* 底部操作条 */
-.dm-foot{display:flex;gap:10px;align-items:center;padding:22px 26px 24px;margin-top:22px;border-top:1px solid var(--dp-line2)}
-.dm-btn{font-size:.77em;letter-spacing:.06em;color:#FCFBF7;background:var(--dp-dark);border:1px solid var(--dp-dark);
-  border-radius:9px;padding:9px 18px;text-decoration:none;transition:all .2s;white-space:nowrap}
-.dm-btn:hover{opacity:.86}
-.dm-btn-ghost{font:inherit;font-size:.77em;letter-spacing:.06em;color:var(--dp-ink2);background:transparent;
-  border:1px solid var(--dp-line);border-radius:9px;padding:9px 18px;cursor:pointer;transition:all .2s;margin-left:auto;white-space:nowrap}
-.dm-btn-ghost:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.34)}
-/* 内容错落入场 */
-@keyframes dmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.dim-modal-scroll>*{animation:dmIn .42s var(--ease-out) both}
-.dim-modal-scroll>*:nth-child(1){animation-delay:.06s}
-.dim-modal-scroll>*:nth-child(2){animation-delay:.1s}
-.dim-modal-scroll>*:nth-child(3){animation-delay:.15s}
-.dim-modal-scroll>*:nth-child(4){animation-delay:.2s}
-.dim-modal-scroll>*:nth-child(5){animation-delay:.25s}
-.dim-modal-scroll>*:nth-child(6){animation-delay:.3s}
-.dim-modal-scroll>*:nth-child(n+7){animation-delay:.34s}
+.dim-m-cover.is-game{height:220px}
+/* 背景：同一张图放大 + 高斯模糊，作为衬底（主图不裁切，边缘不会突兀） */
+.dim-m-cover-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;
+  filter:blur(30px) saturate(1.25) brightness(.72);transform:scale(1.12)}
+/* 主图：完整显示（contain），带投影，长宽比再极端也不会被切掉 */
+.dim-m-cover-img{position:relative;z-index:1;max-width:calc(100% - 36px);max-height:calc(100% - 26px);width:auto;height:auto;
+  object-fit:contain;display:block;border-radius:5px;box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)}
+.dim-m-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.dim-m-kind{display:inline-flex;align-items:center;gap:5px;font-size:.72em;color:var(--gold-pale);letter-spacing:.04em}
+.dim-m-title{font-size:1.28em;color:var(--text-primary);margin:0 0 6px;line-height:1.4;font-weight:600;word-break:break-word;padding-right:36px}
+.dim-m-meta{font-size:.8em;color:var(--text-muted);margin:0 0 8px}
+.dim-m-stars{font-size:1.05em;margin-bottom:4px}
+.dim-m-sec{margin-top:18px;padding-top:16px;border-top:1px solid var(--glass-border)}
+.dim-m-lb{font-size:.74em;color:var(--gold-bright);letter-spacing:.08em;margin-bottom:8px}
+.dim-m-text{font-size:.9em;color:var(--text-secondary);line-height:1.85;margin:0;white-space:pre-wrap;word-break:break-word}
+.dim-m-list{margin:0;padding-left:19px;display:flex;flex-direction:column;gap:8px}
+.dim-m-list li{font-size:.88em;color:var(--text-secondary);line-height:1.8}
+.dim-m-none{font-size:.84em;color:var(--text-muted);margin:16px 0 0}
+.dim-m-link{display:inline-block;margin-top:20px;font-size:.82em;color:var(--gold);text-decoration:none;border:1px solid rgba(212,168,67,.36);border-radius:9px;padding:7px 16px;transition:all .2s}
+.dim-m-link:hover{color:var(--gold-bright);border-color:var(--gold);background:var(--gold-glow)}
 @media (max-width:560px){
   .dim-modal{padding:0;align-items:flex-end}
-  .dim-modal-box{width:100%;max-height:92vh;border-radius:20px 20px 0 0;border-bottom:none}
-  .dm-bar{padding:15px 52px 12px 18px}
-  .dm-hero{height:236px}
-  .dm-main{padding:17px 20px 0}
-  .dm-sec{padding:0 20px}
-  .dm-foot{padding:18px 20px 22px}
-  .dm-title{font-size:1.22em}
+  .dim-modal-box{width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-bottom:none}
+  .dim-modal-scroll{padding:22px 20px 26px}
+  .dim-m-cover{margin:-22px -20px 16px;height:230px}
+  .dim-m-title{font-size:1.15em}
 }
-@media (prefers-reduced-motion: reduce){
-  .dim-modal-box{transition:opacity .2s;transform:none}
-  .dim-modal.show .dim-modal-box{transform:none}
-  .dim-modal-scroll>*{animation:none}
+/* 切换分类时错落入场，让"点了有反应"看得见 */
+@keyframes dimIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.dim-anim .dim-card{animation:dimIn .4s var(--ease-out) both}
+.dim-anim .dim-card:nth-child(1){animation-delay:0s}
+.dim-anim .dim-card:nth-child(2){animation-delay:.05s}
+.dim-anim .dim-card:nth-child(3){animation-delay:.1s}
+.dim-anim .dim-card:nth-child(4){animation-delay:.15s}
+.dim-anim .dim-card:nth-child(5){animation-delay:.2s}
+.dim-anim .dim-card:nth-child(n+6){animation-delay:.25s}
+.dim-link{font-size:.75em;color:var(--gold);text-decoration:none;margin-top:2px;transition:color .2s}
+.dim-link:hover{color:var(--gold-bright)}
+.dim-empty{grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:.88em;padding:52px 16px;line-height:1.9}
+.dim-count{text-align:center;font-size:.76em;color:var(--text-muted);margin-top:var(--space-5)}
+@media (max-width:820px){
+  .dim-toolbar{flex-direction:column;align-items:stretch;gap:var(--space-3)}
+  .dim-tabs{justify-content:center}
+  .dim-subs{justify-content:center}
+}
+@media (max-width:520px){
+  .dim-grid{grid-template-columns:1fr 1fr;gap:var(--space-4)}
+  .dim-grid.games{grid-template-columns:1fr}
+  .dim-tab{padding:6px 13px;font-size:.78em}
 }
 .memo-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 var(--space-5) 8px 32px}
 .memo-tag-chip{font-size:.68em;color:var(--gold-pale);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:999px;padding:1px 9px;cursor:pointer}
@@ -1305,148 +1229,6 @@ main#main{position:relative;z-index:1}
 }
 @media(min-width:769px){.pill-nav-wrap{display:flex!important}}
 </style>
-<!-- 记忆书架：书本结构与样式原样搬自映像馆 assets/memory-shelf.css（它本身又搬自参考项目） -->
-<link rel="stylesheet" href="assets/memory-shelf.css?v=20261023a">
-<style>
-/* ══════════ 游戏区：最初的样子 —— 普通卡片网格（不是书架） ══════════ */
-.dim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-top:6px}
-.dim-grid.games{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-.dim-card{position:relative;display:flex;flex-direction:column;gap:12px;padding:15px;border-radius:14px;
-  background:#FCFBF7;border:1px solid rgba(35,34,30,.14);color:#23221E;cursor:default;
-  transition:transform .25s var(--ease-out),border-color .25s,box-shadow .25s}
-.dim-card.clickable{cursor:pointer}
-.dim-card:hover{transform:translateY(-3px);border-color:rgba(35,34,30,.3);box-shadow:0 18px 36px -24px rgba(0,0,0,.5)}
-.dim-card:focus-visible{outline:2px solid #23221E;outline-offset:3px}
-.dim-thumb{position:relative;width:100%;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:#F2F0E9}
-.dim-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.dim-grid.games .dim-thumb{aspect-ratio:16/9}
-.dim-icon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:58px;height:58px;object-fit:cover;border-radius:12px;display:block;
-  box-shadow:0 6px 16px -6px rgba(0,0,0,.35)}
-.dim-poster{width:100%;height:100%;object-fit:cover;display:block}
-.dim-img-none{display:flex;align-items:center;justify-content:center;color:#A79F8C}
-.dim-body{display:flex;flex-direction:column;gap:6px;min-width:0}
-.dim-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.dim-title{margin:0;font-size:1.02em;font-weight:600;color:#23221E;letter-spacing:.01em;line-height:1.35;
-  word-break:break-word;max-width:100%}
-.dim-meta{margin:0;font-family:var(--dp-mono);font-size:.7em;letter-spacing:.04em;color:var(--dp-ink2)}
-.dim-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;padding-top:10px;
-  border-top:1px solid var(--dp-line2);font-size:.72em;color:var(--dp-ink2)}
-.dim-chev{transition:transform .2s;font-size:1.2em;line-height:1}
-.dim-card:hover .dim-chev{transform:translateX(3px)}
-.dim-img-broken{display:none}
-@media (max-width:520px){
-  .dim-grid{grid-template-columns:1fr;gap:14px}
-}
-
-.dim-rail{margin-top:18px}
-.dim-rail.memory-shelf-viewport{display:block;height:640px;overflow:hidden;cursor:grab;
-  touch-action:none;user-select:none;-webkit-user-select:none;
-  border-radius:14px;background:linear-gradient(180deg,rgba(252,251,247,.6),rgba(246,244,239,.2))}
-/* ★ 弧形书架：书按 railY 弧线绝对定位（位置由 dim-arc.js 的 dimArcLayout 算） */
-.dim-rail .memory-shelf-track{position:relative;inset:auto;width:100%;transform-style:preserve-3d}
-.dim-rail .memory-book{position:absolute;top:0;left:50%;bottom:auto;margin:0;
-  transition:width .42s cubic-bezier(.16,1,.3,1),height .42s cubic-bezier(.16,1,.3,1),opacity .3s}
-.dim-rail .memory-book .memory-book-object{transition:transform .42s cubic-bezier(.16,1,.3,1)}
-.dim-rail.memory-shelf-viewport.dragging{cursor:grabbing}
-.dim-rail.memory-shelf-viewport::-webkit-scrollbar{height:7px}
-.dim-rail.memory-shelf-viewport::-webkit-scrollbar-thumb{background:rgba(35,34,30,.22);border-radius:4px}
-.dim-rail .memory-shelf-track{position:relative;height:100%}
-.dim-rail .memory-shelf-floor{position:absolute;left:0;right:0;bottom:52px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(35,34,30,.22) 8%,rgba(35,34,30,.13) 92%,transparent);
-  box-shadow:0 14px 30px rgba(35,34,30,.14);pointer-events:none}
-.dim-rail .memory-book{transition:width .42s cubic-bezier(.16,1,.3,1),left .42s cubic-bezier(.16,1,.3,1)}
-/* 未选中的书收成书脊，让旋转 90° 的书脊面正对镜头 */
-.dim-rail .memory-book:not(.active){width:64px}
-.dim-rail .memory-book:not(.active) .memory-book-page-face,
-.dim-rail .memory-book:not(.active) .memory-book-page-edge,
-.dim-rail .memory-book:not(.active) .memory-book-edge-top,
-.dim-rail .memory-book:not(.active) .memory-book-edge-bottom,
-.dim-rail .memory-book:not(.active) .memory-book-cover-inside,
-.dim-rail .memory-book:not(.active) .memory-book-back,
-.dim-rail .memory-book:not(.active) .memory-book-opening-page{display:none!important}
-.dim-rail .memory-book:not(.active) .memory-book-spine-face{
-  left:0!important;top:0;width:100%!important;height:100%;transform:none!important;
-  border-radius:4px;z-index:6;opacity:1!important}
-.dim-rail .memory-book:not(.active) .memory-book-spine-copy{inset:12px 2px 10px;color:var(--book-ink,#f3ecd7)}
-.dim-rail .memory-book:not(.active) .memory-book-spine-copy b{font-size:15px;letter-spacing:.1em}
-.dim-rail .memory-book:not(.active) .memory-book-spine-copy small{font-size:10px}
-.dim-rail .memory-book:not(.active) .memory-book-spine-copy i{font-size:8px;letter-spacing:.2em}
-.dim-rail .memory-book:not(.active) .memory-book-cover,
-.dim-rail .memory-book:not(.active) .memory-book-cover-inside{opacity:0;pointer-events:none}
-/* ★ 封面：恢复映像馆原版排版（旅行手册 / 大字标题 / 照片 / 底部元信息），只把数据换成次元柜的。
-   ★ 必须补这三条：参考项目里 .memory-book-cover 只设了 --book-ink 变量，
-     color 却是在 .memory-book 上继承的，结果标题会沿用浅色墨，在米色纸面上几乎看不见。
-     映像馆也是这样补救的，这里照抄。 */
-.dim-rail .memory-book-cover{color:#253943}
-.dim-rail .memory-book-title{color:#253943}
-.dim-rail .memory-book-index{color:#3d525c}
-.dim-rail .memory-book-spine-copy{color:var(--book-ink,#f3ecd7)}
-/* ★ 封面：只放封面图，铺满整本书 —— 不放书名/编号/作者，免得盖住用户的图 */
-.dim-rail .memory-book-cover{padding:0;background:#EFEBE2}
-.dim-rail .memory-book-cover .memory-book-photo{position:absolute;inset:0;margin:0;min-height:0;
-  z-index:1;background-size:cover;background-position:center;background-repeat:no-repeat}
-.dim-rail .memory-book-cover .memory-book-photo::after{display:none}
-.dim-rail .dim-cover-empty{display:flex;align-items:center;justify-content:center;
-  color:#A79F8C;background:linear-gradient(160deg,#FBFAF6,#F0EDE6)}
-/* ★ 翻开后两页里的正文 */
-.dim-rail .dim-page-text{display:block;font-size:11px;line-height:1.9;color:#2b4250;
-  white-space:pre-wrap;word-break:break-word;max-height:60%;overflow:auto}
-.dim-rail .dim-page-list{display:block;font-size:10px;line-height:1.9;color:#3d5a68;max-height:34%;overflow:auto}
-.dim-rail .dim-page-list span{display:block}
-/* 翻开时让这本书浮到最前，别被其它书压住 */
-.dim-rail .memory-book.opening{z-index:70}
-/* ★ 翻开动画：自己写一套，不依赖 memory-shelf.css 里那两条
-   （实测那两条的 animationName 一直是 none，规则在却不生效）。
-   封面绕左侧书脊翻到 -105°，同时封内页翻出来 —— 就是视频里"书摊成两页"的动作。 */
-@keyframes dimCoverOpen{from{transform:translateZ(20px) rotateY(0deg)}to{transform:translateZ(20px) rotateY(-180deg)}}
-@keyframes dimInsideOpen{from{transform:translateZ(19px) rotateY(180deg)}to{transform:translateZ(1px) translateX(-100%) rotateY(0deg)}}
-.dim-rail .memory-book.opening .memory-book-cover{
-  transform-origin:left center;
-  animation:dimCoverOpen .72s .12s cubic-bezier(.55,.06,.68,.19) both !important}
-.dim-rail .memory-book.opening .memory-book-cover-inside{
-  transform-origin:left center;
-  animation:dimInsideOpen .72s .12s cubic-bezier(.55,.06,.68,.19) both !important}
-.dim-rail .memory-book.opening .memory-book-opening-page{opacity:1 !important;transition:opacity .3s .3s}
-@media (prefers-reduced-motion: reduce){
-  .dim-rail .memory-book.opening .memory-book-cover,
-  .dim-rail .memory-book.opening .memory-book-cover-inside{animation:none !important}
-}
-/* ★ 立体感：映像馆的这三条是关键 —— 选中的书微微侧转（露出左侧书脊的布面厚度）、
-   书脊面显形、封底隐去。没有这三条，书就是一张平贴的纸，一点 3D 都没有。 */
-/* ★ 选中的书：从书架里"抽出来" —— 朝观者推近、往上抬、侧转露出一块书脊厚度。
-   视频里那本书是有明显厚度的 3/4 视角，不是平贴的一张纸。 */
-.dim-rail .memory-book .memory-book-object{
-  transition:transform .52s cubic-bezier(.16,1,.3,1);
-  transform:translate3d(0,var(--book-lift,0),var(--book-lift-z,0)) rotateY(var(--book-tilt-y,0deg)) rotateX(var(--book-tilt-x,0deg))}
-.dim-rail .memory-book.active .memory-book-object{
-  transform:translate3d(0,-10px,64px) rotateY(-18deg) rotateX(3deg)}
-.dim-rail .memory-book.active:hover .memory-book-object,
-.dim-rail .memory-book.active:focus-visible .memory-book-object{
-  transform:translate3d(0,-16px,96px) rotateY(-16deg) rotateX(3deg)}
-/* 未选中的书脊也可以轻轻抬头，像是等你抽它 */
-.dim-rail .memory-book:not(.active):hover .memory-book-object{
-  transform:translate3d(0,-6px,26px) rotateY(-9deg)}
-.dim-rail .memory-book.active .memory-book-spine-face{opacity:1}
-.dim-rail .memory-book.active .memory-book-back{opacity:0}
-/* 透视也照映像馆给到 1600px */
-.dim-rail.memory-shelf-viewport{perspective:1600px;perspective-origin:48% 46%}
-/* ★ 尺寸对齐映像馆：选中 308×484，其余收成 64 宽的书脊 */
-.dim-rail .memory-book{width:308px;height:484px;bottom:96px}
-.dim-rail .memory-book:not(.active){width:64px}
-/* ★ 点击改动：翻开后由详情弹窗接管，这里只保留抽出+翻开的动画观感 */
-.dim-rail.memory-shelf-viewport.opening .memory-book:not(.opening){opacity:.35;transition:opacity .3s}
-/* 书架底部的提示行（映像馆也有一条） */
-.dim-rail-hint{position:absolute;right:16px;bottom:10px;font-size:.68em;color:#A79F8C;pointer-events:none;letter-spacing:.04em}
-@media (max-width:760px){
-  .dim-rail.memory-shelf-viewport{height:460px}
-  .dim-rail .memory-book{width:196px;height:309px;bottom:68px}
-  .dim-rail .memory-book:not(.active){width:52px}
-}
-@media (prefers-reduced-motion: reduce){
-  .dim-rail .memory-book{transition:none}
-}
-</style>
 </head>
 <body>
 <a class="skip-link" href="#main">跳到主要内容</a>
@@ -1624,7 +1406,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-23 · 弧形书架：循环滑动 / 统一书脊色 / 高度收紧';
+const BUILD='2026-10-06 · 次元柜：评价改叫简介、感悟改叫评价';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -3617,33 +3399,28 @@ function renderMain(){
          ============================================================ -->
     <div class="view" data-view="dimension" id="view-dimension">
       <section id="dimension-section">
-        <div class="dim-paper reveal">
-          <header class="dim-ahead">
-            <div class="dim-kicker">
-              <span class="dim-k-num">01</span><span class="dim-k-slash">/</span><span class="dim-k-lb">CATALOG</span>
-              <i class="dim-k-line"></i><i class="dim-k-dot"></i>
-            </div>
-            <h2 class="dim-h2">次元柜</h2>
-            <p class="dim-en">PERSONAL ARCHIVE — BOOKS · FILMS · GAMES</p>
-          </header>
-          <div class="dim-toolbar reveal">
-            <div class="dim-tabs" role="tablist">
-              <button class="dim-tab active" type="button" data-dim-kind="books" onclick="setDimKind('books')" role="tab">
-                <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16H7a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2h12z"/><path d="M19 16H7a2 2 0 0 0 -2 2"/><path d="M11 8h5"/></svg>
-                <span>书籍</span></button>
-              <button class="dim-tab" type="button" data-dim-kind="films" onclick="setDimKind('films')" role="tab">
-                <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 15h16"/><path d="M9 4v5"/><path d="M15 4v5"/><path d="M9 15v5"/><path d="M15 15v5"/></svg>
-                <span>影视</span></button>
-              <button class="dim-tab" type="button" data-dim-kind="games" onclick="setDimKind('games')" role="tab">
-                <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6H7a4 4 0 0 0 -4 4v4a4 4 0 0 0 4 4h10a4 4 0 0 0 4 -4v-4a4 4 0 0 0 -4 -4z"/><path d="M7 12h4"/><path d="M9 10v4"/><path d="M15 11h.01"/><path d="M17.5 13h.01"/></svg>
-                <span>游戏</span></button>
-            </div>
-            <div class="dim-subs" id="dim-subs"></div>
-          </div>
-          <div class="dim-shelf" id="dim-grid"></div>
-          <div class="dim-feat" id="dim-feat"></div>
-          <p class="dim-count" id="dim-count"></p>
+        <div class="section-header reveal">
+          <p class="header-eyebrow">Dimension Cabinet</p>
+          <h2 class="header-headline">次元柜</h2>
+          <p class="header-desc">看过的书、影视与游戏，连同当时的简介和后来才想明白的评价。</p>
         </div>
+        <div class="section-divider"></div>
+        <div class="dim-toolbar reveal">
+          <div class="dim-tabs" role="tablist">
+            <button class="dim-tab active" type="button" data-dim-kind="books" onclick="setDimKind('books')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16H7a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2h12z"/><path d="M19 16H7a2 2 0 0 0 -2 2"/><path d="M11 8h5"/></svg>
+              <span>书籍</span></button>
+            <button class="dim-tab" type="button" data-dim-kind="films" onclick="setDimKind('films')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 15h16"/><path d="M9 4v5"/><path d="M15 4v5"/><path d="M9 15v5"/><path d="M15 15v5"/></svg>
+              <span>影视</span></button>
+            <button class="dim-tab" type="button" data-dim-kind="games" onclick="setDimKind('games')" role="tab">
+              <svg class="dim-tab-ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6H7a4 4 0 0 0 -4 4v4a4 4 0 0 0 4 4h10a4 4 0 0 0 4 -4v-4a4 4 0 0 0 -4 -4z"/><path d="M7 12h4"/><path d="M9 10v4"/><path d="M15 11h.01"/><path d="M17.5 13h.01"/></svg>
+              <span>游戏</span></button>
+          </div>
+          <div class="dim-subs" id="dim-subs"></div>
+        </div>
+        <div class="dim-grid" id="dim-grid"></div>
+        <p class="dim-count" id="dim-count"></p>
       </section>
     </div><!-- /view-dimension -->
 
@@ -4756,7 +4533,7 @@ function initDimTilt(){
   grid.addEventListener('mouseleave',()=>{ if(cur){clear(cur);cur=null;} });
 }
 // 点卡片 → 弹出详情窗（不是在页面里展开）
-function openDimDetail(idx,pos,el){
+function openDimDetail(idx){
   const it=dimKit().items[idx];
   if(!it)return;
   const isGame=it.kind==='games';
@@ -4784,201 +4561,65 @@ function openDimDetail(idx,pos,el){
     document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDimDetail();});
   }
   const body=document.getElementById('dim-modal-body');
-  // 档案编码：和书架脊上的编号对应（NO.003 · WK-20003）
-  const _no=String((pos==null?idx:pos)+1).padStart(2,'0');
-  const _code=(it.kind==='films'?'FL-':it.kind==='games'?'GM-':'WK-')+String(20000+((pos==null?idx:pos)+1));
   body.innerHTML=
-    // 顶部档案条（对齐参考详情页的 AppBar：左边栏目名、右边编号）
-    '<div class="dm-bar">'+
-      '<span class="dm-bar-lb">PERSONAL ARCHIVE</span>'+
-      '<span class="dm-code">NO.'+_no+' · '+_code+'</span>'+
-    '</div>'+
-    // 大封面：模糊衬底 + 完整图，不裁切
-    (cover?'<div class="dm-hero">'+
-        '<div class="dm-hero-bg"></div>'+
-        '<img class="dm-hero-img" src="'+escHtml(cover)+'" alt="" onerror="this.style.display=\'none\'">'+
+    (cover?'<div class="dim-m-cover'+(isGame?' is-game':'')+'">'+
+        '<div class="dim-m-cover-bg"></div>'+
+        '<img class="dim-m-cover-img" src="'+escHtml(cover)+'" alt="" onerror="this.style.display=\'none\'">'+
       '</div>':'')+
-    // 主信息
-    '<div class="dm-main">'+
-      '<div class="dm-kicker">'+dimIconSvg(it.kind,13)+'<span>'+escHtml(info.label)+'</span>'+(sub?'<i>·</i><span>'+escHtml(sub)+'</span>':'')+'</div>'+
-      '<h3 class="dm-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
-      (meta?'<p class="dm-meta">'+escHtml(meta)+'</p>':'')+
-      (Number(it.rating)?'<div class="dm-stars">'+dimStars(it.rating)+'</div>':'')+
+    '<div class="dim-m-head">'+
+      '<span class="dim-m-kind">'+dimIconSvg(it.kind,14)+'<span>'+escHtml(info.label)+'</span></span>'+
+      (sub?'<span class="dim-chip">'+escHtml(sub)+'</span>':'')+
     '</div>'+
-    // 档案式分节：01 / 简介、02 / 评价（编号沿用参考里的 01 / CATALOG 写法）
-    (review?'<div class="dm-sec"><div class="dm-sec-h"><span>01</span><b>简介</b><i></i></div><p class="dm-text">'+escHtml(review)+'</p></div>':'')+
-    (lines.length?'<div class="dm-sec"><div class="dm-sec-h"><span>'+(review?'02':'01')+'</span><b>评价</b><i></i></div><ul class="dm-list">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
-    (!review&&!lines.length?'<div class="dm-sec"><p class="dm-none">这条还没有写简介和评价。</p></div>':'')+
-    // 底部操作条
-    '<div class="dm-foot">'+
-      (link?'<a class="dm-btn" href="'+escHtml(link)+'" target="_blank" rel="noopener">去看看 ↗</a>':'')+
-      '<button class="dm-btn-ghost" type="button" onclick="closeDimDetail()">关闭</button>'+
-    '</div>';
-  // 封面背景用同一张图做高斯模糊衬底
-  const bg=body.querySelector('.dm-hero-bg');
+    '<h3 class="dim-m-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
+    (meta?'<p class="dim-m-meta">'+escHtml(meta)+'</p>':'')+
+    '<div class="dim-m-stars">'+dimStars(it.rating)+'</div>'+
+    (review?'<div class="dim-m-sec"><div class="dim-m-lb">简介</div><p class="dim-m-text">'+escHtml(review)+'</p></div>':'')+
+    (lines.length?'<div class="dim-m-sec"><div class="dim-m-lb">评价</div><ul class="dim-m-list">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
+    (!review&&!lines.length?'<p class="dim-m-none">这条还没有写简介和评价。</p>':'')+
+    (link?'<a class="dim-m-link" href="'+escHtml(link)+'" target="_blank" rel="noopener">去看看 ↗</a>':'');
+  box.classList.add('show');
+  document.body.classList.add('dim-modal-open');
+  body.scrollTop=0;
+  // 封面背景用同一张图做高斯模糊衬底，主图完整显示不裁切
+  const bg=body.querySelector('.dim-m-cover-bg');
   if(bg&&cover)bg.style.backgroundImage='url("'+cover.replace(/["\\]/g,'')+'")';
-  const img=body.querySelector('.dm-hero-img');
+  const img=body.querySelector('.dim-m-cover-img');
   if(img)img.addEventListener('load',()=>body.classList.add('has-cover'));
-
-  // 弹出时序：先把这本书从书架抽出来、封面绕书脊翻开（和映像馆记忆书架的手感一致），
-  // 再浮出详情面板；关闭时把书合回去。
-  const bookEl=el||document.querySelector('.memory-book[data-dim-book="'+idx+'"]');
-  // 先把这本书滑到书架中间 —— 对应参考的 _tap(): 没居中先居中。
-  // 网页这边让"居中"和"打开"同时发生：滑过去的同时翻开并弹出详情，
-  // 既保留参考的手感，也不会让人点第一下没反应。
-  try{dimCenterBook(bookEl);}catch(e){}
-  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // 弹窗原点的计算分两半，各自取最准的时刻：
-  //  · 书的位置要在「点击这一刻」记下 —— 翻开动画会把书从 26px 撑到 152px，
-  //    等 330ms 之后书已经变形，拿到的不是用户看到的那个位置。
-  //  · 面板的几何要在「显示这一刻」量 —— 内容刚渲染时高度还会变（图片/滚动条）。
-  let bookCenter=null;
-  if(bookEl){
-    const b=bookEl.getBoundingClientRect();
-    if(b.width&&b.height)bookCenter={x:b.left+b.width/2,y:b.top+b.height/2};
-  }
-  const reveal=()=>{
-    // 面板从这本书的位置长出来，而不是凭空在屏幕中间淡入
-    const panel=box.querySelector('.dim-modal-box');
-    if(panel&&bookCenter){
-      // 先把原点归到正中：此时缩放矩形的中心 = 未变换矩形的中心，量出来才准
-      panel.style.transformOrigin='50% 50%';
-      const p=panel.getBoundingClientRect();
-      const pw=panel.offsetWidth||p.width, ph=panel.offsetHeight||p.height;
-      if(pw&&ph){
-        const rawLeft=p.left+p.width/2-pw/2;
-        const rawTop=p.top+p.height/2-ph/2;
-        // 书可能已滚出视野（书架刚滑过 / 窄屏 sheet），夹到视口内，别让弹窗从屏幕外飞进来
-        const vw=window.innerWidth||document.documentElement.clientWidth;
-        const vh=window.innerHeight||document.documentElement.clientHeight;
-        const cx=Math.max(0,Math.min(vw,bookCenter.x));
-        const cy=Math.max(0,Math.min(vh,bookCenter.y));
-        const ox=Math.round(cx-(rawLeft+pw/2));
-        const oy=Math.round(cy-(rawTop+ph/2));
-        panel.style.transformOrigin='calc(50% + '+ox+'px) calc(50% + '+oy+'px)';
-      }
-    }
-    box.classList.add('show');
-    document.body.classList.add('dim-modal-open');
-    body.scrollTop=0;
-  };
-  if(bookEl&&!reduce){
-    document.querySelectorAll('.memory-book.opening').forEach(b=>{if(b!==bookEl)b.classList.remove('opening');});
-    // 书架进入"正在翻开"状态（样式表里 .memory-shelf-viewport.opening 会让其余书变淡）
-    const _vw=document.getElementById('dim-grid');
-    if(_vw)_vw.classList.add('opening');
-    bookEl.classList.add('opening');
-    setTimeout(reveal,330);
-  }else{
-    if(bookEl)bookEl.classList.add('opening');
-    reveal();
-  }
 }
 function closeDimDetail(){
   const box=document.getElementById('dim-modal');
   if(box)box.classList.remove('show');
   document.body.classList.remove('dim-modal-open');
-  // 把刚才翻开的那本书合回去
-  document.querySelectorAll('.memory-book.opening').forEach(b=>b.classList.remove('opening'));
-  const _vw=document.getElementById('dim-grid');
-  if(_vw)_vw.classList.remove('opening');
 }
-// 书籍：DOM 结构与类名原样搬自映像馆的记忆书架（.memory-book 六面书：
-// 封底 / 书页 / 书口 / 上下书口 / 书脊 / 封内 / 封面），样式来自 assets/memory-shelf.css。
-// 只改了两处：
-//   ① 封面 —— 不要原来那套「标题 + 半幅照片 + 元信息 + 打开旅程」，改成整张照片铺满；
-//   ② 点击 —— 不调映像馆的翻书阅读器 openBook，改为弹出次元柜的详情弹窗。
-const DIM_BOOK_PALETTE=[['#3d7285','#e9e2cf','#f3ecd7','#8fb9c6'],['#a4523a','#ece5d1','#f6efdb','#c98f76'],
-  ['#d5c5a0','#efe9d8','#513d28','#b5a077'],['#67754a','#eae3ce','#f2ecd8','#93a37a'],
-  ['#a07938','#ece5d1','#faf4e0','#c9a75e'],['#5c4a37','#e9e1cd','#f0e7d0','#8c7455']];
-function dimBookPalette(i){return DIM_BOOK_PALETTE[i%DIM_BOOK_PALETTE.length];}
-function bookCard(it,idx,pos){
+// 书籍：做成一本立体书（封面 / 右侧书页边 / 封底三片，靠 preserve-3d 撑出厚度）
+// 参考了博客书架的常见做法：外层 perspective，悬停把整本书 rotateY 抽出来。
+// 这里不带下面的文字块 —— 只显示封面，点书弹详情。
+function bookCard(it,idx){
+  const isFilm=it.kind==='films';
   const cover=String(it.cover||'').trim();
   const sub=String(it.sub||'').trim();
   const title=String(it.title||'未命名');
   const creator=String(it.creator||'').trim();
-  const review=String(it.review||'').trim();
-  const lines=String(it.thought||'').trim()?String(it.thought).split('\n').map(s=>s.trim()).filter(Boolean):[];
-  const hasMore=!!(review||String(it.thought||'').trim()||String(it.link||'').trim());
-  // 编号按「在书架上的位置」排（01 起）
-  const at=(pos==null?idx:pos);
-  const no=String(at+1).padStart(2,'0');
-  const pal=dimBookPalette(0);   // 书脊统一配色（不分色）
-  const kindLabel=(DIM_KINDS.find(k=>k.id===it.kind)||{}).label||'书籍';
-  const photo=cover
-    ? '<span class="mbc-photo" style="background-image:url(\''+escHtml(cover)+'\')"></span>'
-    : '<span class="mbc-photo is-empty">'+dimIconSvg(it.kind,44)+'</span>';
-  return '<button class="memory-book" type="button" data-dim-book="'+idx+'" data-pos="'+at+'"'+
-      ' style="left:'+(at*248)+'px;--book-cover:'+pal[0]+';--book-edge:#e8dfd0;--book-ink:'+pal[2]+';--book-accent:'+pal[3]+'"'+
-      ' aria-label="打开《'+escHtml(title)+'》的详情">'+
-      '<span class="memory-book-shadow" aria-hidden="true"></span>'+
-      '<span class="memory-book-object">'+
-        '<span class="memory-book-back" aria-hidden="true"></span>'+
-        // 右页（翻开后）：简介与评价的正文
-        '<span class="memory-book-page-face" aria-hidden="true"><span class="memory-book-opening-page">'+
-          '<span class="memory-book-opening-page-label"><span>简介</span><span>'+escHtml(kindLabel)+'</span></span>'+
-          '<span class="dim-page-text">'+escHtml(review||'还没有写简介。')+'</span>'+
-          (lines.length?
-            '<span class="memory-book-opening-page-label" style="margin-top:16px"><span>评价</span><span>'+lines.length+' 条</span></span>'+
-            '<span class="dim-page-list">'+lines.map(l=>'<span>· '+escHtml(l)+'</span>').join('')+'</span>'
-            :'')+
-        '</span></span>'+
-        '<span class="memory-book-page-edge" aria-hidden="true"></span>'+
-        '<span class="memory-book-edge-top" aria-hidden="true"></span>'+
-        '<span class="memory-book-edge-bottom" aria-hidden="true"></span>'+
-        '<span class="memory-book-spine-face" aria-hidden="true"><span class="memory-book-spine-copy">'+
-          '<small>'+no+'</small><b>'+escHtml(title)+'</b><i>'+escHtml(kindLabel)+'</i></span></span>'+
-        '<span class="memory-book-cover-inside" aria-hidden="true">'+
-          '<span class="memory-book-opening-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
-          '<span class="memory-book-opening-summary">'+
-            '<small>'+escHtml(kindLabel)+(sub?' · '+escHtml(sub):'')+'</small>'+
-            '<strong>'+escHtml(title)+'</strong>'+
-            '<span>'+escHtml([creator,String(it.date||'')].filter(Boolean).join(' · ')||'—')+'</span>'+
-            '<span class="memory-book-opening-totals">'+
-              (Number(it.rating)?('★ '+String(it.rating))+'　':'')+(lines.length?lines.length+' 条评价':'暂无评价')+
-            '</span>'+
-          '</span>'+
-        '</span>'+
-        // 封面：只放封面图本身，铺满整本书。不放书名 / 编号 / 作者 / 城市数 ——
-        // 那些会盖住用户自己的封面图（用户明确要求：封面就只要显示封面）。
-        '<span class="memory-book-cover">'+
-          '<span class="memory-book-mark" aria-hidden="true"></span>'+
-          (cover
-            ? '<span class="memory-book-photo" style="background-image:url(\''+escHtml(cover)+'\')"></span>'
-            : '<span class="memory-book-photo dim-cover-empty">'+dimIconSvg(it.kind,46)+'</span>')+
-        '</span>'+
-        '</span>'+
-      '</span>'+
-    '</button>';
+  const rating=Number(it.rating)||0;
+  const hasMore=!!(String(it.review||'').trim()||String(it.thought||'').trim()||String(it.link||'').trim());
+  const art=cover
+    ? '<img class="book3d-img" src="'+escHtml(cover)+'" alt="" loading="lazy" onerror="this.classList.add(\'book3d-img-broken\')">'
+    : '<div class="book3d-fallback"><span class="book3d-fb-ic">'+dimIconSvg(it.kind,30)+'</span><span class="book3d-fb-title">'+escHtml(title)+'</span>'+(creator?'<span class="book3d-fb-author">'+escHtml(creator)+'</span>':'')+'</div>';
+  return '<div class="book3d'+(isFilm?' film3d':'')+(hasMore?' clickable':'')+'" title="'+escHtml(title+(creator?' · '+creator:''))+(hasMore?'（点击查看详情）':'')+'"'+
+      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+');}"':'')+'>'+
+      '<div class="book3d-scene"><div class="book3d-inner">'+
+        '<div class="book3d-cover"><div class="book3d-art">'+art+
+          '<div class="book3d-bind" aria-hidden="true"></div>'+
+          (sub?'<span class="book3d-tag">'+escHtml(sub)+'</span>':'')+
+          (rating?'<span class="book3d-score">★'+String(rating.toFixed(1)).replace(/\.0$/,'')+'</span>':'')+
+        '</div></div>'+
+        '<div class="book3d-pages" aria-hidden="true"></div>'+
+        '<div class="book3d-back" aria-hidden="true"></div>'+
+      '</div></div></div>';
 }
-// 书架下方那条「档案条目」——鼠标移到哪本书上就显示哪本（对齐参考里的"月光航线 / 林见舟 · 连载中 ↗"）
-let dimHoverIdx=null;
-function dimHover(idx,pos){
-  if(dimHoverIdx===idx)return;
-  dimHoverIdx=idx;
-  const box=document.getElementById('dim-feat');
-  if(!box)return;
-  const it=dimKit().items[idx];
-  if(!it){box.innerHTML='';return;}
-  const info=dimKindInfo(it.kind);
-  // 编号按「在书架上的位置」排（01 起），不是数组下标 —— 否则按日期倒序后会变成 06→01 倒着走
-  const no=String((pos==null?idx:pos)+1).padStart(2,'0');
-  const meta=[String(it.creator||'').trim(),info.label,String(it.date||'').trim()].filter(Boolean).join(' · ');
-  // 页码跟随：'03 / 12'（和参考里的 ArchiveCode 一致）
-  const _cnt=document.getElementById('dim-count');
-  if(_cnt)_cnt.textContent=no+' / '+String(window.__dimVisibleCount||dimKit().items.length).padStart(2,'0');
-  box.innerHTML='<div class="df-l">'+
-      '<span class="df-no">'+no+'</span>'+
-      '<span class="df-title">'+escHtml(String(it.title||'未命名'))+'</span>'+
-      '<span class="df-meta">'+escHtml(meta)+'</span>'+
-    '</div>'+
-    (Number(it.rating)?'<span class="df-star">'+dimStars(it.rating)+'</span>':'')+
-    '<span class="df-arrow" aria-hidden="true">↗</span>';
-}
-function dimCard(it,idx,pos){
+function dimCard(it,idx){
   // 书籍与影视都做成"立体书"：封面 + 右侧书页边 + 封底，悬停抽出来
-  if(it.kind==='books'||it.kind==='films')return bookCard(it,idx,pos);
+  if(it.kind==='books'||it.kind==='films')return bookCard(it,idx);
   const isGame=it.kind==='games';
   const cover=String(it.cover||'').trim();
   const sub=String(it.sub||'').trim();
@@ -4991,7 +4632,7 @@ function dimCard(it,idx,pos){
     : '<div class="'+(isGame?'dim-icon':'dim-poster')+' dim-img-none">'+dimIconSvg(it.kind,isGame?26:34)+'</div>';
   const meta=[String(it.creator||'').trim(),String(it.date||'').trim()].filter(Boolean).join(' · ');
   return '<article class="dim-card'+(isGame?' is-game':'')+(hasMore?' clickable':'')+'"'+
-      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+','+pos+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+','+pos+');}"':'')+'>'+
+      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+');}"':'')+'>'+
       '<div class="dim-thumb">'+img+'</div>'+
       '<div class="dim-body">'+
         '<div class="dim-head"><h3 class="dim-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
@@ -5001,391 +4642,6 @@ function dimCard(it,idx,pos){
         (hasMore?'<div class="dim-toggle"><span class="dim-toggle-lb">查看详情</span><span class="dim-chev">›</span></div>':'')+
       '</div></article>';
 }
-// ============================================================
-// 书架滚轮：竖向滚轮 → 横向滑书，停下后吸附到最近的一本书
-// 对应参考项目 lib/archive_scroll_simulation.dart 的思路：
-//   "Momentum first, a book detent last."
-//   先按动量滑行，最后落在一个整数书位上，不做第二次居中美化动画。
-// 网页这边用原生滚动（自带惯性）+ 停手后吸附到最近书位来还原手感。
-// ============================================================
-// ============================================================
-// 点击一本书时先把它滑到书架中间
-// 对应参考的 _tap(): if ((focus - index).abs() < .03) 打开; else 先居中。
-// 网页这边让"居中"和"打开"同时发生：滑过去的同时翻开并弹出详情，
-// 既保留参考的居中手感，也不会让人点第一下没反应。
-// ============================================================
-// ============================================================
-// 记忆书架的交互 —— 逻辑搬自映像馆的 memShelfBindActive() + initShelfRail()
-//   点一本没选中的书 → 它展开成完整书（点击被吞掉，不打开）
-//   再点这本已选中的书 → 打开
-//   按住拖动 → 横向滑书架；拖动后跟手的 click 吞掉
-// 唯一改动：最后一步打开的是次元柜的详情弹窗，而不是映像馆的翻书阅读器。
-// ============================================================
-let dimActiveEl=null;
-function dimShelfSetActive(el){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf||!el)return;
-  const idx=+el.dataset.dimBook, pos=+el.dataset.pos;
-  shelf.querySelectorAll('.memory-book').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  el.classList.remove('opening');
-  dimActiveEl=el;
-  dimHover(idx,pos);
-  try{dimCenterBook(el);}catch(e){}
-}
-// 翻开 / 合上这本书 —— 对应映像馆 openBook 的观感，但不跳到阅读器：
-// 书本身翻开成左右两页（左页封面与档案、右页简介与评价），其余书退到画面外。
-function dimBookToggle(b){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf||!b)return;
-  const wasOpen=b.classList.contains('opening');
-  shelf.querySelectorAll('.memory-book.opening').forEach(x=>x.classList.remove('opening'));
-  if(wasOpen){
-    shelf.classList.remove('opening');
-    return;
-  }
-  b.classList.add('opening');
-  shelf.classList.add('opening');
-  // 翻开时把它滑到中间，别贴着边
-  try{dimCenterBook(b);}catch(e){}
-}
-// ============================================================
-// 弧形书架 —— 参数逐个对应 Wenku8_Flutter 的 lib/archive_shelf_geometry.dart
-//   maxViewportWidth = 520   depthX = .66   depthY = -.30   rowStep = 2.5
-//   spineFor(w)  = clamp(w*.043, 14, 18)
-//   pitchFor(w)  = spineFor(w) + 11
-//   coverFor(w)  = clamp(w*.32, 100, 128)
-//   bodyHeight(c)= (c-20)*166/118 + 54
-//   pullDistance(c) = c*.84
-//   baseY(c,h)   = -c*depthY + h*.60 + 12
-//   railY(d)     = clamp(d,-7,7)*rowStep + d*d*.45
-//   origin(c,h,w): pull = pullDistance*w*(1.24-.24*w); lift = w*w*(3-2*w)
-//                  x = -pull*depthX,  y = baseY - pull*depthY - h*.60*lift
-//   _WavePose.weight(d) = cos(clamp(|d|/1.48,0,1)*π/2)^2
-// 滑动动量 + 落位：dragRate 4.4、omega 12、松手吸附到整数书位（archive_scroll_simulation.dart）
-// ============================================================
-const DIM_ARC={depthX:.66,depthY:-.30,rowStep:2.5,radius:1.48,dragRate:4.4,omega:12};
-let dimFocus=0;          // 当前居中第几本（可以是小数）
-let dimVel=0;            // 速度（本/秒）
-let dimRaf=0;
-let dimPitch=29, dimSpine=18, dimCover=128, dimHeight=206, dimBaseY=0;
-
-function dimArcMetrics(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf)return;
-  // 源码按手机逻辑宽 520 设计尺寸；桌面上按容器宽度等比放大（k 上限 1.85）
-  const k=Math.min(1.85,Math.max(1,(shelf.clientWidth||520)/740));
-  const W=Math.max(320,Math.min(760,shelf.clientWidth||520));
-  dimSpine=Math.max(14,Math.min(18,W*0.043))*k;
-  dimPitch=dimSpine+11*k;
-  dimCover=Math.max(100,Math.min(128,W*0.32))*k;
-  dimHeight=(dimCover-20)*166/118+54;
-  dimBaseY=-dimCover*DIM_ARC.depthY+dimHeight*0.60+12;
-}
-function dimRailY(d){
-  const c=Math.max(-7,Math.min(7,d));
-  return c*DIM_ARC.rowStep+c*c*0.45;
-}
-function dimWeight(d){
-  return Math.pow(Math.cos(Math.min(1,Math.abs(d)/DIM_ARC.radius)*Math.PI/2),2);
-}
-
-// 按弧线摆好书：中间那本抽出露封面，两侧收成书脊并沿弧上抬、后退
-// 距离取模 → 首尾相接，可以无限左右滑（循环）
-function dimArcLayout(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf)return;
-  const track=shelf.querySelector('.memory-shelf-track');
-  if(!track)return;
-  const books=[].slice.call(track.querySelectorAll('.memory-book'));
-  if(!books.length)return;
-  dimArcMetrics();
-  const n=books.length;
-  const focus=dimFocus;
-  const TOP_PAD=56;                        // 顶部留给"抽出/悬停抬高"的空间，别被切
-  let maxBottom=0;
-  books.forEach(function(b,i){
-    // ★ 循环：把距离折到 [-n/2, n/2)，滑过最后一本会接回第一本
-    let d=i-focus;
-    d=((d+n/2)%n+n)%n-n/2;
-    const w=dimWeight(d);
-    const isFocus=Math.abs(d)<0.5;
-    const pull=isFocus?1:w;
-    const x=d*dimPitch;
-    const y=dimRailY(d)+TOP_PAD;
-    // 抽出量：正中那本往观者方向推、往上抬
-    const p=dimCover*0.84*pull*(1.24-0.24*pull);
-    const lift=pull*pull*(3-2*pull);
-    const dx=-p*DIM_ARC.depthX;
-    const dy=-p*DIM_ARC.depthY-dimHeight*0.60*lift;
-    // 宽度：正中=封面宽，两侧=书脊宽
-    const bw=isFocus?dimCover:dimSpine;
-    b.style.width=bw+'px';
-    b.style.height=dimHeight+'px';
-    b.style.left='50%';
-    b.style.bottom='auto';
-    b.style.top='0';
-    b.style.marginLeft='0';
-    b.style.transform='translate3d('+(x+dx-bw/2)+'px,'+(y+dy)+'px,0)';
-    b.style.zIndex=String(1000-Math.round(Math.abs(d)*10));
-    // 只画看得见的几本（循环后两侧都有书）
-    b.style.opacity=Math.abs(d)>7?0:1;
-    b.style.pointerEvents=Math.abs(d)>7?'none':'auto';
-    b.classList.toggle('active',isFocus);
-    b.classList.toggle('arc-near',Math.abs(d)<=1);
-    maxBottom=Math.max(maxBottom,y+dy+dimHeight);
-  });
-  // ★ 容器高度 = 书真正占的高度（下面不再留一大片空的）
-  const h=Math.ceil(maxBottom+34);
-  shelf.style.height=h+'px';
-  track.style.height=h+'px';
-  track.style.width='100%';
-  const rail=shelf.querySelector('.memory-shelf-floor');
-  if(rail){
-    const activeBook=track.querySelector('.memory-book.active');
-    const base=activeBook?activeBook.offsetTop+dimHeight:maxBottom-10;
-    rail.style.bottom='8px';
-  }
-}
-
-// 位置更新（带惯性）
-function dimArcAnim(){
-  cancelAnimationFrame(dimRaf);
-  const step=function(){
-    dimVel*=Math.pow(0.0001,1/60);            // 惯性衰减
-    dimFocus+=dimVel/60;
-    if(Math.abs(dimVel)<0.02){dimVel=0;dimArcLayout();return;}
-    dimArcLayout();
-    dimRaf=requestAnimationFrame(step);
-  };
-  dimRaf=requestAnimationFrame(step);
-}
-// 松手吸附到整数书位（对应 archive_scroll_simulation 的 book detent）
-function dimArcSettle(){
-  const target=Math.round(dimFocus);
-  const start=dimFocus, t0=performance.now(), dur=380;
-  const run=function(t){
-    const k=Math.min(1,(t-t0)/dur);
-    const e=1-Math.pow(1-k,3);                // cubic ease-out
-    dimFocus=start+(target-start)*e;
-    dimArcLayout();
-    if(k<1)requestAnimationFrame(run);
-    else{dimFocus=target;dimVel=0;dimArcLayout();}
-  };
-  requestAnimationFrame(run);
-}
-function dimArcGo(delta){
-  const books=document.querySelectorAll('#dim-grid .memory-book').length;
-  const target=Math.max(0,Math.min(books-1,Math.round(dimFocus)+delta));
-  const start=dimFocus,t0=performance.now(),dur=320;
-  const run=function(t){
-    const k=Math.min(1,(t-t0)/dur);
-    const e=1-Math.pow(1-k,3);
-    dimFocus=start+(target-start)*e;
-    dimArcLayout();
-    if(k<1)requestAnimationFrame(run); else dimFocus=target;
-  };
-  requestAnimationFrame(run);
-}
-// 绑定拖动 / 滚轮 / 键盘
-function dimArcBind(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf||shelf.__arcBound)return;
-  shelf.__arcBound=true;
-  let down=false,lastX=0,lastT=0,moved=0;
-  shelf.addEventListener('pointerdown',function(e){
-    down=true;lastX=e.clientX;lastT=performance.now();moved=0;dimVel=0;
-    cancelAnimationFrame(dimRaf);
-    shelf.classList.add('dragging');
-  });
-  shelf.addEventListener('pointermove',function(e){
-    if(!down)return;
-    const now=performance.now();
-    const dx=e.clientX-lastX;
-    const dt=Math.max(8,now-lastT);
-    moved=Math.max(moved,Math.abs(dx));
-    dimFocus-=dx/dimPitch;
-    dimVel=-(dx/dimPitch)/(dt/1000);
-    lastX=e.clientX;lastT=now;
-    dimArcLayout();
-  });
-  const up=function(){
-    if(!down)return;
-    down=false;
-    shelf.classList.remove('dragging');
-    if(moved>6){shelf.__justDragged=true;setTimeout(function(){shelf.__justDragged=false;},80);
-      if(Math.abs(dimVel)>0.6)dimArcAnim();else dimArcSettle();
-    }else{
-      dimArcSettle();
-    }
-  };
-  ['pointerup','pointercancel','pointerleave'].forEach(function(t){shelf.addEventListener(t,up)});
-  shelf.addEventListener('wheel',function(e){
-    // ★ 只有鼠标落在书上（也就是这一小块书架区域）才接管滚轮，其余位置让页面正常滚动
-    var onBook=(e.target&&e.target.closest)?e.target.closest('.memory-book'):null;
-    if(!onBook)return;
-    const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-    if(!d)return;
-    e.preventDefault();
-    dimFocus+=d/dimPitch*0.6;
-    dimArcLayout();
-    clearTimeout(shelf.__wt);
-    shelf.__wt=setTimeout(dimArcSettle,160);
-  },{passive:false});
-  shelf.addEventListener('keydown',function(e){
-    if(e.key==='ArrowRight'){e.preventDefault();dimArcGo(1);}
-    if(e.key==='ArrowLeft'){e.preventDefault();dimArcGo(-1);}
-  });
-}
-// 重绘后复位
-function dimArcMount(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf)return;
-  var n0=shelf.querySelectorAll('.memory-book').length;
-  dimFocus=n0>2?Math.floor(n0/2):0;   // 从中间那本开始，左右都排开才看得出弧线
-  dimVel=0;
-  dimArcBind();
-  dimArcLayout();
-  setTimeout(dimArcLayout,60);
-}
-window.addEventListener('resize',function(){ if(document.getElementById('dim-grid'))dimArcLayout(); });
-
-function dimShelfBind(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf)return;
-  const books=[].slice.call(shelf.querySelectorAll('.memory-book'));
-  if(!books.length)return;
-  // 保证始终有一本是选中的
-  const cur=books.find(b=>b.classList.contains('active'));
-  if(cur){dimActiveEl=cur;}
-  else{books[0].classList.add('active');dimActiveEl=books[0];}
-  if(shelf.__bound)return;
-  shelf.__bound=true;
-
-  // 点击：没选中就选中；已选中就打开详情
-  shelf.addEventListener('click',ev=>{
-    const b=(ev.target&&ev.target.closest)?ev.target.closest('.memory-book'):null;
-    if(!b)return;
-    if(!b.classList.contains('active')){
-      ev.preventDefault();ev.stopPropagation();
-      dimShelfSetActive(b);
-      return;
-    }
-    if(shelf.__justDragged){shelf.__justDragged=false;return;}
-    // 再点已选中的书 → 弹出详情（恢复成原来的弹窗，不再翻书）
-    openDimDetail(+b.dataset.dimBook,+b.dataset.pos,b);
-  },true);
-
-  // 拖动（映像馆 initShelfRail 同款）
-  let down=false,startX=0,startScroll=0,moved=0;
-  shelf.addEventListener('pointerdown',e=>{down=true;startX=e.clientX;startScroll=shelf.scrollLeft;moved=0;});
-  shelf.addEventListener('pointermove',e=>{
-    if(!down)return;
-    const dx=e.clientX-startX;
-    moved=Math.max(moved,Math.abs(dx));
-    if(moved>7){shelf.classList.add('dragging');shelf.scrollLeft=startScroll-dx;}
-  });
-  const up=()=>{
-    down=false;
-    shelf.classList.remove('dragging');
-    if(moved>7){shelf.__justDragged=true;setTimeout(()=>{shelf.__justDragged=false;},80);}
-  };
-  ['pointerup','pointercancel','pointerleave'].forEach(t=>shelf.addEventListener(t,up));
-
-  // 竖向滚轮 → 横向滑（映像馆只做了拖动，这里顺手补上滚轮）
-  shelf.addEventListener('wheel',e=>{
-    const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-    if(!d)return;
-    const max=shelf.scrollWidth-shelf.clientWidth;
-    if(max<=2)return;
-    if((shelf.scrollLeft<=0&&d<0)||(shelf.scrollLeft>=max-1&&d>0))return;
-    e.preventDefault();
-    shelf.scrollLeft+=d>0?Math.max(18,Math.abs(d)):-Math.max(18,Math.abs(d));
-  },{passive:false});
-
-  // ←/→ 切换选中
-  shelf.addEventListener('keydown',e=>{
-    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
-    const all=[].slice.call(shelf.querySelectorAll('.memory-book'));
-    const i=all.indexOf(dimActiveEl);
-    const next=all[i+(e.key==='ArrowRight'?1:-1)];
-    if(next){e.preventDefault();dimShelfSetActive(next);}
-  });
-}
-
-function dimCenterBook(el){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf||!el)return;
-  const max=shelf.scrollWidth-shelf.clientWidth;
-  if(max<=2)return;
-  const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
-  const target=Math.max(0,Math.min(max,el.offsetLeft-pad));
-  if(Math.abs(target-shelf.scrollLeft)>1){
-    // 这次是"点了某本书"引发的定位，不要被停手吸附再拉走半格
-    shelf._suppressSnap=Date.now()+900;
-    shelf.scrollTo({left:target,behavior:'smooth'});
-  }
-}
-function dimSnapToBook(shelf){
-  const books=[].slice.call(shelf.querySelectorAll('.memory-book'));
-  if(!books.length)return;
-  const sl=shelf.scrollLeft;
-  const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
-  let best=null,bestD=Infinity;
-  books.forEach(b=>{
-    const t=b.offsetLeft-pad;
-    const d=Math.abs(t-sl);
-    if(d<bestD){bestD=d;best=b;t<Infinity;}
-  });
-  if(best!=null){
-    const target=Math.max(0,Math.min(shelf.scrollWidth-shelf.clientWidth,best.offsetLeft-pad));
-    if(Math.abs(target-sl)>1)shelf.scrollTo({left:target,behavior:'smooth'});
-  }
-}
-function initDimWheel(){
-  const shelf=document.getElementById('dim-grid');
-  if(!shelf||shelf._wheelBound)return;
-  shelf._wheelBound=true;
-  let snapTimer=null;
-  shelf.addEventListener('wheel',function(e){
-    // 横向滚轮照常用；竖向滚轮转成横向（shift/触控板双指都覆盖）
-    const dy=e.deltaY, dx=e.deltaX;
-    const d=Math.abs(dx)>Math.abs(dy)?dx:dy;
-    if(!d)return;
-    const max=shelf.scrollWidth-shelf.clientWidth;
-    if(max<=2)return;                     // 内容不够宽，交给页面正常滚动
-    const atStart=shelf.scrollLeft<=0;
-    const atEnd=shelf.scrollLeft>=max-1;
-    if((atStart&&d<0)||(atEnd&&d>0))return;  // 到边界放行，别把整页滚动锁死
-    e.preventDefault();
-    shelf.scrollLeft+=d>0?Math.max(18,Math.abs(d)):-Math.max(18,Math.abs(d));
-    clearTimeout(snapTimer);
-    snapTimer=setTimeout(()=>dimSnapToBook(shelf),160);
-  },{passive:false});
-  // 拖动/触摸结束后也吸附
-  shelf.addEventListener('scroll',function(){
-    clearTimeout(shelf._snapT);
-    shelf._snapT=setTimeout(()=>{
-      // 点了某本书正在滑到它 —— 别插一脚把它吸到邻居书位上
-      if(shelf._suppressSnap&&Date.now()<shelf._suppressSnap)return;
-      if(!shelf._dragging)dimSnapToBook(shelf);
-    },220);
-  },{passive:true});
-  // 键盘左右键也能滑
-  shelf.addEventListener('keydown',function(e){
-    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
-    const books=[].slice.call(shelf.querySelectorAll('.memory-book'));
-    if(!books.length)return;
-    const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
-    const sl=shelf.scrollLeft;
-    const dir=e.key==='ArrowRight'?1:-1;
-    let next=null;
-    if(dir>0){for(const b of books){if(b.offsetLeft-pad>sl+2){next=b;break;}}}
-    else{for(let i=books.length-1;i>=0;i--){if(books[i].offsetLeft-pad<sl-2){next=books[i];break;}}}
-    if(next){e.preventDefault();shelf.scrollTo({left:Math.max(0,next.offsetLeft-pad),behavior:'smooth'});}
-  });
-}
-
 function renderDimension(){
   const grid=document.getElementById('dim-grid');if(!grid)return;
   // 用 classList 而不是 className：否则会把 setDimKind 加上的 .dim-anim 冲掉，入场动画就没了
@@ -5416,41 +4672,15 @@ function renderDimension(){
   else if(dimSub)list=all.filter(it=>String(it.sub||'')===dimSub);
   list=list.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
   const cnt=document.getElementById('dim-count');
-  // 页码格式照参考里的 ArchiveCode：'01 / 04'（当前 / 总数），在 dimHover 里随鼠标更新
-  if(cnt)cnt.textContent=list.length?('01 / '+String(list.length).padStart(2,'0')):'';
+  if(cnt)cnt.textContent=list.length?('共 '+list.length+' 部'+info.label+(dimSub?(' · '+(dimSub==='__none__'?'未分类':dimSub)):'')):'';
   if(!list.length){
     grid.innerHTML='<p class="dim-empty">'+dimIconSvg(dimKind,30)+'<br>这里还空着 —— 在管理面板的「次元柜」里添加'+escHtml(info.label)+'记录吧。</p>';
-    const f0=document.getElementById('dim-feat'); if(f0)f0.innerHTML='';
-    dimHoverIdx=null;
     return;
   }
   // 传「在 items 数组里的真实下标」，弹窗靠它取数据（列表经过筛选/排序，下标不一样）
   const allItems=dimKit().items;
-  // 只有书籍 / 影视走映像馆的记忆书架；游戏保持原来的卡片网格不动。
-  const isShelf=(dimKind==='books'||dimKind==='films');
-  grid.classList.toggle('memory-shelf-viewport',isShelf);
-  grid.classList.toggle('dim-rail',isShelf);
-  grid.classList.toggle('dim-shelf',isShelf);
-  grid.classList.toggle('dim-grid',!isShelf);
-  if(!isShelf){
-    // 游戏区：完全保持最初的样子（普通网格 + .dim-card），不套任何书架结构
-    grid.innerHTML=list.map((it,pos)=>dimCard(it,allItems.indexOf(it),pos)).join('');
-    window.__dimVisibleCount=list.length;
-    dimHoverIdx=null;
-    dimHover(allItems.indexOf(list[0]));
-    return;
-  }
-  // 书籍 / 影视：结构原样搬自映像馆的记忆书架
-  //   viewport（可拖动/滚动）> floor（架板线）+ track（absolute 摆放书本）
-  grid.innerHTML='<div class="memory-shelf-floor" aria-hidden="true"></div>'+
-    '<div class="memory-shelf-track" style="width:'+(Math.max(list.length,1)*248+200)+'px">'+
-      list.map((it,pos)=>dimCard(it,allItems.indexOf(it),pos)).join('')+
-    '</div>';
-  dimArcMount();   // 弧形书架：按 archive_shelf_geometry 的参数摆位 + 拖动惯性 + 吸附落位
-  // 默认把第一本的信息显示在书架下方（对应参考里那行"书名 / 作者 · 状态 ↗"）
-  window.__dimVisibleCount=list.length;   // 页码分母：当前书架上的条数
-  dimHoverIdx=null;
-  dimHover(allItems.indexOf(list[0]));
+  grid.innerHTML=list.map(it=>dimCard(it,allItems.indexOf(it))).join('');
+  initDimTilt();   // 卡片重绘后重新确认倾斜监听（幂等）
 }
 
 // ============================================================
