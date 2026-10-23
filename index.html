@@ -1310,11 +1310,11 @@ main#main{position:relative;z-index:1}
 <style>
 /* ══════════ 次元柜 · 记忆书架（搬映像馆那套，只改封面与点击） ══════════ */
 .dim-rail{margin-top:18px}
-.dim-rail .memory-shelf-viewport{height:560px;overflow-x:auto;overflow-y:hidden;cursor:grab;
+.dim-rail.memory-shelf-viewport{display:block;height:660px;overflow-x:auto;overflow-y:hidden;cursor:grab;
   border-radius:14px;background:linear-gradient(180deg,rgba(252,251,247,.6),rgba(246,244,239,.2))}
-.dim-rail .memory-shelf-viewport.dragging{cursor:grabbing}
-.dim-rail .memory-shelf-viewport::-webkit-scrollbar{height:7px}
-.dim-rail .memory-shelf-viewport::-webkit-scrollbar-thumb{background:rgba(35,34,30,.22);border-radius:4px}
+.dim-rail.memory-shelf-viewport.dragging{cursor:grabbing}
+.dim-rail.memory-shelf-viewport::-webkit-scrollbar{height:7px}
+.dim-rail.memory-shelf-viewport::-webkit-scrollbar-thumb{background:rgba(35,34,30,.22);border-radius:4px}
 .dim-rail .memory-shelf-track{position:relative;height:100%}
 .dim-rail .memory-shelf-floor{position:absolute;left:0;right:0;bottom:52px;height:1px;
   background:linear-gradient(90deg,transparent,rgba(35,34,30,.22) 8%,rgba(35,34,30,.13) 92%,transparent);
@@ -1338,21 +1338,24 @@ main#main{position:relative;z-index:1}
 .dim-rail .memory-book:not(.active) .memory-book-spine-copy i{font-size:8px;letter-spacing:.2em}
 .dim-rail .memory-book:not(.active) .memory-book-cover,
 .dim-rail .memory-book:not(.active) .memory-book-cover-inside{opacity:0;pointer-events:none}
-/* ★ 封面改动①：整张照片铺满，不要上下黑边、不要编号与文字 */
-.dim-rail .memory-book-cover{padding:0!important;display:block!important;overflow:hidden!important;
-  background:#EFEBE2!important;color:#23221E}
-.dim-rail .memory-book-cover::before,.dim-rail .memory-book-cover::after{display:none!important}
-.dim-rail .mbc-photo{position:absolute;inset:0;display:block;background:#EFEBE2 center/cover no-repeat}
-.dim-rail .mbc-photo.is-empty{display:flex;align-items:center;justify-content:center;color:#A79F8C}
-/* ★ 封面改动②：封内页用米色纸 + 竖排书名 */
-.dim-rail .memory-book-cover-inside{background:linear-gradient(90deg,#E4DBCD,#F8F3E9 10%,#F3EEE4 92%,#D8CDBD)}
-.dim-rail .mbci-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:22px 16px}
-.dim-rail .mbci-inner b{writing-mode:vertical-rl;text-orientation:mixed;font-size:1rem;font-weight:600;color:#23221E;letter-spacing:.08em}
-.dim-rail .mbci-inner i{font-style:normal;font-family:ui-monospace,monospace;font-size:.6rem;letter-spacing:.14em;color:#8A806B}
+/* ★ 封面：恢复映像馆原版排版（旅行手册 / 大字标题 / 照片 / 底部元信息），只把数据换成次元柜的。
+   ★ 必须补这三条：参考项目里 .memory-book-cover 只设了 --book-ink 变量，
+     color 却是在 .memory-book 上继承的，结果标题会沿用浅色墨，在米色纸面上几乎看不见。
+     映像馆也是这样补救的，这里照抄。 */
+.dim-rail .memory-book-cover{color:#253943}
+.dim-rail .memory-book-title{color:#253943}
+.dim-rail .memory-book-index{color:#3d525c}
+.dim-rail .memory-book-spine-copy{color:var(--book-ink,#f3ecd7)}
+/* ★ 尺寸对齐映像馆：选中 308×484，其余收成 64 宽的书脊 */
+.dim-rail .memory-book{width:308px;height:484px;bottom:96px}
+.dim-rail .memory-book:not(.active){width:64px}
 /* ★ 点击改动：翻开后由详情弹窗接管，这里只保留抽出+翻开的动画观感 */
-.dim-rail .memory-shelf-viewport.opening .memory-book:not(.opening){opacity:.35;transition:opacity .3s}
+.dim-rail.memory-shelf-viewport.opening .memory-book:not(.opening){opacity:.35;transition:opacity .3s}
+/* 书架底部的提示行（映像馆也有一条） */
+.dim-rail-hint{position:absolute;right:16px;bottom:10px;font-size:.68em;color:#A79F8C;pointer-events:none;letter-spacing:.04em}
 @media (max-width:760px){
-  .dim-rail .memory-shelf-viewport{height:430px}
+  .dim-rail.memory-shelf-viewport{height:460px}
+  .dim-rail .memory-book{width:196px;height:309px;bottom:68px}
   .dim-rail .memory-book:not(.active){width:52px}
 }
 @media (prefers-reduced-motion: reduce){
@@ -1536,7 +1539,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-23 · 次元柜换成映像馆的记忆书架';
+const BUILD='2026-10-23 · 次元柜 = 映像馆记忆书架（原版封面）';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4838,10 +4841,26 @@ function bookCard(it,idx,pos){
         '<span class="memory-book-edge-bottom" aria-hidden="true"></span>'+
         '<span class="memory-book-spine-face" aria-hidden="true"><span class="memory-book-spine-copy">'+
           '<small>'+no+'</small><b>'+escHtml(title)+'</b><i>'+escHtml(kindLabel)+'</i></span></span>'+
-        '<span class="memory-book-cover-inside" aria-hidden="true"><span class="mbci-inner">'+
-          '<b>'+escHtml(title)+'</b>'+(creator?'<i>'+escHtml(creator)+'</i>':'')+
-        '</span></span>'+
-        '<span class="memory-book-cover">'+photo+'</span>'+
+        '<span class="memory-book-cover-inside" aria-hidden="true">'+
+          '<span class="memory-book-opening-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
+          '<span class="memory-book-opening-summary">'+
+            '<small>次元柜档案</small>'+
+            '<strong>'+escHtml(title)+'</strong>'+
+            '<span>'+escHtml(creator||kindLabel)+'</span>'+
+            '<span class="memory-book-opening-totals">'+escHtml(kindLabel)+'　'+(review?'已写简介':'暂无简介')+'</span>'+
+          '</span>'+
+        '</span>'+
+        // 封面：结构照抄映像馆的 7 个元素，只把数据换成次元柜的
+        //   index=分类名  title=书名  photo=封面图  meta=作者/日期
+        '<span class="memory-book-cover">'+
+          '<span class="memory-book-mark" aria-hidden="true"></span>'+
+          '<span class="memory-book-index">'+escHtml(kindLabel)+'</span>'+
+          '<strong class="memory-book-title'+(title.length>7?' extra-long':title.length>4?' long':'')+'">'+escHtml(title)+'</strong>'+
+          '<span class="memory-book-subtitle">'+escHtml(sub||creator||'私人档案')+'</span>'+
+          '<span class="memory-book-photo"'+(cover?' style="background-image:url(\''+escHtml(cover)+'\')"':'')+'></span>'+
+          '<span class="memory-book-meta"><span>'+escHtml(creator||'未填作者')+'</span><span>'+escHtml(String(it.date||''))+'</span></span>'+
+          '<span class="memory-book-open">'+escHtml(sub||kindLabel)+'</span>'+
+        '</span>'+
       '</span>'+
     '</button>';
 }
