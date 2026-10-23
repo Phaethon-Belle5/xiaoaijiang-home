@@ -249,20 +249,25 @@
 .sp-title{writing-mode:vertical-rl;text-orientation:mixed;font-size:.74em;line-height:1.2;
   letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   max-height:calc(100% - 26px);color:var(--dp-ink)}
-.sp-cover{position:absolute;left:0;top:0;bottom:0;width:152px;display:flex;flex-direction:column;
-  background:var(--dp-dark);color:#F5F2EA;border-radius:4px;overflow:hidden;opacity:0;pointer-events:none;
+/* 封面：整张照片铺满，不再有上下黑边与编号 */
+.sp-cover{position:absolute;left:0;top:0;bottom:0;width:152px;background:transparent;
+  border-radius:3px 5px 5px 3px;overflow:hidden;opacity:0;pointer-events:none;
+  transform-origin:0% 50%;transform-style:preserve-3d;backface-visibility:hidden;
   transition:opacity .28s ease-out;
-  box-shadow:0 20px 44px -16px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07)}
-.sp-cv-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:none;
-  padding:9px 10px 7px;font-family:var(--dp-mono);font-size:.55em;letter-spacing:.1em;color:rgba(245,242,234,.7)}
-.sp-cv-star{color:#D9C08C;letter-spacing:0}
-.sp-cover>.sp-img,.sp-cover>.sp-fb{flex:1;min-height:0;width:100%;display:block;object-fit:cover}
+  box-shadow:0 20px 44px -16px rgba(0,0,0,.55)}
+.sp-cover>.sp-img{width:100%;height:100%;display:block;object-fit:cover}
 .sp-img-broken{display:none}
-.sp-fb{display:flex;align-items:center;justify-content:center;color:rgba(245,242,234,.4);
-  background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,0))}
-.sp-cv-bot{display:flex;justify-content:space-between;align-items:center;gap:6px;flex:none;
-  padding:8px 10px;font-family:var(--dp-mono);font-size:.52em;letter-spacing:.08em;color:rgba(245,242,234,.55)}
-.sp-cv-tag{border:1px solid rgba(245,242,234,.3);border-radius:3px;padding:1px 5px;color:rgba(245,242,234,.86);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-cover>.sp-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  color:var(--dp-ink2);background:linear-gradient(160deg,#FBFAF6,#EFEBE2)}
+/* 翻开后露出的内页（记忆书架那种"书被打开"的效果） */
+.sp-inside{position:absolute;left:0;top:0;bottom:0;width:152px;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:center;gap:7px;padding:18px 14px;pointer-events:none;
+  background:linear-gradient(160deg,#FCFBF7,#F2EFE8);border-radius:3px 5px 5px 3px;
+  border:1px solid var(--dp-line);opacity:0;transition:opacity .3s ease-out;overflow:hidden}
+.sp-inside b{font-size:.78em;font-weight:600;color:var(--dp-ink);line-height:1.4;
+  writing-mode:vertical-rl;text-orientation:mixed;max-height:100%;overflow:hidden}
+.sp-inside i{font-style:normal;font-family:var(--dp-mono);font-size:.52em;letter-spacing:.08em;
+  color:var(--dp-ink2);writing-mode:vertical-rl}
 .sp-shadow{position:absolute;left:1px;right:-7px;bottom:-10px;height:16px;pointer-events:none;
   border-radius:50%;
   background:radial-gradient(50% 100% at 50% 0%,rgba(35,34,30,.26),rgba(35,34,30,0) 72%);
@@ -272,6 +277,19 @@
 .spine-book:hover .sp-spine,.spine-book:focus-visible .sp-spine{opacity:0}
 .spine-book:hover .sp-cover,.spine-book:focus-visible .sp-cover{opacity:1;transition-delay:.08s;pointer-events:auto}
 .spine-book:focus-visible{outline:2px solid var(--dp-ink);outline-offset:4px;border-radius:4px}
+/* 点击：像从记忆书架上抽出一本、封面绕书脊翻开、露出内页 ——
+   和映像馆 .shelf3d.opening 的弹出手感一致 */
+.spine-book.opening{width:152px;transform:rotateY(0deg) translate3d(0,-8px,70px);
+  margin-left:5px;margin-right:9px;z-index:60;cursor:default}
+.spine-book.opening .sp-spine{opacity:0}
+.spine-book.opening .sp-cover{opacity:1;pointer-events:auto;
+  animation:spCoverOpen .62s .1s cubic-bezier(.55,.06,.68,.19) both}
+.spine-book.opening .sp-inside{opacity:1;transition-delay:.34s}
+@keyframes spCoverOpen{from{transform:rotateY(0deg)}to{transform:rotateY(-108deg)}}
+@media (prefers-reduced-motion: reduce){
+  .spine-book.opening .sp-cover{animation:none;opacity:0}
+  .spine-book.opening .sp-inside{opacity:1;transition:none}
+}
 /* 书架下方那条「档案条目」 */
 .dim-feat{display:flex;align-items:center;gap:14px;min-height:54px;margin-top:4px;padding:16px 2px 0;
   border-top:1px solid var(--dp-line2)}
@@ -1444,7 +1462,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-22 · 次元柜改成奶白玻璃 · 档案式 · 立体书架';
+const BUILD='2026-10-23 · 次元柜封面铺满 + 像记忆书架那样翻开';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4576,7 +4594,7 @@ function initDimTilt(){
   grid.addEventListener('mouseleave',()=>{ if(cur){clear(cur);cur=null;} });
 }
 // 点卡片 → 弹出详情窗（不是在页面里展开）
-function openDimDetail(idx,pos){
+function openDimDetail(idx,pos,el){
   const it=dimKit().items[idx];
   if(!it)return;
   const isGame=it.kind==='games';
@@ -4624,19 +4642,36 @@ function openDimDetail(idx,pos){
     (lines.length?'<div class="dim-m-sec"><div class="dim-m-lb">评价</div><ul class="dim-m-list">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
     (!review&&!lines.length?'<p class="dim-m-none">这条还没有写简介和评价。</p>':'')+
     (link?'<a class="dim-m-link" href="'+escHtml(link)+'" target="_blank" rel="noopener">去看看 ↗</a>':'');
-  box.classList.add('show');
-  document.body.classList.add('dim-modal-open');
-  body.scrollTop=0;
   // 封面背景用同一张图做高斯模糊衬底，主图完整显示不裁切
   const bg=body.querySelector('.dim-m-cover-bg');
   if(bg&&cover)bg.style.backgroundImage='url("'+cover.replace(/["\\]/g,'')+'")';
   const img=body.querySelector('.dim-m-cover-img');
   if(img)img.addEventListener('load',()=>body.classList.add('has-cover'));
+
+  // 弹出时序：先把这本书从书架抽出来、封面绕书脊翻开（和映像馆记忆书架的手感一致），
+  // 再浮出详情面板；关闭时把书合回去。
+  const bookEl=el||document.querySelector('.spine-book[data-idx="'+idx+'"]');
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reveal=()=>{
+    box.classList.add('show');
+    document.body.classList.add('dim-modal-open');
+    body.scrollTop=0;
+  };
+  if(bookEl&&!reduce){
+    document.querySelectorAll('.spine-book.opening').forEach(b=>{if(b!==bookEl)b.classList.remove('opening');});
+    bookEl.classList.add('opening');
+    setTimeout(reveal,330);
+  }else{
+    if(bookEl)bookEl.classList.add('opening');
+    reveal();
+  }
 }
 function closeDimDetail(){
   const box=document.getElementById('dim-modal');
   if(box)box.classList.remove('show');
   document.body.classList.remove('dim-modal-open');
+  // 把刚才翻开的那本书合回去
+  document.querySelectorAll('.spine-book.opening').forEach(b=>b.classList.remove('opening'));
 }
 // 书籍：做成一本立体书（封面 / 右侧书页边 / 封底三片，靠 preserve-3d 撑出厚度）
 // 参考了博客书架的常见做法：外层 perspective，悬停把整本书 rotateY 抽出来。
@@ -4657,17 +4692,14 @@ function bookCard(it,idx,pos){
     : '<div class="sp-fb">'+dimIconSvg(it.kind,26)+'</div>';
   return '<article class="spine-book'+(isFilm?' is-film':'')+(hasMore?' clickable':'')+'" data-kind="'+it.kind+'" data-idx="'+idx+'"'+
       ' title="'+escHtml(title+(creator?' · '+creator:''))+(hasMore?'（点击查看详情）':'')+'"'+
-      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+','+pos+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+','+pos+');}"':'')+
+      (hasMore?' role="button" tabindex="0" onclick="openDimDetail('+idx+','+pos+',this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDimDetail('+idx+','+pos+',this);}"':'')+
       ' onmouseenter="dimHover('+idx+','+pos+')" onfocus="dimHover('+idx+','+pos+')">'+
+      '<span class="sp-inside" aria-hidden="true"><b>'+escHtml(title)+'</b>'+(creator?'<i>'+escHtml(creator)+'</i>':'')+'</span>'+
       '<span class="sp-spine" aria-hidden="true">'+
         '<span class="sp-no">'+no+'</span>'+
         '<span class="sp-title">'+escHtml(title)+'</span>'+
       '</span>'+
-      '<div class="sp-cover" aria-hidden="true">'+
-        '<div class="sp-cv-top"><span class="sp-cv-no">NO.'+no+'</span>'+(rating?'<span class="sp-cv-star">★'+String(rating.toFixed(1)).replace(/\.0$/,'')+'</span>':'')+'</div>'+
-        art+
-        '<div class="sp-cv-bot"><span class="sp-cv-code">'+code+'</span>'+(sub?'<span class="sp-cv-tag">'+escHtml(sub)+'</span>':'')+'</div>'+
-      '</div>'+
+      '<div class="sp-cover" aria-hidden="true">'+art+'</div>'+
       '<span class="sp-shadow" aria-hidden="true"></span>'+
     '</article>';
 }
