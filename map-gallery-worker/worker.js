@@ -146,8 +146,26 @@ export default {
         else await env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET val=?').bind(key, url, url).run();
         return json({ ok: true, province: prov, url });
       }
-      if (p === '/photos' && method === 'GET') {
-        const { results } = await env.DB.prepare('SELECT * FROM photos ORDER BY ord, id').all();
+      // ── 省份评价：记忆书架左侧面板里显示的那段话（管理员在控制面板写）──
+      // 同样复用 site_stats，键名 pr:<省份名>
+      if (p === '/province-reviews' && method === 'GET') {
+        const { results } = await env.DB.prepare("SELECT key,val FROM site_stats WHERE key LIKE 'pr:%'").all();
+        const out = {};
+        (results || []).forEach(r => { if (r && r.key) out[String(r.key).slice(3)] = r.val; });
+        return json(out);
+      }
+      if (p === '/province-review' && method === 'POST') {
+        const auth = await needAuth(); if (auth) return auth;
+        let b; try { b = await request.json(); } catch (e) { return json({ error: 'bad_request' }, 400); }
+        const prov = String(b.province || '').trim().slice(0, 40);
+        const text = String(b.text || '').trim().slice(0, 1200);
+        if (!prov) return json({ error: 'missing_province' }, 400);
+        const key = 'pr:' + prov;
+        if (!text) await env.DB.prepare('DELETE FROM site_stats WHERE key=?').bind(key).run();
+        else await env.DB.prepare('INSERT INTO site_stats(key,val) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET val=?').bind(key, text, text).run();
+        return json({ ok: true, province: prov, text });
+      }
+      if (p === '/photos' && method === 'GET') {        const { results } = await env.DB.prepare('SELECT * FROM photos ORDER BY ord, id').all();
         return json((results || []).map(rowPhoto));
       }
       if (p === '/unlocated' && method === 'GET') {

@@ -205,6 +205,21 @@ a{color:var(--gold);text-decoration:none}
           style="flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--glass-border);background:var(--panel-2);color:var(--text-primary);outline:none">
         <button class="btn sm primary" onclick="saveProvinceCoverFromInput()">用这个地址</button>
       </div>
+      <!-- 省份评价：显示在记忆书架左侧面板 -->
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:.85em;color:var(--text-muted);margin-bottom:6px">
+          省份评价 <span style="opacity:.7">（会显示在记忆书架左侧面板；留空则不显示）</span>
+        </label>
+        <textarea id="provReviewInput" rows="4" placeholder="写一段对这片土地的印象，比如：海风、啤酒和一路慢慢走完的老城区…"
+          style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--glass-border);
+          background:var(--panel-2);color:var(--text-primary);outline:none;resize:vertical;
+          font:inherit;line-height:1.7"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn sm primary" onclick="saveProvinceReview()">保存评价</button>
+          <button class="btn sm" onclick="clearProvinceReview()">清除评价</button>
+          <span id="provReviewHint" style="margin-left:auto;align-self:center;font-size:.8em;color:var(--text-muted)"></span>
+        </div>
+      </div>
       <div class="prov-grid" id="provGrid"></div>
     </div>
   </div>
@@ -249,7 +264,7 @@ function handleUnauth(){sessionStorage.removeItem(TOKEN_KEY);document.getElement
 
 /* ===== 登录 ===== */
 /* ===== 省份封面 ===== */
-let PROV_COVERS={},PROV_CITIES={},provPicking='';
+let PROV_COVERS={},PROV_REVIEWS={},PROV_CITIES={},provPicking='';
 const PROV_NAME_BY_ADCODE={'110000':'北京市','120000':'天津市','130000':'河北省','140000':'山西省','150000':'内蒙古自治区','210000':'辽宁省','220000':'吉林省','230000':'黑龙江省','310000':'上海市','320000':'江苏省','330000':'浙江省','340000':'安徽省','350000':'福建省','360000':'江西省','370000':'山东省','410000':'河南省','420000':'湖北省','430000':'湖南省','440000':'广东省','450000':'广西壮族自治区','460000':'海南省','500000':'重庆市','510000':'四川省','520000':'贵州省','530000':'云南省','540000':'西藏自治区','610000':'陕西省','620000':'甘肃省','630000':'青海省','640000':'宁夏回族自治区','650000':'新疆维吾尔自治区','710000':'台湾省','810000':'香港特别行政区','820000':'澳门特别行政区'};
 function provOf(c){return PROV_NAME_BY_ADCODE[String(c.adcode||'')]||'未归类';}
 async function openProvinceCovers(){
@@ -257,6 +272,8 @@ async function openProvinceCovers(){
   document.getElementById('provList').innerHTML='<p style="color:var(--text-muted)">加载中…</p>';
   try{ PROV_COVERS=await api('/province-covers'); }catch(e){ PROV_COVERS={}; }
   if(!Array.isArray(PROV_COVERS)&&typeof PROV_COVERS!=='object')PROV_COVERS={};
+  try{ PROV_REVIEWS=await api('/province-reviews'); }catch(e){ PROV_REVIEWS={}; }
+  if(!PROV_REVIEWS||typeof PROV_REVIEWS!=='object')PROV_REVIEWS={};
   if(!CITIES.length){try{await loadCities();}catch(e){}}
   // 取全部照片，供挑封面用
   if(!ALL_PHOTOS.length){ try{ ALL_PHOTOS=await api('/photos'); }catch(e){ ALL_PHOTOS=[]; } }
@@ -298,6 +315,10 @@ function openProvPicker(prov){
   document.getElementById('provPicker').style.display='';
   document.getElementById('provPickTitle').textContent=prov+' · 选封面';
   document.getElementById('provUrlInput').value=PROV_COVERS[prov]||'';
+  const rev=document.getElementById('provReviewInput');
+  if(rev){ rev.value=PROV_REVIEWS[prov]||''; }
+  const hint=document.getElementById('provReviewHint');
+  if(hint){ hint.textContent=PROV_REVIEWS[prov]?('已有评价 '+PROV_REVIEWS[prov].length+' 字'):'还没有评价'; }
   const grid=document.getElementById('provGrid');
   const mine=provPhotos(prov);
   // 全站其它照片也列出来 —— 原来只能从"该省的照片"里挑，省份照片少时几乎没得选
@@ -327,6 +348,25 @@ async function saveProvinceCover(url){
 }
 function saveProvinceCoverFromInput(){saveProvinceCover(document.getElementById('provUrlInput').value.trim());}
 function clearProvinceCover(){saveProvinceCover('');}
+/* 省份评价：存到 site_stats 的 pr:<省份>，前端记忆书架左侧面板读它 */
+async function saveProvinceReview(){
+  if(!provPicking){toast('先选一个省份','err');return;}
+  const el=document.getElementById('provReviewInput');
+  const text=(el?el.value:'').trim();
+  try{
+    await api('/province-review',{method:'POST',body:JSON.stringify({province:provPicking,text:text})});
+    if(text)PROV_REVIEWS[provPicking]=text; else delete PROV_REVIEWS[provPicking];
+    const hint=document.getElementById('provReviewHint');
+    if(hint)hint.textContent=text?('已保存 '+text.length+' 字'):'已清除';
+    toast(text?'评价已保存':'评价已清除','ok');
+    renderProvList();
+  }catch(e){toast('保存失败：'+e.message,'err');}
+}
+function clearProvinceReview(){
+  const el=document.getElementById('provReviewInput');
+  if(el)el.value='';
+  saveProvinceReview();
+}
 async function doLogin(){
   const pw=document.getElementById('pw').value;const msg=document.getElementById('loginMsg');
   if(!pw){msg.className='msg err';msg.textContent='请输入密码';return;}

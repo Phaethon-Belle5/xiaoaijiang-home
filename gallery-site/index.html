@@ -838,6 +838,33 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   filter:drop-shadow(0 8px 14px rgba(0,0,0,.55))}
 #memPanel .tl-walker.walking{animation:tlBob .52s ease-in-out infinite alternate}
 @keyframes tlBob{from{translate:0 0}to{translate:0 -5px}}
+
+/* 书架左侧面板撑满整列，内容多了自己滚，不要只露出头部 */
+#memPanel .memory-province-info{height:100%!important;max-height:100%!important;min-height:0!important;
+  overflow-y:auto!important;display:flex!important;flex-direction:column;gap:2px;
+  padding-right:6px}
+#memPanel .memory-province-info::-webkit-scrollbar{width:6px}
+#memPanel .memory-province-info::-webkit-scrollbar-thumb{background:rgba(122,171,255,.3);border-radius:3px}
+/* 城市卡片在面板里紧凑一点 */
+#memPanel .memory-info-cities{gap:6px;margin-top:10px}
+
+/* 书架左侧：深色底，否则日期/城市/评价这些浅色字在浅灰底上看不见 */
+#memPanel .memory-province-info{background:linear-gradient(165deg,#1b2534,#0e1520 70%)!important;
+  color:#dbe8f8!important}
+#memPanel .memory-info-name{color:#f2f7ff!important}
+#memPanel .memory-info-count{color:#d4a843!important}
+#memPanel .memory-info-stats span{color:#9fb6d4!important}
+#memPanel .memory-info-stats b{color:#eaf2ff!important}
+#memPanel .memory-info-date span{color:#8fa8c8!important}
+#memPanel .memory-info-date strong{color:#e6efff!important;display:block;margin-top:2px}
+#memPanel .memory-info-date{margin-top:14px;font-size:12px}
+#memPanel .memory-info-cities span{color:#cfdcf0!important}
+#memPanel .memory-info-review{color:#cfdcf0!important}
+#memPanel .memory-info-note{color:#7d90a8!important}
+#memPanel .memory-info-review-block{margin-top:14px;padding:11px 13px;border-radius:11px;
+  background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.22)}
+#memPanel .memory-info-review{color:#dfe9f8!important;line-height:1.8;margin:0;font-size:13px}
+#memPanel .memory-info-review.is-empty{color:#7d90a8!important;font-style:italic}
 </style>
 </head>
 <body>
@@ -1024,7 +1051,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-23 · 照片墙堆叠态清空背景';
+const GALLERY_BUILD='2026-10-23 · 书架左侧：省份评价 + 城市列表';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1482,6 +1509,19 @@ function setMemTab(t){
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const p=document.getElementById('memPop');if(p&&p.classList.contains('show')&&!document.getElementById('bookLayer').classList.contains('show'))closeMemPop();}});
 /* 省份封面（管理员在控制面板选定；取不到就用该省第一张照片兜底）*/
 let PROV_COVERS={},__provCoversLoaded=false;
+/* 省份评价：管理员在后台「省份封面」面板里写，存 site_stats 的 pr:<省份>。
+   记忆书架左侧面板的 review 字段直接读这里。 */
+let PROV_REVIEWS={};
+let PROV_REVIEWS_LOADED=false;
+async function loadProvinceReviews(){
+  if(PROV_REVIEWS_LOADED)return PROV_REVIEWS;
+  try{
+    const r=await fetch(API+'/province-reviews');
+    if(r.ok){const j=await r.json(); if(j&&typeof j==='object')PROV_REVIEWS=j;}
+  }catch(e){}
+  PROV_REVIEWS_LOADED=true;
+  return PROV_REVIEWS;
+}
 async function loadProvinceCovers(){
   try{
     const r=await fetch(API+'/province-covers');
@@ -1934,16 +1974,18 @@ function memShelfProvinces(){
     cover:g.cover?thumbUrl(g.cover):'',
     photoCount:g.photos,
     cities:g.cities.map(c=>({
-      name:c.name,
+      // 城市名在 cityName，name 存的是省名（照搬参考项目的数据结构）
+      name:c.cityName||c.name,
       photoCount:(c.photos||[]).length,
-      cityKey:c.cityKey||c.name
+      cityKey:c.cityKey||c.cityName||c.name
     })),
     firstMonth:memProvinceDateText(g)==='时间尚未记录'?'':memProvinceDateText(g),
     latestMonth:'',
-    review:''
+    review:(PROV_REVIEWS[g.prov]||'')   // 省名在 g.prov，不是 g.name
   }));
 }
-function mountMemShelf(){
+async function mountMemShelf(){
+  try{ await loadProvinceReviews(); }catch(e){}
   const host=document.getElementById('memPanel');
   if(!host||typeof renderMemoryShelf!=='function')return false;
   window.memoryShelfBodyEl=host;
