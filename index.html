@@ -188,10 +188,10 @@
 .dim-paper,.dim-modal{
   --dp-bg:#F6F4EF;
   --dp-surface:#FCFBF7;
-  --dp-surface2:#F0EDE6;
+  --dp-surface2:#F2F0E9;
   --dp-ink:#23221E;
-  --dp-ink2:#8B877C;
-  --dp-ink3:#B5B0A4;
+  --dp-ink2:#8A806B;
+  --dp-ink3:#A79F8C;
   --dp-line:rgba(35,34,30,.14);
   --dp-line2:rgba(35,34,30,.075);
   --dp-dark:#20201D;
@@ -242,14 +242,16 @@
 .spine-book:last-child{margin-right:0}
 .sp-spine{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:9px;
   padding:11px 0 13px;overflow:hidden;
-  background:linear-gradient(90deg,#E7E3D9 0%,#F9F8F3 18%,#FCFBF7 58%,#F1EDE5 86%,#E2DDD1 100%);
+  background:linear-gradient(90deg,#E3DFD3 0%,#F7F3EA 20%,#FFF9F2 56%,#F2F0E9 84%,#DED9CC 100%);
   border:1px solid rgba(35,34,30,.15);border-radius:3px 4px 4px 3px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 1px 0 0 rgba(255,255,255,.6);
   color:var(--dp-ink);transition:opacity .24s ease-out}
 .sp-no{font-family:var(--dp-mono);font-size:.56em;letter-spacing:.06em;color:var(--dp-ink2);flex:none}
 .sp-title{writing-mode:vertical-rl;text-orientation:mixed;font-size:.74em;line-height:1.2;
   letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-height:calc(100% - 26px);color:var(--dp-ink)}
+  max-height:calc(100% - 44px);color:var(--dp-ink)}
+/* 书脊底部的小圆点（参考源码里的 Icon(CupertinoIcons.circle, size:6)） */
+.sp-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--dp-ink3);opacity:.7;margin-top:auto}
 /* 封面：整张照片铺满，不再有上下黑边与编号 */
 .sp-cover{position:absolute;left:0;top:0;bottom:0;width:152px;background:transparent;
   border-radius:3px 5px 5px 3px;overflow:hidden;opacity:0;pointer-events:none;
@@ -1480,7 +1482,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-23 · 次元柜：滚轮滑书 + 详情从书里弹出';
+const BUILD='2026-10-23 · 次元柜：照参考源码校准书架与详情';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4679,18 +4681,40 @@ function openDimDetail(idx,pos,el){
   // 弹出时序：先把这本书从书架抽出来、封面绕书脊翻开（和映像馆记忆书架的手感一致），
   // 再浮出详情面板；关闭时把书合回去。
   const bookEl=el||document.querySelector('.spine-book[data-idx="'+idx+'"]');
+  // 先把这本书滑到书架中间 —— 对应参考的 _tap(): 没居中先居中。
+  // 网页这边让"居中"和"打开"同时发生：滑过去的同时翻开并弹出详情，
+  // 既保留参考的手感，也不会让人点第一下没反应。
+  try{dimCenterBook(bookEl);}catch(e){}
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 弹窗原点的计算分两半，各自取最准的时刻：
+  //  · 书的位置要在「点击这一刻」记下 —— 翻开动画会把书从 26px 撑到 152px，
+  //    等 330ms 之后书已经变形，拿到的不是用户看到的那个位置。
+  //  · 面板的几何要在「显示这一刻」量 —— 内容刚渲染时高度还会变（图片/滚动条）。
+  let bookCenter=null;
+  if(bookEl){
+    const b=bookEl.getBoundingClientRect();
+    if(b.width&&b.height)bookCenter={x:b.left+b.width/2,y:b.top+b.height/2};
+  }
   const reveal=()=>{
-    // 让面板的缩放原点落在被点的那本书上 —— 弹窗就像从书里长出来，
-    // 而不是凭空在屏幕中间淡入（对齐参考 App 的 Hero 转场手感）。
+    // 面板从这本书的位置长出来，而不是凭空在屏幕中间淡入
     const panel=box.querySelector('.dim-modal-box');
-    if(panel&&bookEl){
-      const b=bookEl.getBoundingClientRect();
+    if(panel&&bookCenter){
+      // 先把原点归到正中：此时缩放矩形的中心 = 未变换矩形的中心，量出来才准
+      panel.style.transformOrigin='50% 50%';
       const p=panel.getBoundingClientRect();
-      if(b.width&&p.width&&p.height){
-        const ox=(b.left+b.width/2)-(p.left+p.width/2);
-        const oy=(b.top+b.height/2)-(p.top+p.height/2);
-        panel.style.transformOrigin='calc(50% + '+Math.round(ox)+'px) calc(50% + '+Math.round(oy)+'px)';
+      const pw=panel.offsetWidth||p.width, ph=panel.offsetHeight||p.height;
+      if(pw&&ph){
+        const rawLeft=p.left+p.width/2-pw/2;
+        const rawTop=p.top+p.height/2-ph/2;
+        // 书可能已滚出视野（书架刚滑过 / 窄屏 sheet），夹到视口内，别让弹窗从屏幕外飞进来
+        const vw=window.innerWidth||document.documentElement.clientWidth;
+        const vh=window.innerHeight||document.documentElement.clientHeight;
+        const cx=Math.max(0,Math.min(vw,bookCenter.x));
+        const cy=Math.max(0,Math.min(vh,bookCenter.y));
+        const ox=Math.round(cx-(rawLeft+pw/2));
+        const oy=Math.round(cy-(rawTop+ph/2));
+        panel.style.transformOrigin='calc(50% + '+ox+'px) calc(50% + '+oy+'px)';
       }
     }
     box.classList.add('show');
@@ -4738,6 +4762,7 @@ function bookCard(it,idx,pos){
       '<span class="sp-spine" aria-hidden="true">'+
         '<span class="sp-no">'+no+'</span>'+
         '<span class="sp-title">'+escHtml(title)+'</span>'+
+        '<i class="sp-dot"></i>'+
       '</span>'+
       '<div class="sp-cover" aria-hidden="true">'+art+'</div>'+
       '<span class="sp-shadow" aria-hidden="true"></span>'+
@@ -4756,6 +4781,9 @@ function dimHover(idx,pos){
   // 编号按「在书架上的位置」排（01 起），不是数组下标 —— 否则按日期倒序后会变成 06→01 倒着走
   const no=String((pos==null?idx:pos)+1).padStart(2,'0');
   const meta=[String(it.creator||'').trim(),info.label,String(it.date||'').trim()].filter(Boolean).join(' · ');
+  // 页码跟随：'03 / 12'（和参考里的 ArchiveCode 一致）
+  const _cnt=document.getElementById('dim-count');
+  if(_cnt)_cnt.textContent=no+' / '+String(window.__dimVisibleCount||dimKit().items.length).padStart(2,'0');
   box.innerHTML='<div class="df-l">'+
       '<span class="df-no">'+no+'</span>'+
       '<span class="df-title">'+escHtml(String(it.title||'未命名'))+'</span>'+
@@ -4796,6 +4824,25 @@ function dimCard(it,idx,pos){
 //   先按动量滑行，最后落在一个整数书位上，不做第二次居中美化动画。
 // 网页这边用原生滚动（自带惯性）+ 停手后吸附到最近书位来还原手感。
 // ============================================================
+// ============================================================
+// 点击一本书时先把它滑到书架中间
+// 对应参考的 _tap(): if ((focus - index).abs() < .03) 打开; else 先居中。
+// 网页这边让"居中"和"打开"同时发生：滑过去的同时翻开并弹出详情，
+// 既保留参考的居中手感，也不会让人点第一下没反应。
+// ============================================================
+function dimCenterBook(el){
+  const shelf=document.getElementById('dim-grid');
+  if(!shelf||!el)return;
+  const max=shelf.scrollWidth-shelf.clientWidth;
+  if(max<=2)return;
+  const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
+  const target=Math.max(0,Math.min(max,el.offsetLeft-pad));
+  if(Math.abs(target-shelf.scrollLeft)>1){
+    // 这次是"点了某本书"引发的定位，不要被停手吸附再拉走半格
+    shelf._suppressSnap=Date.now()+900;
+    shelf.scrollTo({left:target,behavior:'smooth'});
+  }
+}
 function dimSnapToBook(shelf){
   const books=[].slice.call(shelf.querySelectorAll('.spine-book'));
   if(!books.length)return;
@@ -4835,7 +4882,11 @@ function initDimWheel(){
   // 拖动/触摸结束后也吸附
   shelf.addEventListener('scroll',function(){
     clearTimeout(shelf._snapT);
-    shelf._snapT=setTimeout(()=>{if(!shelf._dragging)dimSnapToBook(shelf);},220);
+    shelf._snapT=setTimeout(()=>{
+      // 点了某本书正在滑到它 —— 别插一脚把它吸到邻居书位上
+      if(shelf._suppressSnap&&Date.now()<shelf._suppressSnap)return;
+      if(!shelf._dragging)dimSnapToBook(shelf);
+    },220);
   },{passive:true});
   // 键盘左右键也能滑
   shelf.addEventListener('keydown',function(e){
@@ -4882,7 +4933,8 @@ function renderDimension(){
   else if(dimSub)list=all.filter(it=>String(it.sub||'')===dimSub);
   list=list.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
   const cnt=document.getElementById('dim-count');
-  if(cnt)cnt.textContent=list.length?('共 '+list.length+' 部'+info.label+(dimSub?(' · '+(dimSub==='__none__'?'未分类':dimSub)):'')):'';
+  // 页码格式照参考里的 ArchiveCode：'01 / 04'（当前 / 总数），在 dimHover 里随鼠标更新
+  if(cnt)cnt.textContent=list.length?('01 / '+String(list.length).padStart(2,'0')):'';
   if(!list.length){
     grid.innerHTML='<p class="dim-empty">'+dimIconSvg(dimKind,30)+'<br>这里还空着 —— 在管理面板的「次元柜」里添加'+escHtml(info.label)+'记录吧。</p>';
     const f0=document.getElementById('dim-feat'); if(f0)f0.innerHTML='';
@@ -4896,6 +4948,7 @@ function renderDimension(){
   // 注：新书架用的是「书脊 → 悬停抽出翻成封面」，纯 CSS 过渡即可，
   // 不再需要旧的 initDimTilt（立体倾斜）—— 那个函数留着但不再调用。
   // 默认把第一本的信息显示在书架下方（对应参考里那行"书名 / 作者 · 状态 ↗"）
+  window.__dimVisibleCount=list.length;   // 页码分母：当前书架上的条数
   dimHoverIdx=null;
   dimHover(allItems.indexOf(list[0]));
 }
