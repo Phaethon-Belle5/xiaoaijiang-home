@@ -1,0 +1,87 @@
+/* ============ 详情弹窗：照 App 详情页的排版（顶栏 / 大封面 / 编号分节 / 底栏）============ */
+body.dim-modal-open{overflow:hidden}
+.dim-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;
+  opacity:0;pointer-events:none;transition:opacity .26s var(--ease-out)}
+.dim-modal.show{opacity:1;pointer-events:auto}
+.dim-modal-mask{position:absolute;inset:0;background:rgba(16,15,13,.55);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+/* 弹出动画：面板从被点的那本书的位置长出来（transform-origin 由 JS 设在书的中心） */
+.dim-modal-box{position:relative;width:min(680px,100%);max-height:min(90vh,940px);display:flex;flex-direction:column;
+  background:#FCFBF7;border:1px solid var(--dp-line);color:var(--dp-ink);border-radius:22px;overflow:hidden;
+  box-shadow:0 46px 110px -40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.9);
+  transform:scale(.55);opacity:0;
+  transition:transform .5s cubic-bezier(.18,1.18,.32,1),opacity .26s ease-out}
+.dim-modal.show .dim-modal-box{transform:scale(1);opacity:1}
+.dim-modal-x{position:absolute;top:13px;right:14px;z-index:5;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:rgba(252,251,247,.86);color:var(--dp-ink2);border:1px solid var(--dp-line);border-radius:50%;cursor:pointer;
+  transition:all .2s;backdrop-filter:blur(8px);font-size:15px;line-height:1}
+.dim-modal-x:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.35);background:#fff}
+.dim-modal-x:active{transform:scale(.93)}
+.dim-modal-scroll{padding:0;overflow-y:auto;overscroll-behavior:contain}
+/* 顶部档案条（对齐参考详情页的 AppBar） */
+.dm-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:17px 56px 13px 24px;
+  border-bottom:1px solid var(--dp-line2)}
+.dm-bar-lb{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.2em;color:var(--dp-ink2);text-transform:uppercase}
+.dm-code{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3);
+  border:1px solid var(--dp-line);border-radius:3px;padding:1px 6px;white-space:nowrap}
+/* 大封面 */
+.dm-hero{position:relative;height:300px;overflow:hidden;background:var(--dp-dark);
+  display:flex;align-items:center;justify-content:center}
+.dm-hero-bg{position:absolute;inset:-30px;background-size:cover;background-position:center;
+  filter:blur(34px) saturate(1.15) brightness(.55);transform:scale(1.16)}
+.dm-hero-img{position:relative;z-index:1;max-width:70%;max-height:calc(100% - 38px);width:auto;height:auto;
+  object-fit:contain;display:block;border-radius:3px;
+  box-shadow:0 20px 44px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1)}
+/* 主信息 */
+.dm-main{padding:20px 26px 0}
+.dm-kicker{display:flex;align-items:center;gap:6px;font-family:var(--dp-mono);font-size:.59em;
+  letter-spacing:.14em;color:var(--dp-ink2);text-transform:uppercase}
+.dm-kicker svg{opacity:.72;flex:none}
+.dm-kicker i{font-style:normal;opacity:.4}
+.dm-title{font-family:var(--font-display,inherit);font-size:1.45em;font-weight:600;color:var(--dp-ink);
+  margin:9px 0 7px;line-height:1.35;word-break:break-word}
+.dm-meta{font-family:var(--dp-mono);font-size:.73em;letter-spacing:.04em;color:var(--dp-ink2);margin:0 0 9px}
+.dm-stars{font-size:1em;margin-bottom:2px}
+/* 档案式分节：编号 + 发丝线 + 小标题 */
+.dm-sec{padding:0 26px;margin-top:21px}
+.dm-sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.dm-sec-h span{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3)}
+.dm-sec-h i{flex:1;height:1px;background:var(--dp-line2)}
+.dm-sec-h b{font-weight:500;font-size:.71em;letter-spacing:.16em;color:var(--dp-ink2);white-space:nowrap}
+.dm-text{font-size:.92em;line-height:1.95;color:var(--dp-ink);margin:0;white-space:pre-wrap;word-break:break-word}
+.dm-list{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:9px}
+.dm-list li{font-size:.9em;line-height:1.8;color:var(--dp-ink)}
+.dm-none{font-size:.85em;color:var(--dp-ink2);margin:0}
+/* 底部操作条 */
+.dm-foot{display:flex;gap:10px;align-items:center;padding:22px 26px 24px;margin-top:22px;border-top:1px solid var(--dp-line2)}
+.dm-btn{font-size:.77em;letter-spacing:.06em;color:#FCFBF7;background:var(--dp-dark);border:1px solid var(--dp-dark);
+  border-radius:9px;padding:9px 18px;text-decoration:none;transition:all .2s;white-space:nowrap}
+.dm-btn:hover{opacity:.86}
+.dm-btn-ghost{font:inherit;font-size:.77em;letter-spacing:.06em;color:var(--dp-ink2);background:transparent;
+  border:1px solid var(--dp-line);border-radius:9px;padding:9px 18px;cursor:pointer;transition:all .2s;margin-left:auto;white-space:nowrap}
+.dm-btn-ghost:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.34)}
+/* 内容错落入场 */
+@keyframes dmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.dim-modal-scroll>*{animation:dmIn .42s var(--ease-out) both}
+.dim-modal-scroll>*:nth-child(1){animation-delay:.06s}
+.dim-modal-scroll>*:nth-child(2){animation-delay:.1s}
+.dim-modal-scroll>*:nth-child(3){animation-delay:.15s}
+.dim-modal-scroll>*:nth-child(4){animation-delay:.2s}
+.dim-modal-scroll>*:nth-child(5){animation-delay:.25s}
+.dim-modal-scroll>*:nth-child(6){animation-delay:.3s}
+.dim-modal-scroll>*:nth-child(n+7){animation-delay:.34s}
+@media (max-width:560px){
+  .dim-modal{padding:0;align-items:flex-end}
+  .dim-modal-box{width:100%;max-height:92vh;border-radius:20px 20px 0 0;border-bottom:none}
+  .dm-bar{padding:15px 52px 12px 18px}
+  .dm-hero{height:236px}
+  .dm-main{padding:17px 20px 0}
+  .dm-sec{padding:0 20px}
+  .dm-foot{padding:18px 20px 22px}
+  .dm-title{font-size:1.22em}
+}
+@media (prefers-reduced-motion: reduce){
+  .dim-modal-box{transition:opacity .2s;transform:none}
+  .dim-modal.show .dim-modal-box{transform:none}
+  .dim-modal-scroll>*{animation:none}
+}

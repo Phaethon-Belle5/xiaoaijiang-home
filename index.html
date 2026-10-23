@@ -230,7 +230,8 @@
 /* ============ 立体书架 ============ */
 .dim-shelf{display:flex;align-items:flex-end;gap:0;min-height:280px;
   padding:40px 10px 34px;perspective:1300px;
-  overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  scroll-behavior:smooth;overscroll-behavior-x:contain}
 .dim-shelf::-webkit-scrollbar{display:none}
 .dim-shelf::after{content:'';position:sticky;right:0;left:0;align-self:flex-end;height:1px;background:var(--dp-line);margin-bottom:-20px;pointer-events:none;flex:none;width:100%}
 .spine-book{position:relative;flex:none;width:34px;height:212px;margin-right:2px;
@@ -344,74 +345,91 @@
   .spine-book{transition:none}
   .dim-anim .spine-book{animation:none}
 }
-/* ============ 详情弹窗（同一套奶白档案观感）============ */
+/* ============ 详情弹窗：照 App 详情页的排版（顶栏 / 大封面 / 编号分节 / 底栏）============ */
 body.dim-modal-open{overflow:hidden}
 .dim-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;
   opacity:0;pointer-events:none;transition:opacity .26s var(--ease-out)}
 .dim-modal.show{opacity:1;pointer-events:auto}
-.dim-modal-mask{position:absolute;inset:0;background:rgba(16,15,13,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.dim-modal-box{position:relative;width:min(660px,100%);max-height:min(88vh,880px);display:flex;flex-direction:column;
-  background:linear-gradient(180deg,#FCFBF7,#F5F3ED);border:1px solid var(--dp-line);color:var(--dp-ink);
-  border-radius:20px;box-shadow:0 40px 100px -34px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.9);
-  transform:translateY(26px) scale(.93);opacity:0;
-  transition:transform .36s cubic-bezier(.16,1,.3,1),opacity .26s ease-out;overflow:hidden}
-.dim-modal.show .dim-modal-box{transform:none;opacity:1}
-@keyframes dimMIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.dim-modal-scroll>*{animation:dimMIn .44s var(--ease-out) both}
-.dim-modal-scroll>*:nth-child(1){animation-delay:.04s}
-.dim-modal-scroll>*:nth-child(2){animation-delay:.09s}
-.dim-modal-scroll>*:nth-child(3){animation-delay:.13s}
-.dim-modal-scroll>*:nth-child(4){animation-delay:.17s}
-.dim-modal-scroll>*:nth-child(5){animation-delay:.21s}
-.dim-modal-scroll>*:nth-child(6){animation-delay:.25s}
-.dim-modal-scroll>*:nth-child(n+7){animation-delay:.28s}
-.dim-modal-x{position:absolute;top:14px;right:14px;z-index:3;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.72);color:var(--dp-ink2);border:1px solid var(--dp-line);border-radius:50%;cursor:pointer;
-  transition:all .2s;backdrop-filter:blur(8px)}
+.dim-modal-mask{position:absolute;inset:0;background:rgba(16,15,13,.55);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+/* 弹出动画：面板从被点的那本书的位置长出来（transform-origin 由 JS 设在书的中心） */
+.dim-modal-box{position:relative;width:min(680px,100%);max-height:min(90vh,940px);display:flex;flex-direction:column;
+  background:#FCFBF7;border:1px solid var(--dp-line);color:var(--dp-ink);border-radius:22px;overflow:hidden;
+  box-shadow:0 46px 110px -40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.9);
+  transform:scale(.55);opacity:0;
+  transition:transform .5s cubic-bezier(.18,1.18,.32,1),opacity .26s ease-out}
+.dim-modal.show .dim-modal-box{transform:scale(1);opacity:1}
+.dim-modal-x{position:absolute;top:13px;right:14px;z-index:5;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:rgba(252,251,247,.86);color:var(--dp-ink2);border:1px solid var(--dp-line);border-radius:50%;cursor:pointer;
+  transition:all .2s;backdrop-filter:blur(8px);font-size:15px;line-height:1}
 .dim-modal-x:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.35);background:#fff}
 .dim-modal-x:active{transform:scale(.93)}
-.dim-modal-scroll{padding:26px 30px 30px;overflow-y:auto;overscroll-behavior:contain}
-/* 档案头：编号 + 分类 */
-.dim-m-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-right:40px}
-.dim-m-kind{display:inline-flex;align-items:center;gap:5px;font-family:var(--dp-mono);font-size:.62em;letter-spacing:.14em;
-  color:var(--dp-ink2);text-transform:uppercase}
-.dim-m-code{font-family:var(--dp-mono);font-size:.6em;letter-spacing:.12em;color:var(--dp-ink3);
-  border:1px solid var(--dp-line);border-radius:3px;padding:1px 6px}
-.dim-chip{font-size:.64em;color:var(--dp-ink);border:1px solid var(--dp-line);border-radius:3px;padding:1px 7px;white-space:nowrap;flex:none;line-height:1.7}
-/* 封面区 */
-.dim-m-cover{position:relative;margin:-26px -30px 22px;height:264px;overflow:hidden;background:var(--dp-dark);
+.dim-modal-scroll{padding:0;overflow-y:auto;overscroll-behavior:contain}
+/* 顶部档案条（对齐参考详情页的 AppBar） */
+.dm-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:17px 56px 13px 24px;
+  border-bottom:1px solid var(--dp-line2)}
+.dm-bar-lb{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.2em;color:var(--dp-ink2);text-transform:uppercase}
+.dm-code{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3);
+  border:1px solid var(--dp-line);border-radius:3px;padding:1px 6px;white-space:nowrap}
+/* 大封面 */
+.dm-hero{position:relative;height:300px;overflow:hidden;background:var(--dp-dark);
   display:flex;align-items:center;justify-content:center}
-.dim-m-cover-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;
-  filter:blur(30px) saturate(1.2) brightness(.6);transform:scale(1.14)}
-.dim-m-cover-img{position:relative;z-index:1;max-width:calc(100% - 40px);max-height:calc(100% - 28px);width:auto;height:auto;
-  object-fit:contain;display:block;border-radius:4px;
-  box-shadow:0 16px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08)}
-/* 标题区 */
-.dim-m-title{font-family:var(--font-display,inherit);font-size:1.4em;font-weight:600;color:var(--dp-ink);
-  margin:0 0 7px;line-height:1.35;word-break:break-word}
-.dim-m-meta{font-size:.8em;color:var(--dp-ink2);margin:0 0 10px;font-family:var(--dp-mono);letter-spacing:.04em}
-.dim-m-stars{font-size:1.05em;margin-bottom:2px}
-/* 分节：档案式小标题 + 发丝线 */
-.dim-m-sec{margin-top:22px;padding-top:18px;border-top:1px solid var(--dp-line2)}
-.dim-m-lb{font-family:var(--dp-mono);font-size:.62em;letter-spacing:.16em;color:var(--dp-ink2);
-  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.dim-m-lb::after{content:'';flex:1;height:1px;background:var(--dp-line2)}
-.dim-m-text{font-size:.92em;color:var(--dp-ink);line-height:1.9;margin:0;white-space:pre-wrap;word-break:break-word}
-.dim-m-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px}
-.dim-m-list li{font-size:.9em;color:var(--dp-ink);line-height:1.8}
-.dim-m-none{font-size:.85em;color:var(--dp-ink2);margin:16px 0 0}
-.dim-m-link{display:inline-block;margin-top:22px;font-family:var(--dp-mono);font-size:.72em;letter-spacing:.1em;
-  color:var(--dp-ink);text-decoration:none;border:1px solid var(--dp-line);border-radius:8px;padding:8px 16px;transition:all .2s}
-.dim-m-link:hover{border-color:var(--dp-ink);background:rgba(35,34,30,.05)}
+.dm-hero-bg{position:absolute;inset:-30px;background-size:cover;background-position:center;
+  filter:blur(34px) saturate(1.15) brightness(.55);transform:scale(1.16)}
+.dm-hero-img{position:relative;z-index:1;max-width:70%;max-height:calc(100% - 38px);width:auto;height:auto;
+  object-fit:contain;display:block;border-radius:3px;
+  box-shadow:0 20px 44px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1)}
+/* 主信息 */
+.dm-main{padding:20px 26px 0}
+.dm-kicker{display:flex;align-items:center;gap:6px;font-family:var(--dp-mono);font-size:.59em;
+  letter-spacing:.14em;color:var(--dp-ink2);text-transform:uppercase}
+.dm-kicker svg{opacity:.72;flex:none}
+.dm-kicker i{font-style:normal;opacity:.4}
+.dm-title{font-family:var(--font-display,inherit);font-size:1.45em;font-weight:600;color:var(--dp-ink);
+  margin:9px 0 7px;line-height:1.35;word-break:break-word}
+.dm-meta{font-family:var(--dp-mono);font-size:.73em;letter-spacing:.04em;color:var(--dp-ink2);margin:0 0 9px}
+.dm-stars{font-size:1em;margin-bottom:2px}
+/* 档案式分节：编号 + 发丝线 + 小标题 */
+.dm-sec{padding:0 26px;margin-top:21px}
+.dm-sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.dm-sec-h span{font-family:var(--dp-mono);font-size:.57em;letter-spacing:.1em;color:var(--dp-ink3)}
+.dm-sec-h i{flex:1;height:1px;background:var(--dp-line2)}
+.dm-sec-h b{font-weight:500;font-size:.71em;letter-spacing:.16em;color:var(--dp-ink2);white-space:nowrap}
+.dm-text{font-size:.92em;line-height:1.95;color:var(--dp-ink);margin:0;white-space:pre-wrap;word-break:break-word}
+.dm-list{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:9px}
+.dm-list li{font-size:.9em;line-height:1.8;color:var(--dp-ink)}
+.dm-none{font-size:.85em;color:var(--dp-ink2);margin:0}
+/* 底部操作条 */
+.dm-foot{display:flex;gap:10px;align-items:center;padding:22px 26px 24px;margin-top:22px;border-top:1px solid var(--dp-line2)}
+.dm-btn{font-size:.77em;letter-spacing:.06em;color:#FCFBF7;background:var(--dp-dark);border:1px solid var(--dp-dark);
+  border-radius:9px;padding:9px 18px;text-decoration:none;transition:all .2s;white-space:nowrap}
+.dm-btn:hover{opacity:.86}
+.dm-btn-ghost{font:inherit;font-size:.77em;letter-spacing:.06em;color:var(--dp-ink2);background:transparent;
+  border:1px solid var(--dp-line);border-radius:9px;padding:9px 18px;cursor:pointer;transition:all .2s;margin-left:auto;white-space:nowrap}
+.dm-btn-ghost:hover{color:var(--dp-ink);border-color:rgba(35,34,30,.34)}
+/* 内容错落入场 */
+@keyframes dmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.dim-modal-scroll>*{animation:dmIn .42s var(--ease-out) both}
+.dim-modal-scroll>*:nth-child(1){animation-delay:.06s}
+.dim-modal-scroll>*:nth-child(2){animation-delay:.1s}
+.dim-modal-scroll>*:nth-child(3){animation-delay:.15s}
+.dim-modal-scroll>*:nth-child(4){animation-delay:.2s}
+.dim-modal-scroll>*:nth-child(5){animation-delay:.25s}
+.dim-modal-scroll>*:nth-child(6){animation-delay:.3s}
+.dim-modal-scroll>*:nth-child(n+7){animation-delay:.34s}
 @media (max-width:560px){
   .dim-modal{padding:0;align-items:flex-end}
-  .dim-modal-box{width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-bottom:none}
-  .dim-modal-scroll{padding:22px 20px 26px}
-  .dim-m-cover{margin:-22px -20px 18px;height:220px}
-  .dim-m-title{font-size:1.2em}
+  .dim-modal-box{width:100%;max-height:92vh;border-radius:20px 20px 0 0;border-bottom:none}
+  .dm-bar{padding:15px 52px 12px 18px}
+  .dm-hero{height:236px}
+  .dm-main{padding:17px 20px 0}
+  .dm-sec{padding:0 20px}
+  .dm-foot{padding:18px 20px 22px}
+  .dm-title{font-size:1.22em}
 }
 @media (prefers-reduced-motion: reduce){
-  .dim-modal-box{transition:opacity .2s}
+  .dim-modal-box{transition:opacity .2s;transform:none}
+  .dim-modal.show .dim-modal-box{transform:none}
   .dim-modal-scroll>*{animation:none}
 }
 .memo-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 var(--space-5) 8px 32px}
@@ -1462,7 +1480,7 @@ main#main{position:relative;z-index:1}
 const API_URL='https://home.xiaoaijiang.cloud/api';
 // 构建标记：显示在页脚，用来一眼确认"浏览器里这份是不是最新版"
 // 每次部署新功能时改这里（日期 + 一句话）
-const BUILD='2026-10-23 · 次元柜封面铺满 + 像记忆书架那样翻开';
+const BUILD='2026-10-23 · 次元柜：滚轮滑书 + 详情从书里弹出';
 // 评论图标（内联 SVG）：原来用的是 💬 emoji，各平台字形不一致、也无法跟随文字颜色，
 // 换成与全站其它图标同样式的描边对话气泡，统一由这里引用。
 const ICON_COMMENT_SVG='<svg class="ic-cmt" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1 -10.9 6.7L4 19.5l1.4 -4.2A7.5 7.5 0 1 1 20 11.5z"/></svg>';
@@ -4626,26 +4644,36 @@ function openDimDetail(idx,pos,el){
   const _no=String((pos==null?idx:pos)+1).padStart(2,'0');
   const _code=(it.kind==='films'?'FL-':it.kind==='games'?'GM-':'WK-')+String(20000+((pos==null?idx:pos)+1));
   body.innerHTML=
-    (cover?'<div class="dim-m-cover'+(isGame?' is-game':'')+'">'+
-        '<div class="dim-m-cover-bg"></div>'+
-        '<img class="dim-m-cover-img" src="'+escHtml(cover)+'" alt="" onerror="this.style.display=\'none\'">'+
-      '</div>':'')+
-    '<div class="dim-m-head">'+
-      '<span class="dim-m-kind">'+dimIconSvg(it.kind,14)+'<span>'+escHtml(info.label)+'</span></span>'+
-      '<span class="dim-m-code">NO.'+_no+' · '+_code+'</span>'+
-      (sub?'<span class="dim-chip">'+escHtml(sub)+'</span>':'')+
+    // 顶部档案条（对齐参考详情页的 AppBar：左边栏目名、右边编号）
+    '<div class="dm-bar">'+
+      '<span class="dm-bar-lb">PERSONAL ARCHIVE</span>'+
+      '<span class="dm-code">NO.'+_no+' · '+_code+'</span>'+
     '</div>'+
-    '<h3 class="dim-m-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
-    (meta?'<p class="dim-m-meta">'+escHtml(meta)+'</p>':'')+
-    '<div class="dim-m-stars">'+dimStars(it.rating)+'</div>'+
-    (review?'<div class="dim-m-sec"><div class="dim-m-lb">简介</div><p class="dim-m-text">'+escHtml(review)+'</p></div>':'')+
-    (lines.length?'<div class="dim-m-sec"><div class="dim-m-lb">评价</div><ul class="dim-m-list">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
-    (!review&&!lines.length?'<p class="dim-m-none">这条还没有写简介和评价。</p>':'')+
-    (link?'<a class="dim-m-link" href="'+escHtml(link)+'" target="_blank" rel="noopener">去看看 ↗</a>':'');
-  // 封面背景用同一张图做高斯模糊衬底，主图完整显示不裁切
-  const bg=body.querySelector('.dim-m-cover-bg');
+    // 大封面：模糊衬底 + 完整图，不裁切
+    (cover?'<div class="dm-hero">'+
+        '<div class="dm-hero-bg"></div>'+
+        '<img class="dm-hero-img" src="'+escHtml(cover)+'" alt="" onerror="this.style.display=\'none\'">'+
+      '</div>':'')+
+    // 主信息
+    '<div class="dm-main">'+
+      '<div class="dm-kicker">'+dimIconSvg(it.kind,13)+'<span>'+escHtml(info.label)+'</span>'+(sub?'<i>·</i><span>'+escHtml(sub)+'</span>':'')+'</div>'+
+      '<h3 class="dm-title">'+escHtml(String(it.title||'未命名'))+'</h3>'+
+      (meta?'<p class="dm-meta">'+escHtml(meta)+'</p>':'')+
+      (Number(it.rating)?'<div class="dm-stars">'+dimStars(it.rating)+'</div>':'')+
+    '</div>'+
+    // 档案式分节：01 / 简介、02 / 评价（编号沿用参考里的 01 / CATALOG 写法）
+    (review?'<div class="dm-sec"><div class="dm-sec-h"><span>01</span><b>简介</b><i></i></div><p class="dm-text">'+escHtml(review)+'</p></div>':'')+
+    (lines.length?'<div class="dm-sec"><div class="dm-sec-h"><span>'+(review?'02':'01')+'</span><b>评价</b><i></i></div><ul class="dm-list">'+lines.map(l=>'<li>'+escHtml(l)+'</li>').join('')+'</ul></div>':'')+
+    (!review&&!lines.length?'<div class="dm-sec"><p class="dm-none">这条还没有写简介和评价。</p></div>':'')+
+    // 底部操作条
+    '<div class="dm-foot">'+
+      (link?'<a class="dm-btn" href="'+escHtml(link)+'" target="_blank" rel="noopener">去看看 ↗</a>':'')+
+      '<button class="dm-btn-ghost" type="button" onclick="closeDimDetail()">关闭</button>'+
+    '</div>';
+  // 封面背景用同一张图做高斯模糊衬底
+  const bg=body.querySelector('.dm-hero-bg');
   if(bg&&cover)bg.style.backgroundImage='url("'+cover.replace(/["\\]/g,'')+'")';
-  const img=body.querySelector('.dim-m-cover-img');
+  const img=body.querySelector('.dm-hero-img');
   if(img)img.addEventListener('load',()=>body.classList.add('has-cover'));
 
   // 弹出时序：先把这本书从书架抽出来、封面绕书脊翻开（和映像馆记忆书架的手感一致），
@@ -4653,6 +4681,18 @@ function openDimDetail(idx,pos,el){
   const bookEl=el||document.querySelector('.spine-book[data-idx="'+idx+'"]');
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const reveal=()=>{
+    // 让面板的缩放原点落在被点的那本书上 —— 弹窗就像从书里长出来，
+    // 而不是凭空在屏幕中间淡入（对齐参考 App 的 Hero 转场手感）。
+    const panel=box.querySelector('.dim-modal-box');
+    if(panel&&bookEl){
+      const b=bookEl.getBoundingClientRect();
+      const p=panel.getBoundingClientRect();
+      if(b.width&&p.width&&p.height){
+        const ox=(b.left+b.width/2)-(p.left+p.width/2);
+        const oy=(b.top+b.height/2)-(p.top+p.height/2);
+        panel.style.transformOrigin='calc(50% + '+Math.round(ox)+'px) calc(50% + '+Math.round(oy)+'px)';
+      }
+    }
     box.classList.add('show');
     document.body.classList.add('dim-modal-open');
     body.scrollTop=0;
@@ -4749,6 +4789,69 @@ function dimCard(it,idx,pos){
         (hasMore?'<div class="dim-toggle"><span class="dim-toggle-lb">查看详情</span><span class="dim-chev">›</span></div>':'')+
       '</div></article>';
 }
+// ============================================================
+// 书架滚轮：竖向滚轮 → 横向滑书，停下后吸附到最近的一本书
+// 对应参考项目 lib/archive_scroll_simulation.dart 的思路：
+//   "Momentum first, a book detent last."
+//   先按动量滑行，最后落在一个整数书位上，不做第二次居中美化动画。
+// 网页这边用原生滚动（自带惯性）+ 停手后吸附到最近书位来还原手感。
+// ============================================================
+function dimSnapToBook(shelf){
+  const books=[].slice.call(shelf.querySelectorAll('.spine-book'));
+  if(!books.length)return;
+  const sl=shelf.scrollLeft;
+  const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
+  let best=null,bestD=Infinity;
+  books.forEach(b=>{
+    const t=b.offsetLeft-pad;
+    const d=Math.abs(t-sl);
+    if(d<bestD){bestD=d;best=b;t<Infinity;}
+  });
+  if(best!=null){
+    const target=Math.max(0,Math.min(shelf.scrollWidth-shelf.clientWidth,best.offsetLeft-pad));
+    if(Math.abs(target-sl)>1)shelf.scrollTo({left:target,behavior:'smooth'});
+  }
+}
+function initDimWheel(){
+  const shelf=document.getElementById('dim-grid');
+  if(!shelf||shelf._wheelBound)return;
+  shelf._wheelBound=true;
+  let snapTimer=null;
+  shelf.addEventListener('wheel',function(e){
+    // 横向滚轮照常用；竖向滚轮转成横向（shift/触控板双指都覆盖）
+    const dy=e.deltaY, dx=e.deltaX;
+    const d=Math.abs(dx)>Math.abs(dy)?dx:dy;
+    if(!d)return;
+    const max=shelf.scrollWidth-shelf.clientWidth;
+    if(max<=2)return;                     // 内容不够宽，交给页面正常滚动
+    const atStart=shelf.scrollLeft<=0;
+    const atEnd=shelf.scrollLeft>=max-1;
+    if((atStart&&d<0)||(atEnd&&d>0))return;  // 到边界放行，别把整页滚动锁死
+    e.preventDefault();
+    shelf.scrollLeft+=d>0?Math.max(18,Math.abs(d)):-Math.max(18,Math.abs(d));
+    clearTimeout(snapTimer);
+    snapTimer=setTimeout(()=>dimSnapToBook(shelf),160);
+  },{passive:false});
+  // 拖动/触摸结束后也吸附
+  shelf.addEventListener('scroll',function(){
+    clearTimeout(shelf._snapT);
+    shelf._snapT=setTimeout(()=>{if(!shelf._dragging)dimSnapToBook(shelf);},220);
+  },{passive:true});
+  // 键盘左右键也能滑
+  shelf.addEventListener('keydown',function(e){
+    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+    const books=[].slice.call(shelf.querySelectorAll('.spine-book'));
+    if(!books.length)return;
+    const pad=parseFloat(getComputedStyle(shelf).paddingLeft)||0;
+    const sl=shelf.scrollLeft;
+    const dir=e.key==='ArrowRight'?1:-1;
+    let next=null;
+    if(dir>0){for(const b of books){if(b.offsetLeft-pad>sl+2){next=b;break;}}}
+    else{for(let i=books.length-1;i>=0;i--){if(books[i].offsetLeft-pad<sl-2){next=books[i];break;}}}
+    if(next){e.preventDefault();shelf.scrollTo({left:Math.max(0,next.offsetLeft-pad),behavior:'smooth'});}
+  });
+}
+
 function renderDimension(){
   const grid=document.getElementById('dim-grid');if(!grid)return;
   // 用 classList 而不是 className：否则会把 setDimKind 加上的 .dim-anim 冲掉，入场动画就没了
@@ -4789,6 +4892,7 @@ function renderDimension(){
   // 传「在 items 数组里的真实下标」，弹窗靠它取数据（列表经过筛选/排序，下标不一样）
   const allItems=dimKit().items;
   grid.innerHTML=list.map((it,pos)=>dimCard(it,allItems.indexOf(it),pos)).join('');
+  initDimWheel();   // 竖向滚轮 → 横向滑书架，停下吸附到最近一本
   // 注：新书架用的是「书脊 → 悬停抽出翻成封面」，纯 CSS 过渡即可，
   // 不再需要旧的 initDimTilt（立体倾斜）—— 那个函数留着但不再调用。
   // 默认把第一本的信息显示在书架下方（对应参考里那行"书名 / 作者 · 状态 ↗"）
