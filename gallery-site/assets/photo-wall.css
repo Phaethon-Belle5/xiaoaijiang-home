@@ -233,3 +233,18 @@
 #pwViewer .pw-toggle:hover{background:rgba(212,168,67,.28);border-color:rgba(212,168,67,.6)}
 #pwViewer.pw-grid-mode .nav-btn{display:none}
 #pwViewer.reveal .pw-count{bottom:14px}
+
+/* ── 堆叠态必须彻底清空背景 ──
+   .pw-wall 的 display:grid 会把 [hidden] 的默认 display:none 盖掉，
+   所以堆叠时整面墙仍然透在背后（看着很乱）。这里显式把它关掉。 */
+#pwViewer .pw-wall[hidden]{display:none!important}
+/* 清空后让堆叠画面的背景更干净：深色渐变 + 轻微暗角，不再透出相框 */
+#pwViewer.stack-mode{background:
+  radial-gradient(ellipse at 50% 42%,rgba(28,44,64,.55),rgba(6,10,16,.96) 62%),
+  #060a10}
+
+/* 计数条：底部居中（之前没有定位规则，它作为普通 div 排在按钮后面，跑到右边去了） */
+#pwViewer .pw-count{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+  z-index:40;pointer-events:none;padding:7px 18px;border-radius:999px;
+  background:rgba(10,16,24,.72);backdrop-filter:blur(6px);
+  color:rgba(235,243,255,.92);font-size:13px;letter-spacing:.04em;white-space:nowrap}
