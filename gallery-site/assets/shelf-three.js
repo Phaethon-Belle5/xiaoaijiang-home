@@ -268,7 +268,7 @@ function memoryBindShelf(){
     viewport.addEventListener('wheel',event=>{
       event.preventDefault();
       const now=performance.now();
-      if(now-memoryShelfState.wheelAt<420) return;
+      if(now-memoryShelfState.wheelAt<220) return;
       memoryShelfState.wheelAt=now;
       const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
       memorySetActive(memoryShelfState.active+(delta>0?1:-1));
@@ -454,8 +454,10 @@ function memorySpineLabelMaterial(THREE,province,index,ink){
 
 function memorySetActive(index,instant){
     if(memoryShelfState.opening) return;
-    const max=Math.max(0,memoryShelfState.provinces.length-1);
-    const next=Math.max(0,Math.min(max,index));
+    // 循环切换：原来用 Math.min/max 夹在 [0, max] 里，滚轮到最后一本就停住了。
+    // 改成取模：最后一本再往后就是第一本，第一本往前也会绕回最后一本。
+    const total=memoryShelfState.provinces.length;
+    const next=total?(((index%total)+total)%total):0;
     const changed=next!==memoryShelfState.active;
     memoryShelfState.active=next;
     memoryShelfState.dragOffset=0;memoryShelfState.bookRotation=null;

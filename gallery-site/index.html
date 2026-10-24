@@ -1062,12 +1062,12 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script src="assets/photo-wall.js?v=20261023a"></script>
 <!-- 记忆书架：Three.js 书架 rig（整段搬自参考项目），按需懒加载 -->
 <script src="assets/three.min.js?v=20261018b"></script>
-<script src="assets/shelf-three.js?v=20261018j"></script>
+<script src="assets/shelf-three.js?v=20261024a"></script>
 <script src="assets/dome-gallery.js?v=20261018"></script>
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-24 · 书架面板随书籍切换 + 去掉编辑按钮';
+const GALLERY_BUILD='2026-10-24 · 书架循环切换（滚轮可一直滚）';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
