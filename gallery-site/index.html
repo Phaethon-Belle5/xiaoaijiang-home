@@ -878,6 +878,9 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 #memPanel .memory-info-review-block,
 #memPanel .memory-info-note{display:block!important}
 #memPanel .memory-info-cities{display:flex!important;flex-wrap:wrap;gap:8px 14px}
+
+/* 参考项目里那个「编辑」按钮在映像馆没有对应的编辑界面，点了没反应，直接隐藏 */
+#memPanel .memory-province-edit{display:none!important}
 </style>
 </head>
 <body>
@@ -1064,7 +1067,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-24 · 书架左侧：显示城市列表与省份评价';
+const GALLERY_BUILD='2026-10-24 · 书架面板随书籍切换 + 去掉编辑按钮';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
@@ -1997,6 +2000,32 @@ function memShelfProvinces(){
     review:(PROV_REVIEWS[g.prov]||'')   // 省名在 g.prov，不是 g.name
   }));
 }
+/* ═══════════════════════════════════════════════════════════════
+   rig 的 memorySetActive() 里有一句 memoryUpdateProvinceInfo()，
+   但 shelf-three.js 里**根本没有这个函数** ——
+   所以每次切换书籍：左侧面板不更新，并且抛 ReferenceError。
+   这里补上：按当前 active 索引重新渲染 #memoryProvinceInfo。
+   ═══════════════════════════════════════════════════════════════ */
+window.memoryUpdateProvinceInfo=function(){
+  try{
+    const host=document.getElementById('memoryProvinceInfo');
+    if(!host)return;
+    let idx=0;
+    try{
+      if(typeof memoryShelfState==='object'&&memoryShelfState&&typeof memoryShelfState.active==='number')idx=memoryShelfState.active;
+    }catch(e){}
+    const provs=(typeof memShelfProvinces==='function')?memShelfProvinces():[];
+    if(!provs.length)return;
+    /* 签名是 memoryInfoHtml(province, index, total) —— 第一个参数是单个省份对象，不是数组。
+       一开始传成 (provs, idx)，函数里去取 province.name.length，直接抛错。 */
+    const html=(typeof window.memoryInfoHtml==='function')?window.memoryInfoHtml(provs[Math.max(0,Math.min(idx,provs.length-1))],idx,provs.length):'';
+    if(!html)return;
+    const tmp=document.createElement('div');
+    tmp.innerHTML=html;
+    const next=tmp.firstElementChild;
+    if(next)host.replaceWith(next);
+  }catch(e){ console.warn('[书架] 更新左侧面板失败',e); }
+};
 async function mountMemShelf(){
   try{ await loadProvinceReviews(); }catch(e){}
   const host=document.getElementById('memPanel');
