@@ -840,9 +840,11 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 @keyframes tlBob{from{translate:0 0}to{translate:0 -5px}}
 
 /* 书架左侧面板撑满整列，内容多了自己滚，不要只露出头部 */
+/* 注意：这里千万不能用 display:flex + flex-direction:column ——
+   子元素默认 flex-shrink:1，内容一多就被压成 0 高，底下几块直接看不见。 */
 #memPanel .memory-province-info{height:100%!important;max-height:100%!important;min-height:0!important;
-  overflow-y:auto!important;display:flex!important;flex-direction:column;gap:2px;
-  padding-right:6px}
+  overflow-y:auto!important;padding-right:6px}
+#memPanel .memory-province-info>*{flex:0 0 auto}
 #memPanel .memory-province-info::-webkit-scrollbar{width:6px}
 #memPanel .memory-province-info::-webkit-scrollbar-thumb{background:rgba(122,171,255,.3);border-radius:3px}
 /* 城市卡片在面板里紧凑一点 */
@@ -865,6 +867,17 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
   background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.22)}
 #memPanel .memory-info-review{color:#dfe9f8!important;line-height:1.8;margin:0;font-size:13px}
 #memPanel .memory-info-review.is-empty{color:#7d90a8!important;font-style:italic}
+
+/* ── 强制显示左侧面板的这些块 ──
+   memory-shelf.css 第 321 行有一句
+   .memory-info-cities,.memory-info-date,.memory-info-review-block,.memory-info-note{display:none}
+   它原本是给窄屏的精简版用的，但在这套布局里也被命中了，
+   导致日期 / 城市列表 / 省份评价 / 底部说明全部高度为 0。这里直接压回来。 */
+#memPanel .memory-info-cities,
+#memPanel .memory-info-date,
+#memPanel .memory-info-review-block,
+#memPanel .memory-info-note{display:block!important}
+#memPanel .memory-info-cities{display:flex!important;flex-wrap:wrap;gap:8px 14px}
 </style>
 </head>
 <body>
@@ -1051,7 +1064,7 @@ main{position:relative;z-index:1;max-width:var(--container-max);margin:0 auto;pa
 <script>
 const API='https://mapi.231060101.xyz';
 // 构建标记：显示在页脚，用来一眼确认浏览器里这份是不是最新版
-const GALLERY_BUILD='2026-10-23 · 书架左侧：省份评价 + 城市列表';
+const GALLERY_BUILD='2026-10-24 · 书架左侧：显示城市列表与省份评价';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(msg,ms){const host=document.getElementById('toastHost');if(!host)return;const t=document.createElement('div');t.className='toast';t.textContent=msg;host.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320);},ms||2200);}
 window.toast=toast;
