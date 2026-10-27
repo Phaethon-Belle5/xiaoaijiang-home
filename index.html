@@ -345,6 +345,15 @@ body.dim-modal-open{overflow:hidden}
 .dm-author:hover{background:rgba(212,168,67,.16);border-color:var(--gold)}
 .dm-chev{font-size:1.15em;line-height:1;opacity:.8}
 .dm-stars{font-size:.95em}
+/* 封面右侧那张"档案信息表"：评分 / 类型 / 日期 —— 填满原来空着的那块 */
+.dm-facts{margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.dm-facts>div{display:flex;align-items:baseline;gap:12px;font-size:.82em;min-width:0}
+.dm-facts dt{flex:none;width:3em;color:var(--text-muted);letter-spacing:.1em;font-size:.92em}
+.dm-facts dd{margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  color:var(--text-secondary);min-width:0;word-break:break-word}
+.dm-facts dd i{font-style:normal;opacity:.4}
+.dm-fact-num{font-weight:600;color:var(--gold-bright);font-variant-numeric:tabular-nums}
+.dm-fact-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.94em;letter-spacing:.04em}
 .dm-tags{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
 .dm-tag{font-size:.78em;line-height:1.4;color:var(--text-secondary);background:rgba(255,255,255,.06);
   border:1px solid var(--glass-border);border-radius:999px;padding:5px 14px}
@@ -4607,7 +4616,7 @@ function openDimDetail(idx){
   // 版面照用户草图：左边封面 / 右上作品名 / 右下作者·平台 › / 标签胶囊 / 01 SYNOPSIS 简介
   body.innerHTML=
     '<div class="dim-top">'+
-      '<div class="dm-cover">'+
+      '<div class="dm-cover'+(cover?'':' is-empty')+'">'+
         (cover
           ? '<img src="'+escHtml(cover)+'" alt="" onerror="this.parentNode.classList.add(\'is-empty\');this.remove()">'
           : '')+
@@ -4619,7 +4628,16 @@ function openDimDetail(idx){
           ? '<a class="dm-author"'+(link?' href="'+escHtml(link)+'" target="_blank" rel="noopener"':'')+'>'+
               escHtml(String(it.creator||'').trim()||info.label)+'<span class="dm-chev">›</span></a>'
           : '')+
-        (Number(it.rating)?'<div class="dm-stars">'+dimStars(it.rating)+'</div>':'')+
+        // 原来这里只有封面高度撑着、显得空。用已有但没展示的数据填一张档案信息表
+        '<dl class="dm-facts">'+
+          (Number(it.rating)
+            ? '<div><dt>评分</dt><dd>'+dimStars(it.rating)+'</dd></div>'
+            : '')+
+          '<div><dt>类型</dt><dd>'+escHtml(info.label)+(sub?' <i>·</i> '+escHtml(sub):'')+'</dd></div>'+
+          (String(it.date||'').trim()
+            ? '<div><dt>日期</dt><dd class="dm-fact-mono">'+escHtml(String(it.date).trim())+'</dd></div>'
+            : '')+
+        '</dl>'+
       '</div>'+
     '</div>'+
     (tagList.length?'<div class="dm-tags">'+tagList.map(t=>'<span class="dm-tag">'+escHtml(t)+'</span>').join('')+'</div>':'')+
