@@ -1958,7 +1958,10 @@ ADMIN_RENDER.wallpaper=function(){
       admText('轮播间隔（秒）','e-wp-int',w.interval==null?8:w.interval)+
     '</div>'+
     admField('上传本地图片','<button class="admin-sbtn" type="button" onclick="document.getElementById(\'wallpaper-upload\').click()">'+AI.img+'选择图片（可多选）</button>')+
-    admField('添加图片网址','<div style="display:flex;gap:8px"><input type="text" id="e-wp-new-url" placeholder="https://…" style="flex:1"><button class="admin-sbtn" type="button" onclick="addWpUrl()">添加</button></div>')+
+    admField('添加图片网址','<div style="display:flex;gap:8px;align-items:flex-start">'+
+      '<textarea id="e-wp-new-url" rows="3" placeholder="每行一个地址，可以一次粘贴多个：&#10;https://img.231060101.xyz/file/背景/1.jpg&#10;https://img.231060101.xyz/file/背景/2.jpg" style="flex:1;resize:vertical;min-height:64px;font-size:.8em;line-height:1.6"></textarea>'+
+      '<button class="admin-sbtn" type="button" onclick="addWpUrl()" style="flex:none">添加</button></div>',
+      '用文本框而不是单行输入框 —— 单行 input 装不下换行，粘多行会被浏览器拼成一行，只算一张。')+
     '<div class="admin-group" data-adm-label="壁纸图片列表"><label>壁纸图片（'+((w.images||[]).length)+' 张）</label><div class="wp-list" id="wp-list">'+
       ((w.images||[]).length?(w.images||[]).map((u,i)=>
         '<div class="wp-list-item"><img class="wp-list-thumb" src="'+escHtml(u)+'" loading="lazy" alt="" onerror="this.style.display=\'none\'">'+
@@ -3024,7 +3027,13 @@ function addWpUrl(){
   let added=0;
   good.forEach(u=>{if(data.wallpaper.images.indexOf(u)<0){data.wallpaper.images.push(u);added++;}});
   // 加了图片就顺手把类型切成「图片轮播」，否则还是播视频
-  if(added&&data.wallpaper.type!=='image')data.wallpaper.type='image';
+  if(added){
+    data.wallpaper.type='image';
+    // ★ 关键：下拉框也要同步，否则随后 ADMIN.refresh 里的 readAll() 会从下拉框
+    //   读回旧的 video，把刚设好的 image 又冲掉，保存上去还是视频。
+    const sel=document.getElementById('e-wp-type');
+    if(sel)sel.value='image';
+  }
   inp.value='';
   wpCommit(added?('已添加 '+added+' 张壁纸'):'这些地址已经在列表里了');
 }
