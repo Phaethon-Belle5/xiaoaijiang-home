@@ -2995,7 +2995,13 @@ let _videoCatalog=null;
 function applyVideoCatalog(catalog){
   if(catalog&&catalog.wallpapers&&catalog.wallpapers.length)_videoCatalog=catalog;
   if(!catalog||!catalog.wallpapers.length)return false;
-  const prevDur=new Map((data.wallpaper?.videos||[]).filter(v=>v&&v.src).map(v=>[v.src,v.duration]));
+  // ★ 云端已经配了自己的背景视频（例如用户图床的 18 个 webm）时，
+  //   不要再用 R2 的 /video-catalog 覆盖它 —— 原来这里无条件覆盖，
+  //   导致 KV 里配好的图床视频永远不生效，页面播的还是 R2 里那批。
+  const cloudVids=(data.wallpaper&&data.wallpaper.videos)||[];
+  const hasOwn=cloudVids.some(v=>v&&v.src&&!/cdn\.231060101\.xyz/.test(String(v.src)));
+  if(hasOwn)return true;
+  const prevDur=new Map(cloudVids.filter(v=>v&&v.src).map(v=>[v.src,v.duration]));
   data.wallpaper=data.wallpaper||{};
   data.wallpaper.videos=catalog.wallpapers.map(v=>({src:v.src,duration:prevDur.get(v.src)||v.duration||30}));
   // ★ 只有用户没明确选「图片轮播」时才切回视频。
@@ -3063,9 +3069,14 @@ function initWallpapers(){
   if(wpTimer)clearInterval(wpTimer);if(videoTimeout)clearTimeout(videoTimeout);
   const w=data.wallpaper||{};
   const rawImgs=(w.images||[]).filter(Boolean).filter(u=>u!==LEGACY_DEFAULT_WALLPAPER);
-  // 视频来源：优先 /video-catalog（R2 里新传的会自动出现），回落到 data.wallpaper.videos
-  const catVids=(_videoCatalog&&_videoCatalog.wallpapers&&_videoCatalog.wallpapers.length)?_videoCatalog.wallpapers.map(v=>({src:v.src,duration:v.duration||30})):null;
-  videoQueue=(catVids||(w.videos||[])).filter(v=>v&&v.src);videoIdx=0;
+  /* 视频来源优先级（★ 改过）：
+     1) 云端 data.wallpaper.videos 里只要有「非 R2 的地址」（例如用户图床的 18 个 webm），就以它为准
+     2) 否则用 /video-catalog（R2 里新传的会自动出现）
+     3) 再否则用 data.wallpaper.videos 原样
+     原来这里是 catVids 无条件优先，导致 KV 里配的图床视频永远被 R2 那批覆盖。 */
+  const ownVids=(w.videos||[]).filter(v=>v&&v.src&&!/cdn\.231060101\.xyz/.test(String(v.src)));
+  const catVids=(!ownVids.length&&_videoCatalog&&_videoCatalog.wallpapers&&_videoCatalog.wallpapers.length)?_videoCatalog.wallpapers.map(v=>({src:v.src,duration:v.duration||30})):null;
+  videoQueue=(ownVids.length?ownVids:(catVids||(w.videos||[]))).filter(v=>v&&v.src);videoIdx=0;
   stage.innerHTML='';
   /* 类型优先级（照片背景这条路之前被停用了，现在恢复）：
      1) 后台选「图片轮播」且确实有图片 → 走图片
@@ -3115,8 +3126,19 @@ function playVideoQueue(stage,oldVid){
     v.style.opacity='1';
     if(oldVid){oldVid.style.opacity='0';setTimeout(()=>{try{oldVid.remove()}catch(e){}},700);}
     v.play().catch(()=>{});
-    const dur=60*1000; // 每个背景播 1 分钟后切下一个（视频本身 loop 循环，不会中途暂停）
-    videoTimeout=setTimeout(()=>{videoIdx=(videoIdx+1)%videoQueue.length;playVideoQueue(stage,v);},dur);
+    // ★ 每个背景播多久：优先用这条视频自己的 duration（云端配的是 20），否则用 20 秒
+    const dur=Math.max(3,Number(item&&item.duration)||WP_INTERVAL_SEC)*1000;
+    // ★ 随机播下一个（原来是无脑 +1 顺序播）
+    videoTimeout=setTimeout(()=>{
+      if(videoQueue.length>1){
+        let next=videoIdx;
+        for(let g=0;g<20&&next===videoIdx;g++)next=Math.floor(Math.random()*videoQueue.length);
+        videoIdx=next;
+      }else{
+        videoIdx=(videoIdx+1)%videoQueue.length;
+      }
+      playVideoQueue(stage,v);
+    },dur);
     renderWpControls();
   };
   v.oncanplay=swap;v.onloadeddata=swap;
