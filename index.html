@@ -3000,13 +3000,69 @@ function applyVideoCatalog(catalog){
 }
 // 视频背景加载不出来时：清空舞台，露出 #wp-stage 的纯色底（不再回退 webp 图）
 function showSolidWallpaper(stage){if(!stage)return;stage.innerHTML='';wpRuntimeMode='solid';renderWpControls();}
+// ============================================================
+// 后台「壁纸」区缺的三个函数（之前按钮点了没反应/报错，所以加不进图片）
+//   addWpUrl()      —— 粘贴一个或多个图片网址（支持换行/逗号分隔）
+//   ADMIN.editWp(i) —— 改这一张的地址
+//   ADMIN.delWp(i)  —— 删掉这一张
+// ============================================================
+function wpCommit(msg){
+  try{saveData();}catch(e){}
+  try{initWallpapers();}catch(e){}
+  try{ADMIN.refresh('wallpaper');}catch(e){}
+  try{toast(msg,'success');}catch(e){}
+}
+function addWpUrl(){
+  const inp=document.getElementById('e-wp-new-url');
+  if(!inp)return;
+  const urls=String(inp.value||'').split(/[\s,，、]+/).map(s=>s.trim()).filter(Boolean);
+  if(!urls.length){toast('先粘贴图片地址','error');return;}
+  const good=urls.filter(u=>/^https?:\/\//i.test(u));
+  if(!good.length){toast('请填 http(s) 开头的图片地址','error');return;}
+  data.wallpaper=data.wallpaper||{};
+  if(!Array.isArray(data.wallpaper.images))data.wallpaper.images=[];
+  let added=0;
+  good.forEach(u=>{if(data.wallpaper.images.indexOf(u)<0){data.wallpaper.images.push(u);added++;}});
+  // 加了图片就顺手把类型切成「图片轮播」，否则还是播视频
+  if(added&&data.wallpaper.type!=='image')data.wallpaper.type='image';
+  inp.value='';
+  wpCommit(added?('已添加 '+added+' 张壁纸'):'这些地址已经在列表里了');
+}
+ADMIN.editWp=function(i){
+  const list=(data.wallpaper&&data.wallpaper.images)||[];
+  if(list[i]==null)return;
+  const v=prompt('修改这张壁纸的地址：',list[i]);
+  if(v==null)return;
+  const u=String(v).trim();
+  if(!/^https?:\/\//i.test(u)){toast('请填 http(s) 开头的地址','error');return;}
+  list[i]=u;
+  wpCommit('已更新');
+};
+ADMIN.delWp=function(i){
+  const list=(data.wallpaper&&data.wallpaper.images)||[];
+  if(list[i]==null)return;
+  if(!confirm('删除这张壁纸？\n'+String(list[i]).slice(0,80)))return;
+  list.splice(i,1);
+  wpCommit('已删除');
+};
+
 function initWallpapers(){
-  // 背景只用 R2 桶里的 webm 视频；优先用 /video-catalog 缓存（真正数据源，不受云端同步覆盖影响），回落 data.wallpaper.videos；都没有→纯色兜底。不再用任何图片当背景。
-  const stage=document.getElementById('wp-stage');if(!stage)return;stage.innerHTML='';const w=data.wallpaper||{};
+  const stage=document.getElementById('wp-stage');if(!stage)return;
   if(wpTimer)clearInterval(wpTimer);if(videoTimeout)clearTimeout(videoTimeout);
+  const w=data.wallpaper||{};
+  const rawImgs=(w.images||[]).filter(Boolean).filter(u=>u!==LEGACY_DEFAULT_WALLPAPER);
+  // 视频来源：优先 /video-catalog（R2 里新传的会自动出现），回落到 data.wallpaper.videos
   const catVids=(_videoCatalog&&_videoCatalog.wallpapers&&_videoCatalog.wallpapers.length)?_videoCatalog.wallpapers.map(v=>({src:v.src,duration:v.duration||30})):null;
   videoQueue=(catVids||(w.videos||[])).filter(v=>v&&v.src);videoIdx=0;
-  if(videoQueue.length){wpRuntimeMode='video';playVideoQueue(stage);}
+  stage.innerHTML='';
+  /* 类型优先级（照片背景这条路之前被停用了，现在恢复）：
+     1) 后台选「图片轮播」且确实有图片 → 走图片
+     2) 否则有视频 → 走视频
+     3) 否则有图片 → 走图片
+     4) 都没有 → 纯色兜底 */
+  if(w.type==='image' && rawImgs.length){ renderImageWallpapers(stage,rawImgs); return; }
+  if(videoQueue.length){ wpRuntimeMode='video'; playVideoQueue(stage); }
+  else if(rawImgs.length){ renderImageWallpapers(stage,rawImgs); }
   else showSolidWallpaper(stage);
   renderWpControls();
 }
@@ -3062,10 +3118,27 @@ function playVideoQueue(stage,oldVid){
     if(performance.now()-lastActive>=WP_STALL_MS)cleanup();
   },1000);
 }
+// 背景切换间隔（秒）—— 用户要求固定 20 秒。
+// 后台「壁纸 → 切换间隔」的旧值（云端是 30）先不参与，避免覆盖。
+const WP_INTERVAL_SEC=20;
+function wpIntervalSec(){
+  return WP_INTERVAL_SEC;
+}
 function startWpTimer(){
   if(wpTimer)clearInterval(wpTimer);
   if(wpRuntimeMode==='video'||getWallpaperImages().length<=1)return;
-  wpTimer=setInterval(()=>{const s=document.querySelectorAll('#wp-stage .wp-img');if(!s.length)return;s[wpIndex].classList.remove('on');wpIndex=(wpIndex+1)%s.length;s[wpIndex].classList.add('on');},data.wallpaper.interval*1000);
+  // ★ 随机切换（不是顺序）：每次挑一张和当前不同的，避免连续两张一样
+  wpTimer=setInterval(()=>{
+    const s=document.querySelectorAll('#wp-stage .wp-img');
+    if(s.length<2)return;
+    let next=wpIndex;
+    for(let guard=0;guard<20&&next===wpIndex;guard++)next=Math.floor(Math.random()*s.length);
+    if(next===wpIndex)return;
+    s[wpIndex].classList.remove('on');
+    wpIndex=next;
+    s[wpIndex].classList.add('on');
+    renderWpControls();
+  },wpIntervalSec()*1000);
 }
 function renderWpControls(){
   const c=document.getElementById('wp-controls');if(!c){const d=document.createElement('div');d.className='wp-controls';d.id='wp-controls';document.body.appendChild(d);}
