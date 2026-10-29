@@ -1965,7 +1965,7 @@ ADMIN_RENDER.wallpaper=function(){
     '<div class="admin-group" data-adm-label="壁纸图片列表"><label>壁纸图片（'+((w.images||[]).length)+' 张）</label><div class="wp-list" id="wp-list">'+
       ((w.images||[]).length?(w.images||[]).map((u,i)=>
         '<div class="wp-list-item"><img class="wp-list-thumb" src="'+escHtml(u)+'" loading="lazy" alt="" onerror="this.style.display=\'none\'">'+
-        '<span class="wp-list-url" title="'+escHtml(u)+'">'+escHtml(String(u).slice(0,70))+'</span>'+
+        '<span class="wp-list-url" title="'+escHtml(u)+'">'+escHtml(wpFileName(u))+'</span>'+
         '<div class="wp-list-actions">'+
           '<button class="admin-sbtn" type="button" onclick="ADMIN.editWp('+i+')">编辑</button>'+
           '<button class="admin-sbtn danger" type="button" onclick="ADMIN.delWp('+i+')">'+AI.trash+'</button>'+
@@ -1975,7 +1975,7 @@ ADMIN_RENDER.wallpaper=function(){
     '<div class="admin-group" data-adm-label="视频播放列表"><label>视频列表（'+vids.length+' 个）</label>'+
       (vids.length?vids.map((v,i)=>
         '<div class="wp-list-item"><span style="font-size:.72em;color:var(--text-muted);flex:none">#'+(i+1)+'</span>'+
-        '<span class="wp-list-url" title="'+escHtml(v.src||'')+'">'+escHtml(v.src&&v.src.indexOf('data:')===0?'本地视频':String(v.src||'').slice(0,50))+'</span>'+
+        '<span class="wp-list-url" title="'+escHtml(v.src||'')+'">'+escHtml(v.src&&v.src.indexOf('data:')===0?'本地视频':wpFileName(v.src))+'</span>'+
         '<input type="text" value="'+escHtml(v.duration||8)+'" data-v-dur="'+i+'" aria-label="播放时长秒" style="width:46px;padding:4px 6px;font-size:.75em;text-align:center;border:1px solid var(--surface-border);border-radius:6px;background:rgba(255,255,255,.04);color:var(--text-primary)">'+
         '<div class="wp-list-actions">'+
           '<button class="admin-sbtn icon" type="button" onclick="moveVideo('+i+',-1)" '+(i===0?'disabled':'')+' title="上移">'+AI.up+'</button>'+
@@ -2547,11 +2547,10 @@ window.addEventListener('hashchange',()=>{
 });
 
 const R2_PUBLIC='https://cdn.231060101.xyz/';
-// 开屏动画兜底（/video-catalog 不可用时用直链）
-const SPLASH_VIDEO_URL=R2_PUBLIC+'MP4/%E8%96%87%E5%B0%94%E8%8E%89%E7%89%B9.webm';
-const DEFAULT_WALLPAPERS=[
-  'https://img.231060101.xyz/file/%E8%AF%B4%E8%AF%B4%E5%9B%BE%E7%89%87/%E7%88%B1%E9%85%B1.webp'
-];
+// 开屏动画兜底（R2 的 MP4 已全部删除，改用图床里的同一个视频）
+const SPLASH_VIDEO_URL='https://img.231060101.xyz/file/%E8%83%8C%E6%99%AF/1793280375465_%E8%96%87%E5%B0%94%E8%8E%89%E7%89%B9.webm';
+// 回落用的默认壁纸 —— 用户明确要求「视频没加载出来时用纯色、不要加任何图片」，所以留空。
+const DEFAULT_WALLPAPERS=[];
 const LEGACY_DEFAULT_WALLPAPER="assets/wallpaper-default.jpg";
 
 const DEFAULT_DATA={
@@ -2960,12 +2959,10 @@ function getWallpaperImages(){
   return imgs.length?imgs:DEFAULT_WALLPAPERS;
 }
 function ensureWallpaperFallback(stage){
-  wpRuntimeMode='image';
-  const fallback=getWallpaperImages()[0]||DEFAULT_WALLPAPERS[0];
-  if(!stage||!fallback)return;
-  let d=stage.querySelector('.wp-img.fallback');
-  if(!d){d=document.createElement('div');d.className='wp-img fallback on';d.setAttribute('aria-hidden','true');stage.appendChild(d);}
-  d.style.backgroundImage=`url(${fallback})`;
+  // ★ 用户要求：视频还没加载出来时用纯色背景，绝对不要塞任何图片进来。
+  //   原来这里会拿 DEFAULT_WALLPAPERS[0]（一张图床照片）当兜底，所以没加载出来时
+  //   会看到一张静止的人像图。现在直接走纯色。
+  showSolidWallpaper(stage);
 }
 function renderImageWallpapers(stage,imgs){
   if(!stage)return;
@@ -3018,6 +3015,17 @@ function showSolidWallpaper(stage){if(!stage)return;stage.innerHTML='';wpRuntime
 //   ADMIN.editWp(i) —— 改这一张的地址
 //   ADMIN.delWp(i)  —— 删掉这一张
 // ============================================================
+// 后台列表里显示文件名，而不是一长串 %E8%83%8C%E6%99%AF/… 的编码地址
+function wpFileName(u){
+  const s=String(u==null?'':u);
+  if(!s)return '';
+  if(s.indexOf('data:')===0)return '本地文件';
+  let dec=s;
+  try{ dec=decodeURIComponent(s); }catch(e){ dec=s; }
+  const clean=dec.split('?')[0].split('#')[0];
+  const parts=clean.split('/').filter(Boolean);
+  return parts.length?parts[parts.length-1]:clean;
+}
 function wpCommit(msg){
   try{saveData();}catch(e){}
   try{initWallpapers();}catch(e){}
