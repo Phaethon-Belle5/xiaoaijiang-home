@@ -2550,7 +2550,7 @@ const R2_PUBLIC='https://cdn.231060101.xyz/';
 // 开屏动画兜底（/video-catalog 不可用时用直链）
 const SPLASH_VIDEO_URL=R2_PUBLIC+'MP4/%E8%96%87%E5%B0%94%E8%8E%89%E7%89%B9.webm';
 const DEFAULT_WALLPAPERS=[
-  R2_PUBLIC+'%E6%98%A0%E5%83%8F%E9%A6%86/webp/20230619%E8%A5%BF%E5%B2%B3%E5%8D%8E%E5%B1%B1%E5%8C%97%E5%B3%B0%E9%A1%B6.webp'
+  'https://img.231060101.xyz/file/%E8%AF%B4%E8%AF%B4%E5%9B%BE%E7%89%87/%E7%88%B1%E9%85%B1.webp'
 ];
 const LEGACY_DEFAULT_WALLPAPER="assets/wallpaper-default.jpg";
 
@@ -2998,7 +2998,10 @@ function applyVideoCatalog(catalog){
   const prevDur=new Map((data.wallpaper?.videos||[]).filter(v=>v&&v.src).map(v=>[v.src,v.duration]));
   data.wallpaper=data.wallpaper||{};
   data.wallpaper.videos=catalog.wallpapers.map(v=>({src:v.src,duration:prevDur.get(v.src)||v.duration||30}));
-  data.wallpaper.type='video';
+  // ★ 只有用户没明确选「图片轮播」时才切回视频。
+  //   原来这里无条件写 'video'，导致云端明明存了 type=image，
+  //   页面一加载视频目录就把类型改回 video，图片背景永远不生效。
+  if(data.wallpaper.type!=='image')data.wallpaper.type='video';
   return true;
 }
 // 视频背景加载不出来时：清空舞台，露出 #wp-stage 的纯色底（不再回退 webp 图）

@@ -1,0 +1,56 @@
+{
+  "type": "video",
+  "images": [],
+  "videos": [
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E8%A6%81%E8%A2%AB%E5%80%9F%E9%92%B1%E7%9A%84%E6%B3%A2%E5%A5%87%E9%85%B1.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E8%83%A1%E6%A1%83.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E5%B1%B1%E7%94%B0%E5%87%89.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E5%AE%B5%E5%AE%AB.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/Ellen-Joe-Zenless-Zone-Zero-getlivewall-com.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E6%B5%81%E8%90%A4.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E5%AD%A4%E7%8B%AC%E6%91%87%E6%BB%9Aps%E6%9C%80%E7%BB%88%E6%88%90%E5%93%81.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E5%AD%A4%E7%8B%AC%E6%91%87%E6%BB%9A%E6%98%9F%E7%A9%BA%E4%B8%8B%E7%9A%84%E5%90%88%E5%BD%B1.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E5%93%A5%E4%BC%A6%E6%AF%94%E4%BA%9A.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E4%B8%96%E7%95%8C%E5%BE%88%E6%B8%A9%E6%9F%94%E2%80%94%E3%80%8A%E9%BE%99%E6%97%8F%E3%80%8B%E4%B8%8A%E6%9D%89%E7%BB%98%E6%A2%A8%E8%A1%A3.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/000.webm",
+      "duration": 30
+    },
+    {
+      "src": "https://cdn.231060101.xyz/MP4/%E9%A3%8E%E8%B5%B7%E5%9C%B0.webm",
+      "duration": 30
+    }
+  ],
+  "interval": "30",
+  "video": ""
+}
