@@ -3026,6 +3026,28 @@ function wpFileName(u){
   const parts=clean.split('/').filter(Boolean);
   return parts.length?parts[parts.length-1]:clean;
 }
+// 后台「背景视频」列表那三个按钮（上移/下移/删除）和「选择 MP4 文件」——
+// 原来这些函数根本不存在，点了完全没反应。
+function moveVideo(i,delta){
+  const vids=(data.wallpaper&&data.wallpaper.videos)||[];
+  const j=i+delta;
+  if(i<0||i>=vids.length||j<0||j>=vids.length)return;
+  const tmp=vids[i];vids[i]=vids[j];vids[j]=tmp;
+  wpCommit(delta<0?'已上移':'已下移');
+}
+function deleteVideo(i){
+  const vids=(data.wallpaper&&data.wallpaper.videos)||[];
+  if(i<0||i>=vids.length)return;
+  if(!confirm('删除这个背景视频？\n'+wpFileName(vids[i]&&vids[i].src)))return;
+  vids.splice(i,1);
+  wpCommit('已删除');
+}
+function uploadVideo(){
+  const inp=document.getElementById('wallpaper-video');
+  if(!inp)return;
+  inp.value='';       // 清掉上次的选择，否则选同一个文件不会触发 change
+  inp.click();
+}
 function wpCommit(msg){
   try{saveData();}catch(e){}
   try{initWallpapers();}catch(e){}
