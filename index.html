@@ -1958,10 +1958,10 @@ ADMIN_RENDER.wallpaper=function(){
       admText('轮播间隔（秒）','e-wp-int',w.interval==null?8:w.interval)+
     '</div>'+
     admField('上传本地图片','<button class="admin-sbtn" type="button" onclick="document.getElementById(\'wallpaper-upload\').click()">'+AI.img+'选择图片（可多选）</button>')+
-    admField('添加图片网址','<div style="display:flex;gap:8px;align-items:flex-start">'+
-      '<textarea id="e-wp-new-url" rows="3" placeholder="每行一个地址，可以一次粘贴多个：&#10;https://img.231060101.xyz/file/背景/1.jpg&#10;https://img.231060101.xyz/file/背景/2.jpg" style="flex:1;resize:vertical;min-height:64px;font-size:.8em;line-height:1.6"></textarea>'+
+    admField('添加背景地址（图片或视频）','<div style="display:flex;gap:8px;align-items:flex-start">'+
+      '<textarea id="e-wp-new-url" rows="3" placeholder="每行一个地址，可以一次粘贴多个：&#10;图片 → 进「壁纸图片」，.webm/.mp4 → 自动进「背景视频」&#10;https://img.231060101.xyz/file/背景/1793280391212_雷姆.webm" style="flex:1;resize:vertical;min-height:64px;font-size:.8em;line-height:1.6"></textarea>'+
       '<button class="admin-sbtn" type="button" onclick="addWpUrl()" style="flex:none">添加</button></div>',
-      '用文本框而不是单行输入框 —— 单行 input 装不下换行，粘多行会被浏览器拼成一行，只算一张。')+
+      '按扩展名自动分流：.webm / .mp4 / .mov 等进「背景视频」，其余进「壁纸图片」。单行 input 装不下换行，所以这里是文本框。')+
     '<div class="admin-group" data-adm-label="壁纸图片列表"><label>壁纸图片（'+((w.images||[]).length)+' 张）</label><div class="wp-list" id="wp-list">'+
       ((w.images||[]).length?(w.images||[]).map((u,i)=>
         '<div class="wp-list-item"><img class="wp-list-thumb" src="'+escHtml(u)+'" loading="lazy" alt="" onerror="this.style.display=\'none\'">'+
@@ -3058,23 +3058,41 @@ function addWpUrl(){
   const inp=document.getElementById('e-wp-new-url');
   if(!inp)return;
   const urls=String(inp.value||'').split(/[\s,，、]+/).map(s=>s.trim()).filter(Boolean);
-  if(!urls.length){toast('先粘贴图片地址','error');return;}
+  if(!urls.length){toast('先粘贴图片或视频地址','error');return;}
   const good=urls.filter(u=>/^https?:\/\//i.test(u));
-  if(!good.length){toast('请填 http(s) 开头的图片地址','error');return;}
+  if(!good.length){toast('请填 http(s) 开头的地址','error');return;}
   data.wallpaper=data.wallpaper||{};
   if(!Array.isArray(data.wallpaper.images))data.wallpaper.images=[];
-  let added=0;
-  good.forEach(u=>{if(data.wallpaper.images.indexOf(u)<0){data.wallpaper.images.push(u);added++;}});
-  // 加了图片就顺手把类型切成「图片轮播」，否则还是播视频
-  if(added){
-    data.wallpaper.type='image';
-    // ★ 关键：下拉框也要同步，否则随后 ADMIN.refresh 里的 readAll() 会从下拉框
-    //   读回旧的 video，把刚设好的 image 又冲掉，保存上去还是视频。
+  if(!Array.isArray(data.wallpaper.videos))data.wallpaper.videos=[];
+  // ★ 按扩展名自动分流：.webm/.mp4/.mov… 进「背景视频」，其余进「壁纸图片」。
+  //   原来这里不看扩展名，全部塞进 images，所以粘 .webm 会被归到壁纸图片。
+  const isVideo=u=>/\.(webm|mp4|m4v|mov|ogv|ogg|avi|mkv)(\?|#|$)/i.test(u);
+  let addImg=0,addVid=0,dup=0;
+  good.forEach(u=>{
+    if(isVideo(u)){
+      if(data.wallpaper.videos.some(v=>v&&v.src===u)){dup++;return;}
+      data.wallpaper.videos.push({src:u,duration:WP_INTERVAL_SEC});
+      addVid++;
+    }else{
+      if(data.wallpaper.images.indexOf(u)>=0){dup++;return;}
+      data.wallpaper.images.push(u);
+      addImg++;
+    }
+  });
+  // 类型跟着这次加的东西走；下拉框必须一起改，
+  // 否则 ADMIN.refresh 里的 readAll() 会从下拉框读回旧值把它冲掉。
+  if(addVid||addImg){
+    const nextType=addVid?'video':'image';
+    data.wallpaper.type=nextType;
     const sel=document.getElementById('e-wp-type');
-    if(sel)sel.value='image';
+    if(sel)sel.value=nextType;
   }
   inp.value='';
-  wpCommit(added?('已添加 '+added+' 张壁纸'):'这些地址已经在列表里了');
+  const msg=[];
+  if(addVid)msg.push('视频 '+addVid+' 个');
+  if(addImg)msg.push('图片 '+addImg+' 张');
+  if(dup)msg.push('重复 '+dup);
+  wpCommit(msg.length?('已添加：'+msg.join('，')):'这些地址已经在列表里了');
 }
 ADMIN.editWp=function(i){
   const list=(data.wallpaper&&data.wallpaper.images)||[];
